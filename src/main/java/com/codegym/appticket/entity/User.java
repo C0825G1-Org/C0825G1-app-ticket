@@ -3,7 +3,6 @@ package com.codegym.appticket.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,8 +12,7 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class User {
+public class User extends Parent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,36 +30,17 @@ public class User {
     @Column(name = "password", nullable = false)
     private String password;
 
+    //Enabled = false đại diện cho tài khoản người dùng đang chờ xác nhận mail
+    // (nếu họ xác nhận mail thì mới enabled tài khoản)
+    //Nhưng vì chưa phát triển tính năng gửi mail nên tạm thời để true để phục vụ tạo tài khoản user
     @Column(name = "enabled")
-    @Builder.Default
-    private Boolean enabled = false;
+    private Boolean enabled = true;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    @Builder.Default
     private Set<Role> roles = new HashSet<>();
-
-    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL)
-    @Builder.Default
-    private Set<Event> createdEvents = new HashSet<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    @Builder.Default
-    private Set<Booking> bookings = new HashSet<>();
-
-    @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL)
-    @Builder.Default
-    private Set<EventRequest> eventRequests = new HashSet<>();
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
 }

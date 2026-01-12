@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "ticket_types")
@@ -13,14 +11,13 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class TicketType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "event_id")
     private Event event;
 
@@ -32,9 +29,4 @@ public class TicketType {
 
     @Column(name = "quantity")
     private Integer quantity;
-
-    // One-to-Many: TicketType has many BookingDetails
-    @OneToMany(mappedBy = "ticketType", cascade = CascadeType.ALL)
-    @Builder.Default
-    private Set<BookingDetail> bookingDetails = new HashSet<>();
 }
