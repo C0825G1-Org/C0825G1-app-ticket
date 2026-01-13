@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<!-- Footer Fragment -->
+<footer th:fragment="footer" class="bg-white border-top pt-5 pb-4 mt-5">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-4">
+                <div class="d-flex align-items-center gap-2 fw-bold fs-4 mb-3">
+                    <div class="rounded-3 d-flex align-items-center justify-content-center text-white"
+                        style="width: 32px; height: 32px; background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); font-size: 1rem;">
+                        E
+                    </div>
+                    EventPro
+                </div>
+                <p class="text-muted small">Nền tảng kết nối và đặt vé sự kiện hàng đầu. Trải nghiệm tuyệt vời bắt
+                    đầu từ đây.</p>
+            </div>
+            <div class="col-6 col-lg-2">
+                <h6 class="fw-bold mb-3">Sự kiện</h6>
+                <ul class="list-unstyled text-muted small d-flex flex-column gap-2">
+                    <li><a th:href="@{/events}" class="text-decoration-none text-muted">Âm nhạc</a></li>
+                    <li><a th:href="@{/events}" class="text-decoration-none text-muted">Thể thao</a></li>
+                    <li><a th:href="@{/events}" class="text-decoration-none text-muted">Hội thảo</a></li>
+                </ul>
+            </div>
+            <div class="col-6 col-lg-2">
+                <h6 class="fw-bold mb-3">Hỗ trợ</h6>
+                <ul class="list-unstyled text-muted small d-flex flex-column gap-2">
+                    <li><a th:href="@{/help}" class="text-decoration-none text-muted">Help Center</a></li>
+                    <li><a th:href="@{/privacy}" class="text-decoration-none text-muted">Bảo mật</a></li>
+                    <li><a th:href="@{/terms}" class="text-decoration-none text-muted">Điều khoản</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-4">
+                <h6 class="fw-bold mb-3">Theo dõi chúng tôi</h6>
+                <div class="d-flex gap-3">
+                    <a href="#" class="btn btn-light rounded-circle p-2"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="btn btn-light rounded-circle p-2"><i class="bi bi-instagram"></i></a>
+                    <a href="#" class="btn btn-light rounded-circle p-2"><i class="bi bi-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="text-center small text-muted mt-5 pt-4 border-top">
+            &copy; 2026 EventPro. All rights reserved.
+        </div>
+    </div>
+</footer>
+
+</html>

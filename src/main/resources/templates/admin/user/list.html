@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Người dùng - Admin - EventPro</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <th:block th:replace="~{common/styles :: styles}"></th:block>
+</head>
+
+<body>
+
+    <!-- Sidebar -->
+    <div th:replace="~{common/sidebar :: admin-sidebar}"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Header -->
+        <div th:replace="~{common/sidebar :: admin-header}"></div>
+
+        <!-- Content -->
+        <div class="container-fluid p-4">
+
+            <h2 class="fw-bold mb-4">Quản lý Người dùng</h2>
+
+            <!-- Stats Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small mb-1">Tổng người dùng</div>
+                                    <h3 class="fw-bold mb-0" th:text="${totalUsers} ?: '0'">1,245</h3>
+                                </div>
+                                <div class="bg-primary-subtle text-primary rounded-circle p-3">
+                                    <i class="bi bi-people fs-4"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small mb-1">Đang hoạt động</div>
+                                    <h3 class="fw-bold mb-0 text-success" th:text="${activeUsers} ?: '0'">1,180</h3>
+                                </div>
+                                <div class="bg-success-subtle text-success rounded-circle p-3">
+                                    <i class="bi bi-person-check fs-4"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small mb-1">Bị khóa</div>
+                                    <h3 class="fw-bold mb-0 text-danger" th:text="${blockedUsers} ?: '0'">65</h3>
+                                </div>
+                                <div class="bg-danger-subtle text-danger rounded-circle p-3">
+                                    <i class="bi bi-person-x fs-4"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small mb-1">Mới tháng này</div>
+                                    <h3 class="fw-bold mb-0 text-info" th:text="${newUsers} ?: '0'">42</h3>
+                                </div>
+                                <div class="bg-info-subtle text-info rounded-circle p-3">
+                                    <i class="bi bi-person-plus fs-4"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters & Search -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <form th:action="@{/admin/users}" method="get" class="row g-3">
+                        <div class="col-md-5">
+                            <input type="text" name="keyword" th:value="${keyword}" class="form-control"
+                                placeholder="Tìm theo tên, email, số điện thoại...">
+                        </div>
+                        <div class="col-md-2">
+                            <select name="role" class="form-select">
+                                <option value="">Tất cả vai trò</option>
+                                <option value="USER" th:selected="${role == 'USER'}">USER</option>
+                                <option value="ADMIN" th:selected="${role == 'ADMIN'}">ADMIN</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="status" class="form-select">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="active" th:selected="${status == 'active'}">Hoạt động</option>
+                                <option value="blocked" th:selected="${status == 'blocked'}">Bị khóa</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary w-100"
+                                style="background-color: var(--primary-color); border: none;">
+                                <i class="bi bi-search me-1"></i> Tìm kiếm
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Success/Error Messages -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Users Table -->
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr class="text-muted small text-uppercase">
+                                    <th class="px-4 py-3 fw-bold">Người dùng</th>
+                                    <th class="px-4 py-3 fw-bold">Email</th>
+                                    <th class="px-4 py-3 fw-bold">Số điện thoại</th>
+                                    <th class="px-4 py-3 fw-bold">Vai trò</th>
+                                    <th class="px-4 py-3 fw-bold">Trạng thái</th>
+                                    <th class="px-4 py-3 fw-bold">Ngày tạo</th>
+                                    <th class="px-4 py-3 fw-bold text-end">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="user : ${users}" th:classappend="${!user.enabled} ? 'opacity-75' : ''">
+                                    <td class="px-4 py-3">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <img th:src="'https://ui-avatars.com/api/?name=' + ${user.fullName} + '&background=7c3aed&color=fff'"
+                                                class="rounded-circle" width="40" height="40">
+                                            <div class="fw-bold" th:text="${user.fullName}">Nguyễn Văn A</div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 text-muted" th:text="${user.email}">nguyenvana@gmail.com</td>
+                                    <td class="px-4 py-3 text-muted" th:text="${user.phoneNumber}">0912345678</td>
+                                    <td class="px-4 py-3">
+                                        <span th:each="role : ${user.roles}"
+                                            th:class="${role.name == 'ADMIN'} ? 'badge bg-danger-subtle text-danger' : 'badge bg-primary-subtle text-primary'"
+                                            th:text="${role.name}">USER</span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span th:if="${user.enabled}"
+                                            class="badge bg-success-subtle text-success rounded-pill">Hoạt động</span>
+                                        <span th:unless="${user.enabled}"
+                                            class="badge bg-danger-subtle text-danger rounded-pill">Bị khóa</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-muted"
+                                        th:text="${#temporals.format(user.createdDate, 'dd/MM/yyyy')}">10/01/2026</td>
+                                    <td class="px-4 py-3 text-end">
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary rounded-3 dropdown-toggle"
+                                                data-bs-toggle="dropdown">
+                                                Hành động
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li>
+                                                    <a class="dropdown-item"
+                                                        th:href="@{/admin/users/{id}(id=${user.id})}">
+                                                        <i class="bi bi-eye me-2"></i>Xem chi tiết
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item"
+                                                        th:href="@{/admin/users/{id}/edit(id=${user.id})}">
+                                                        <i class="bi bi-pencil me-2"></i>Chỉnh sửa
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <hr class="dropdown-divider">
+                                                </li>
+                                                <li th:if="${user.enabled}">
+                                                    <form th:action="@{/admin/users/{id}/toggle(id=${user.id})}"
+                                                        method="post" style="display:inline;">
+                                                        <button type="submit" class="dropdown-item text-danger">
+                                                            <i class="bi bi-lock me-2"></i>Khóa tài khoản
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li th:unless="${user.enabled}">
+                                                    <form th:action="@{/admin/users/{id}/toggle(id=${user.id})}"
+                                                        method="post" style="display:inline;">
+                                                        <button type="submit" class="dropdown-item text-success">
+                                                            <i class="bi bi-unlock me-2"></i>Mở khóa
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Empty state -->
+                                <tr th:if="${#lists.isEmpty(users)}">
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <i class="bi bi-inbox fs-1"></i>
+                                        <p class="mt-2">Không có người dùng nào</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top py-3" th:if="${totalPages > 1}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted small">
+                            Hiển thị <span th:text="${(currentPage - 1) * pageSize + 1}">1</span>-<span
+                                th:text="${currentPage * pageSize}">10</span>
+                            trong <span th:text="${totalUsers}">1,245</span> người dùng
+                        </div>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0">
+                                <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/admin/users(page=${currentPage - 1})}">Trước</a>
+                                </li>
+                                <li th:each="i : ${#numbers.sequence(1, totalPages)}" class="page-item"
+                                    th:classappend="${i == currentPage} ? 'active'">
+                                    <a class="page-link" th:href="@{/admin/users(page=${i})}" th:text="${i}">1</a>
+                                </li>
+                                <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/admin/users(page=${currentPage + 1})}">Sau</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

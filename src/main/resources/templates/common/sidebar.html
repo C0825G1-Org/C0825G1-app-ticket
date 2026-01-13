@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<!-- Admin Sidebar Fragment -->
+<aside th:fragment="admin-sidebar" class="sidebar d-flex flex-column">
+    <div class="p-4 border-bottom border-secondary border-opacity-25">
+        <div class="d-flex align-items-center gap-2 text-white fw-bold fs-5">
+            <div class="rounded-3 d-flex align-items-center justify-content-center text-white"
+                style="width: 32px; height: 32px; background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));">
+                E
+            </div>
+            EventPro Admin
+        </div>
+    </div>
+
+    <nav class="sidebar-nav flex-grow-1 p-3">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a th:href="@{/admin/dashboard}" class="nav-link"
+                    th:classappend="${#strings.equals(currentPage, 'dashboard')} ? 'active' : ''">
+                    <i class="bi bi-grid"></i>
+                    <span>Trang chủ</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a th:href="@{/admin/events}" class="nav-link"
+                    th:classappend="${#strings.equals(currentPage, 'events')} ? 'active' : ''">
+                    <i class="bi bi-calendar-event"></i>
+                    <span>Quản lý sự kiện</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a th:href="@{/admin/users}" class="nav-link"
+                    th:classappend="${#strings.equals(currentPage, 'users')} ? 'active' : ''">
+                    <i class="bi bi-people"></i>
+                    <span>Người dùng</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a th:href="@{/admin/categories}" class="nav-link"
+                    th:classappend="${#strings.equals(currentPage, 'categories')} ? 'active' : ''">
+                    <i class="bi bi-folder"></i>
+                    <span>Danh mục</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a th:href="@{/admin/reports}" class="nav-link"
+                    th:classappend="${#strings.equals(currentPage, 'reports')} ? 'active' : ''">
+                    <i class="bi bi-bar-chart"></i>
+                    <span>Báo cáo</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="p-3 border-top border-secondary border-opacity-25">
+        <a th:href="@{/logout}" class="nav-link text-danger">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Đăng xuất</span>
+        </a>
+    </div>
+</aside>
+
+<!-- Admin Header Fragment -->
+<header th:fragment="admin-header" class="bg-white border-bottom sticky-top">
+    <div class="container-fluid py-3 px-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <button class="btn btn-link d-lg-none text-dark" type="button"
+                onclick="document.querySelector('.sidebar').classList.toggle('show')">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <button class="btn btn-link text-muted position-relative p-2">
+                    <i class="bi bi-bell fs-5"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                        style="font-size: 0.6rem;">
+                        3
+                    </span>
+                </button>
+                <div class="d-flex align-items-center gap-2">
+                    <img th:src="${session.user != null} ? 'https://ui-avatars.com/api/?name=' + ${session.user.fullName} + '&background=0f172a&color=fff' : 'https://ui-avatars.com/api/?name=Admin&background=0f172a&color=fff'"
+                        class="rounded-circle" width="40" height="40">
+                    <div class="d-none d-md-block">
+                        <div class="fw-bold small"
+                            th:text="${session.user != null} ? ${session.user.fullName} : 'Admin'">Admin</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">Quản trị viên</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+</html>
