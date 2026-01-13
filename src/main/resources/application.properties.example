@@ -1,8 +1,8 @@
 spring.application.name=app-ticket
-# Database
+# Database - Cập nhật username/password MySQL của bạn
 spring.datasource.url=jdbc:mysql://localhost:3306/event_booking_db?createDatabaseIfNotExist=true
-spring.datasource.username=username
-spring.datasource.password=password
+spring.datasource.username=your_username
+spring.datasource.password=your_password
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 # JPA/Hibernate
 spring.jpa.hibernate.ddl-auto=update

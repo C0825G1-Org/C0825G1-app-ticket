@@ -38,3 +38,6 @@ out/
 
 ### View Demo (Mock UI - không push lên git) ###
 **/templates/view-demo/
+
+### Application Properties (chứa credentials riêng mỗi người) ###
+application.properties
