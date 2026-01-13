@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thêm Người dùng - Admin - EventPro</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <th:block th:replace="~{common/styles :: styles}"></th:block>
+</head>
+
+<body>
+
+    <!-- Sidebar -->
+    <div th:replace="~{common/sidebar :: admin-sidebar}"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Header -->
+        <div th:replace="~{common/sidebar :: admin-header}"></div>
+
+        <!-- Content -->
+        <div class="container-fluid p-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold mb-0">Thêm Người dùng mới</h2>
+                <a th:href="@{/admin/users}" class="btn btn-outline-secondary rounded-3">
+                    <i class="bi bi-arrow-left me-2"></i>Quay lại
+                </a>
+            </div>
+
+            <!-- Error Messages -->
+            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+            <!-- Create Form -->
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <form th:action="@{/admin/users/create}" th:object="${user}" method="post">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Họ và tên <span class="text-danger">*</span></label>
+                                <input type="text" th:field="*{fullName}" class="form-control form-control-lg rounded-3"
+                                    placeholder="Nguyễn Văn A" required>
+                                <div th:if="${#fields.hasErrors('fullName')}" class="text-danger small"
+                                    th:errors="*{fullName}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+                                <input type="email" th:field="*{email}" class="form-control form-control-lg rounded-3"
+                                    placeholder="email@example.com" required>
+                                <div th:if="${#fields.hasErrors('email')}" class="text-danger small"
+                                    th:errors="*{email}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Số điện thoại</label>
+                                <input type="tel" th:field="*{phoneNumber}"
+                                    class="form-control form-control-lg rounded-3" placeholder="0912345678">
+                                <div th:if="${#fields.hasErrors('phoneNumber')}" class="text-danger small"
+                                    th:errors="*{phoneNumber}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Mật khẩu <span class="text-danger">*</span></label>
+                                <input type="password" th:field="*{password}"
+                                    class="form-control form-control-lg rounded-3" placeholder="••••••••" required>
+                                <small class="text-muted">Tối thiểu 8 ký tự</small>
+                                <div th:if="${#fields.hasErrors('password')}" class="text-danger small"
+                                    th:errors="*{password}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Vai trò</label>
+                                <select name="roleId" class="form-select form-select-lg rounded-3">
+                                    <option th:each="role : ${roles}" th:value="${role.id}" th:text="${role.name}">USER
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Trạng thái</label>
+                                <div class="form-check form-switch mt-2">
+                                    <input class="form-check-input" type="checkbox" th:field="*{enabled}"
+                                        id="enabledCheck">
+                                    <label class="form-check-label" for="enabledCheck">Kích hoạt tài khoản</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-3 border-top">
+                            <button type="submit" class="btn btn-primary btn-lg px-5 rounded-3"
+                                style="background-color: var(--primary-color); border: none;">
+                                <i class="bi bi-plus-circle me-2"></i>Tạo người dùng
+                            </button>
+                            <a th:href="@{/admin/users}"
+                                class="btn btn-outline-secondary btn-lg px-4 rounded-3 ms-2">Hủy</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

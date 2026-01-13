@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### View Demo (Mock UI - không push lên git) ###
+**/templates/view-demo/

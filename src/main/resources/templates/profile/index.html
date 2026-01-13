@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ sơ cá nhân - EventPro</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <th:block th:replace="~{common/styles :: styles}"></th:block>
+    <style>
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card {
+            border: none;
+            border-radius: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .nav-pills .nav-link {
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: #64748b;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-pills .nav-link:hover {
+            background-color: #f1f5f9;
+            color: var(--dark-color);
+        }
+
+        .nav-pills .nav-link.active {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <div th:replace="~{common/user-header :: user-navbar}"></div>
+
+    <!-- Main Content -->
+    <div class="container-xl py-5" style="margin-top: 80px;">
+
+        <!-- Profile Header -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-auto text-center text-md-start mb-3 mb-md-0">
+                        <img th:src="'https://ui-avatars.com/api/?name=' + ${user.fullName} + '&size=120&background=7c3aed&color=fff'"
+                            class="profile-avatar" alt="Avatar">
+                    </div>
+                    <div class="col-md">
+                        <h3 class="fw-bold mb-2" th:text="${user.fullName}">Nguyễn Văn A</h3>
+                        <p class="text-muted mb-3">
+                            <i class="bi bi-envelope me-2"></i><span th:text="${user.email}">nguyenvana@gmail.com</span>
+                        </p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <span class="badge bg-primary-subtle text-primary px-3 py-2">
+                                <i class="bi bi-person-check me-1"></i>
+                                Thành viên
+                            </span>
+                            <span th:if="${user.enabled}" class="badge bg-success-subtle text-success px-3 py-2">
+                                <i class="bi bi-shield-check me-1"></i>
+                                Đã xác thực
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card stat-card shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1 small">Vé đã mua</p>
+                                <h3 class="fw-bold mb-0" th:text="${ticketCount} ?: '0'">12</h3>
+                            </div>
+                            <div class="bg-primary-subtle text-primary rounded-circle p-3">
+                                <i class="bi bi-ticket-perforated fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1 small">Sự kiện đã tạo</p>
+                                <h3 class="fw-bold mb-0" th:text="${eventCount} ?: '0'">3</h3>
+                            </div>
+                            <div class="bg-success-subtle text-success rounded-circle p-3">
+                                <i class="bi bi-calendar-event fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1 small">Tổng chi tiêu</p>
+                                <h3 class="fw-bold mb-0" th:text="${totalSpent} ?: '0đ'">5.2M</h3>
+                            </div>
+                            <div class="bg-warning-subtle text-warning rounded-circle p-3">
+                                <i class="bi bi-currency-dollar fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <ul class="nav nav-pills mb-4" id="profileTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="info-tab" data-bs-toggle="pill" data-bs-target="#info"
+                            type="button">
+                            <i class="bi bi-person me-2"></i>Thông tin cá nhân
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="password-tab" data-bs-toggle="pill" data-bs-target="#password"
+                            type="button">
+                            <i class="bi bi-shield-lock me-2"></i>Đổi mật khẩu
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="profileTabsContent">
+                    <!-- Personal Info Tab -->
+                    <div class="tab-pane fade show active" id="info" role="tabpanel">
+                        <form th:action="@{/user/profile}" th:object="${user}" method="post">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Họ và tên</label>
+                                    <input type="text" th:field="*{fullName}"
+                                        class="form-control form-control-lg rounded-3">
+                                    <div th:if="${#fields.hasErrors('fullName')}" class="text-danger small"
+                                        th:errors="*{fullName}"></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Email</label>
+                                    <input type="email" th:field="*{email}"
+                                        class="form-control form-control-lg rounded-3" readonly>
+                                    <small class="text-muted">Email không thể thay đổi</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Số điện thoại</label>
+                                    <input type="tel" th:field="*{phoneNumber}"
+                                        class="form-control form-control-lg rounded-3">
+                                    <div th:if="${#fields.hasErrors('phoneNumber')}" class="text-danger small"
+                                        th:errors="*{phoneNumber}"></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Ngày tham gia</label>
+                                    <input type="text" class="form-control form-control-lg rounded-3"
+                                        th:value="${#temporals.format(user.createdDate, 'dd/MM/yyyy')}" readonly
+                                        disabled>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-gradient btn-lg px-5 rounded-3">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    Lưu thay đổi
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Change Password Tab -->
+                    <div class="tab-pane fade" id="password" role="tabpanel">
+                        <form th:action="@{/user/profile/change-password}" method="post">
+                            <div class="row g-4">
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Mật khẩu hiện tại</label>
+                                    <input type="password" name="currentPassword"
+                                        class="form-control form-control-lg rounded-3"
+                                        placeholder="Nhập mật khẩu hiện tại" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Mật khẩu mới</label>
+                                    <input type="password" name="newPassword"
+                                        class="form-control form-control-lg rounded-3" placeholder="Nhập mật khẩu mới"
+                                        required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Xác nhận mật khẩu mới</label>
+                                    <input type="password" name="confirmPassword"
+                                        class="form-control form-control-lg rounded-3"
+                                        placeholder="Nhập lại mật khẩu mới" required>
+                                </div>
+                            </div>
+                            <div class="alert alert-info mt-4">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và số
+                            </div>
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-gradient btn-lg px-5 rounded-3">
+                                    <i class="bi bi-shield-check me-2"></i>
+                                    Đổi mật khẩu
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div th:replace="~{common/footer :: footer}"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
