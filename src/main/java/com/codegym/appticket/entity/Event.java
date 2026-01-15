@@ -3,6 +3,8 @@ package com.codegym.appticket.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "events")
 @Getter
@@ -35,4 +37,7 @@ public class Event extends Parent {
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private EventStatus status = EventStatus.PENDING;
+
+    @Column(name = "event_date")
+    private LocalDateTime eventDate;
 }

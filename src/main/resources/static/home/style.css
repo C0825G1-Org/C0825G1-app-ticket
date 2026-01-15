@@ -1,0 +1,150 @@
+:root {
+    --primary-color: #7c3aed;
+    --secondary-color: #db2777;
+    --dark-color: #0f172a;
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    background-color: #f8fafc;
+    color: var(--dark-color);
+}
+
+/* Glass Navbar */
+.navbar-glass {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Hero Section */
+.hero-section {
+    padding-top: 120px;
+    padding-bottom: 80px;
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.7) 0%, rgba(248, 250, 252, 0.9) 100%),
+    url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    min-height: 600px;
+}
+
+.gradient-text {
+    background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.btn-gradient {
+    background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    transition: transform 0.2s;
+}
+
+.btn-gradient:hover {
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(124, 58, 237, 0.3);
+}
+
+/* Search Widget */
+.search-widget {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+}
+
+.form-control-lg,
+.form-select-lg {
+    border-radius: 0.75rem;
+    border-color: #e2e8f0;
+    font-size: 1rem;
+    padding: 1rem 1.25rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(124, 58, 237, 0.15);
+}
+
+/* Card Hover Effect */
+.card-event {
+    border: 1px solid #f1f5f9;
+    border-radius: 1rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card-event:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.card-img-top {
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.5s;
+}
+
+.card-event:hover .card-img-top {
+    transform: scale(1.05);
+}
+
+/* Category Item */
+.category-item {
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.category-item:hover {
+    background: white;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.category-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s;
+}
+
+.category-item:hover .category-icon {
+    color: white !important;
+}
+
+/* Custom Colors for Hover */
+.hover-primary:hover .category-icon {
+    background-color: #0d6efd;
+}
+
+.hover-purple:hover .category-icon {
+    background-color: #6f42c1;
+}
+
+.hover-success:hover .category-icon {
+    background-color: #198754;
+}
+
+.hover-warning:hover .category-icon {
+    background-color: #fd7e14;
+}
+
+.hover-danger:hover .category-icon {
+    background-color: #dc3545;
+}
+
+.hover-info:hover .category-icon {
+    background-color: #0dcaf0;
+}

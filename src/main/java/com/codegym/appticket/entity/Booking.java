@@ -19,6 +19,10 @@ public class Booking extends Parent {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "event_id")
+    private Event event;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private BookingStatus status;

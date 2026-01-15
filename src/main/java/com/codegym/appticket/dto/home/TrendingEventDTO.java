@@ -1,4 +1,4 @@
-package com.codegym.appticket.dto;
+package com.codegym.appticket.dto.home;
 
 public interface TrendingEventDTO {
     Long getId();
