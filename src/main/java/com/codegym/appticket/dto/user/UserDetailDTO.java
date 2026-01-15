@@ -46,5 +46,11 @@ public class UserDetailDTO {
         private String type;        // BOOKING, EVENT_CREATED
         private String description; // "Đặt vé EDM Symphony Night" hoặc "Tạo sự kiện Workshop AI"
         private LocalDateTime timestamp;
+
+        public String getAction() {
+            if ("BOOKING".equals(type)) return "Đặt vé";
+            if ("EVENT_CREATED".equals(type)) return "Tạo sự kiện";
+            return type;
+        }
     }
 }

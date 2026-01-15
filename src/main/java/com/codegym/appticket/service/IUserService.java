@@ -77,5 +77,10 @@ public interface IUserService extends IService<UserDTO> {
      */
     void updatePassword(String email, String newPassword);
 
+    /**
+     * Cập nhật thông tin profile người dùng
+     */
+    void updateProfile(Long userId, UserProfileDTO dto);
+
     boolean existsByEmail(String email);
 }

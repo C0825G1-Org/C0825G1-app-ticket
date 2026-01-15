@@ -58,4 +58,8 @@ public class UserInfoUserDetails implements UserDetails {
     public boolean isEnabled() {
         return user.getEnabled() != null ? user.getEnabled() : true;
     }
+
+    public User getUser() {
+        return user;
+    }
 }

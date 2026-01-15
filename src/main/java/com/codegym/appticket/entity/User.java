@@ -30,11 +30,6 @@ public class User extends Parent {
     @Column(name = "password", nullable = false)
     private String password;
 
-    // Enabled = false đại diện cho tài khoản người dùng đang chờ xác nhận mail
-    // (nếu họ xác nhận mail thì mới enabled tài khoản)
-    //Nhưng vì chưa phát triển tính năng gửi mail nên tạm thời để true để phục vụ tạo tài khoản user
-    // isBlocked = true nghĩa là admin đã khóa tài khoản này
-    // User vẫn hiển thị trong danh sách admin nhưng không thể thao tác
     @Column(name = "is_blocked")
     private Boolean isBlocked = false;
 

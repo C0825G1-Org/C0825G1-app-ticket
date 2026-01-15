@@ -11,14 +11,39 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <th:block th:replace="~{common/styles :: styles}"></th:block>
+    <!-- JQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- CSRF Token -->
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
     <style>
+        :root {
+            --primary-color: #7c3aed;
+            --secondary-color: #db2777;
+            --dark-color: #0f172a;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f8fafc;
+            color: var(--dark-color);
+        }
+
+        .navbar-glass {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
         .profile-avatar {
             width: 120px;
             height: 120px;
             border-radius: 50%;
             border: 4px solid white;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            object-fit: cover;
         }
 
         .stat-card {
@@ -48,23 +73,81 @@
             background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
             color: white;
         }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(124, 58, 237, 0.15);
+        }
+
+        .btn-gradient {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            border: none;
+            color: white;
+            transition: transform 0.2s;
+        }
+
+        .btn-gradient:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(124, 58, 237, 0.3);
+        }
     </style>
 </head>
 
 <body>
 
     <!-- Navbar -->
-    <div th:replace="~{common/user-header :: user-navbar}"></div>
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top navbar-glass">
+        <div class="container-xl">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-4" th:href="@{/}">
+                <div class="rounded-3 d-flex align-items-center justify-content-center text-white"
+                    style="width: 40px; height: 40px; background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));">
+                    E
+                </div>
+                EventPro
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 fw-medium">
+                    <li class="nav-item"><a class="nav-link" th:href="@{/}">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Sự kiện</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Vé của tôi</a></li>
+                </ul>
+                <div class="d-flex gap-2 align-items-center">
+                    <a th:href="@{/profile}" class="btn btn-link text-decoration-none text-dark fw-medium">
+                        <i class="bi bi-person-circle me-1"></i>
+                        Hồ sơ
+                    </a>
+                    <form th:action="@{/logout}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-outline-danger rounded-pill px-4">Đăng xuất</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
 
     <!-- Main Content -->
     <div class="container-xl py-5" style="margin-top: 80px;">
+
+        <!-- Alerts -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i><span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
 
         <!-- Profile Header -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">
                 <div class="row align-items-center">
                     <div class="col-md-auto text-center text-md-start mb-3 mb-md-0">
-                        <img th:src="'https://ui-avatars.com/api/?name=' + ${user.fullName} + '&size=120&background=7c3aed&color=fff'"
+                        <img th:src="@{'https://ui-avatars.com/api/?name=' + ${user.fullName} + '&size=120&background=7c3aed&color=fff'}"
                             class="profile-avatar" alt="Avatar">
                     </div>
                     <div class="col-md">
@@ -72,16 +155,10 @@
                         <p class="text-muted mb-3">
                             <i class="bi bi-envelope me-2"></i><span th:text="${user.email}">nguyenvana@gmail.com</span>
                         </p>
-                        <div class="d-flex gap-2 flex-wrap">
-                            <span class="badge bg-primary-subtle text-primary px-3 py-2">
-                                <i class="bi bi-person-check me-1"></i>
-                                Thành viên
-                            </span>
-                            <span th:if="${user.enabled}" class="badge bg-success-subtle text-success px-3 py-2">
-                                <i class="bi bi-shield-check me-1"></i>
-                                Đã xác thực
-                            </span>
-                        </div>
+                        <!-- Account Status Hidden as requested -->
+                    </div>
+                    <div class="col-md-auto mt-3 mt-md-0">
+                        <!-- Avatar change removed for now as backend support not explicit in task -->
                     </div>
                 </div>
             </div>
@@ -89,13 +166,14 @@
 
         <!-- Stats -->
         <div class="row g-4 mb-4">
+            <!-- Ticket Count -->
             <div class="col-md-4">
-                <div class="card stat-card shadow-sm">
+                <div class="card stat-card shadow-sm h-100">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <p class="text-muted mb-1 small">Vé đã mua</p>
-                                <h3 class="fw-bold mb-0" th:text="${ticketCount} ?: '0'">12</h3>
+                                <h3 class="fw-bold mb-0" th:text="${user.ticketCount}">0</h3>
                             </div>
                             <div class="bg-primary-subtle text-primary rounded-circle p-3">
                                 <i class="bi bi-ticket-perforated fs-4"></i>
@@ -104,46 +182,40 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Event Count -->
             <div class="col-md-4">
-                <div class="card stat-card shadow-sm">
+                <div class="card stat-card shadow-sm h-100">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <p class="text-muted mb-1 small">Sự kiện đã tạo</p>
-                                <h3 class="fw-bold mb-0" th:text="${eventCount} ?: '0'">3</h3>
+                                <h3 class="fw-bold mb-0" th:text="${user.eventCount}">0</h3>
                             </div>
                             <div class="bg-success-subtle text-success rounded-circle p-3">
-                                <i class="bi bi-calendar-event fs-4"></i>
+                                <i class="bi bi-calendar-check fs-4"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Total Spent -->
             <div class="col-md-4">
-                <div class="card stat-card shadow-sm">
+                <div class="card stat-card shadow-sm h-100">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <p class="text-muted mb-1 small">Tổng chi tiêu</p>
-                                <h3 class="fw-bold mb-0" th:text="${totalSpent} ?: '0đ'">5.2M</h3>
+                                <h3 class="fw-bold mb-0" th:text="${user.totalSpent}">0đ</h3>
                             </div>
                             <div class="bg-warning-subtle text-warning rounded-circle p-3">
-                                <i class="bi bi-currency-dollar fs-4"></i>
+                                <i class="bi bi-cash-stack fs-4"></i>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Success/Error Messages -->
-        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <span th:text="${success}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <span th:text="${error}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
         <!-- Tabs -->
@@ -162,39 +234,41 @@
                             <i class="bi bi-shield-lock me-2"></i>Đổi mật khẩu
                         </button>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="history-tab" data-bs-toggle="pill" data-bs-target="#history"
+                            type="button">
+                            <i class="bi bi-clock-history me-2"></i>Lịch sử hoạt động
+                        </button>
+                    </li>
                 </ul>
 
                 <div class="tab-content" id="profileTabsContent">
                     <!-- Personal Info Tab -->
                     <div class="tab-pane fade show active" id="info" role="tabpanel">
-                        <form th:action="@{/user/profile}" th:object="${user}" method="post">
+                        <form th:action="@{/profile/update}" th:object="${userProfileDTO}" method="post" novalidate>
                             <div class="row g-4">
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Họ và tên</label>
-                                    <input type="text" th:field="*{fullName}"
-                                        class="form-control form-control-lg rounded-3">
-                                    <div th:if="${#fields.hasErrors('fullName')}" class="text-danger small"
-                                        th:errors="*{fullName}"></div>
+                                    <input type="text" class="form-control form-control-lg rounded-3"
+                                        th:field="*{fullName}">
+                                    <div th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"
+                                        class="text-danger small mt-1"></div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Email</label>
-                                    <input type="email" th:field="*{email}"
-                                        class="form-control form-control-lg rounded-3" readonly>
-                                    <small class="text-muted">Email không thể thay đổi</small>
+                                    <input type="email" class="form-control form-control-lg rounded-3"
+                                        th:field="*{email}">
+                                    <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}"
+                                        class="text-danger small mt-1"></div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Số điện thoại</label>
-                                    <input type="tel" th:field="*{phoneNumber}"
-                                        class="form-control form-control-lg rounded-3">
-                                    <div th:if="${#fields.hasErrors('phoneNumber')}" class="text-danger small"
-                                        th:errors="*{phoneNumber}"></div>
+                                    <input type="tel" class="form-control form-control-lg rounded-3"
+                                        th:field="*{phoneNumber}">
+                                    <div th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"
+                                        class="text-danger small mt-1"></div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Ngày tham gia</label>
-                                    <input type="text" class="form-control form-control-lg rounded-3"
-                                        th:value="${#temporals.format(user.createdDate, 'dd/MM/yyyy')}" readonly
-                                        disabled>
-                                </div>
+                                <!-- Removed DOB and Address -->
                             </div>
                             <div class="mt-4">
                                 <button type="submit" class="btn btn-gradient btn-lg px-5 rounded-3">
@@ -207,13 +281,32 @@
 
                     <!-- Change Password Tab -->
                     <div class="tab-pane fade" id="password" role="tabpanel">
-                        <form th:action="@{/user/profile/change-password}" method="post">
+
+                        <!-- Step 1: Request OTP -->
+                        <div id="otp-request-step">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Để bảo mật, chúng tôi cần gửi mã OTP xác thực đến email của bạn trước khi đổi mật khẩu.
+                            </div>
+                            <button id="btnSendOtp" class="btn btn-gradient btn-lg px-5 rounded-3">
+                                <i class="bi bi-envelope-paper me-2"></i>
+                                Gửi mã OTP xác nhận
+                            </button>
+                        </div>
+
+                        <!-- Step 2: Change Password Form (Hidden initially) -->
+                        <form id="change-password-form" th:action="@{/profile/password/change}" method="post"
+                            style="display: none;">
+                            <div class="alert alert-success fs-6">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Mã OTP đã được gửi đến email của bạn. Vui lòng kiểm tra và nhập bên dưới.
+                            </div>
+
                             <div class="row g-4">
                                 <div class="col-12">
-                                    <label class="form-label fw-bold">Mật khẩu hiện tại</label>
-                                    <input type="password" name="currentPassword"
-                                        class="form-control form-control-lg rounded-3"
-                                        placeholder="Nhập mật khẩu hiện tại" required>
+                                    <label class="form-label fw-bold">Mã OTP (6 số)</label>
+                                    <input type="text" name="otp" class="form-control form-control-lg rounded-3"
+                                        placeholder="Nhập mã OTP" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Mật khẩu mới</label>
@@ -228,10 +321,6 @@
                                         placeholder="Nhập lại mật khẩu mới" required>
                                 </div>
                             </div>
-                            <div class="alert alert-info mt-4">
-                                <i class="bi bi-info-circle me-2"></i>
-                                Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và số
-                            </div>
                             <div class="mt-4">
                                 <button type="submit" class="btn btn-gradient btn-lg px-5 rounded-3">
                                     <i class="bi bi-shield-check me-2"></i>
@@ -240,17 +329,83 @@
                             </div>
                         </form>
                     </div>
+
+                    <!-- Activity History Tab -->
+                    <div class="tab-pane fade" id="history" role="tabpanel">
+                        <div class="list-group list-group-flush" th:if="${not #lists.isEmpty(user.activities)}">
+                            <div class="list-group-item px-0 py-3" th:each="activity : ${user.activities}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <!-- Determine color/icon based on activity type -->
+                                        <h6 class="fw-bold mb-1" th:text="${activity.action}">Action</h6>
+                                        <p class="text-muted small mb-0" th:text="${activity.description}">Description
+                                        </p>
+                                    </div>
+                                    <small class="text-muted"
+                                        th:text="${#temporals.format(activity.timestamp, 'dd/MM/yyyy HH:mm')}">Time</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center py-4" th:if="${#lists.isEmpty(user.activities)}">
+                            <p class="text-muted">Chưa có hoạt động nào được ghi nhận.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
     </div>
-
-    <!-- Footer -->
-    <div th:replace="~{common/footer :: footer}"></div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Setup CSRF for AJAX
+            var token = $("meta[name='_csrf']").attr("content");
+            var header = $("meta[name='_csrf_header']").attr("content");
+
+            $(document).ajaxSend(function (e, xhr, options) {
+                if (token && header) {
+                    xhr.setRequestHeader(header, token);
+                }
+            });
+
+            // Check if URL has hash (e.g. #password) to activate tab
+            var hash = window.location.hash;
+            if (hash) {
+                var triggerEl = document.querySelector('#profileTabs button[data-bs-target="' + hash + '"]');
+                if (triggerEl) {
+                    var tab = new bootstrap.Tab(triggerEl);
+                    tab.show();
+                }
+            }
+
+            // OTP Button Click
+            $("#btnSendOtp").click(function () {
+                var btn = $(this);
+                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Đang gửi...');
+
+                $.post("/profile/password/otp", function (data) {
+                    if (data === "SUCCESS") {
+                        $("#otp-request-step").fadeOut(function () {
+                            $("#change-password-form").fadeIn();
+                        });
+                    } else {
+                        alert("Lỗi: " + data);
+                        btn.prop('disabled', false).html('<i class="bi bi-envelope-paper me-2"></i>Gửi mã OTP xác nhận');
+                    }
+                }).fail(function (xhr) {
+                    var errorMsg = "Lỗi kết nối đến server!";
+                    if (xhr.status === 403) {
+                        errorMsg = "Lỗi bảo mật (CSRF). Vui lòng tải lại trang.";
+                    }
+                    alert(errorMsg);
+                    console.error("Error:", xhr);
+                    btn.prop('disabled', false).html('<i class="bi bi-envelope-paper me-2"></i>Gửi mã OTP xác nhận');
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>

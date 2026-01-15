@@ -26,4 +26,8 @@ public class RegisterDTO {
 
     @NotBlank(message = "Vui lòng xác nhận mật khẩu")
     private String confirmPassword;
+
+    @jakarta.validation.constraints.AssertTrue(message = "Bạn phải đồng ý với điều khoản sử dụng")
+    @jakarta.validation.constraints.NotNull(message = "Bạn phải đồng ý với điều khoản sử dụng")
+    private Boolean terms;
 }
