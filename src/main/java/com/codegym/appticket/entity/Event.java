@@ -3,7 +3,8 @@ package com.codegym.appticket.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "events")
@@ -38,6 +39,9 @@ public class Event extends Parent {
     @Column(name = "status")
     private EventStatus status = EventStatus.PENDING;
 
-    @Column(name = "event_date")
-    private LocalDateTime eventDate;
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventTime> eventTimes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventMedia> eventMedias = new ArrayList<>();
 }

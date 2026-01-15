@@ -54,7 +54,9 @@
     </nav>
 
     <div class="p-3 border-top border-secondary border-opacity-25">
-        <a th:href="@{/logout}" class="nav-link text-danger">
+        <form th:action="@{/logout}" method="post" id="adminLogoutForm" class="d-none"></form>
+        <a href="#" onclick="event.preventDefault(); document.getElementById('adminLogoutForm').submit();"
+            class="nav-link text-danger">
             <i class="bi bi-box-arrow-right"></i>
             <span>Đăng xuất</span>
         </a>

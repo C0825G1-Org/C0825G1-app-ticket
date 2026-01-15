@@ -42,7 +42,9 @@
                     <i class="bi bi-person-circle me-1"></i>
                     <span th:text="${session.user != null} ? ${session.user.fullName} : 'Hồ sơ'">Hồ sơ</span>
                 </a>
-                <a th:href="@{/logout}" class="btn btn-outline-danger rounded-pill px-4">Đăng xuất</a>
+                <form th:action="@{/logout}" method="post" id="userLogoutForm" class="d-none"></form>
+                <a href="#" onclick="event.preventDefault(); document.getElementById('userLogoutForm').submit();"
+                    class="btn btn-outline-danger rounded-pill px-4">Đăng xuất</a>
             </div>
         </div>
     </div>
