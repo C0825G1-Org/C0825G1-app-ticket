@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{common/layout :: head('Tạo sự kiện mới')}">
+</head>
+
+<body>
+    <div th:replace="~{common/layout :: admin-layout(~{::content})}">
+        <div th:fragment="content">
+
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="fw-bold mb-0">Tạo sự kiện mới</h4>
+                    <p class="text-muted small mb-0">Nhập thông tin chi tiết để tạo sự kiện mới</p>
+                </div>
+                <a th:href="@{/admin/events}" class="btn btn-outline-secondary rounded-3">
+                    <i class="bi bi-arrow-left me-2"></i> Quay lại
+                </a>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+
+                    <!-- Error/Success Messages -->
+                    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+                    <form id="createEventForm">
+
+                        <!-- Basic Info -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div class="card-header bg-white border-bottom py-3">
+                                <h5 class="fw-bold mb-0">
+                                    <i class="bi bi-info-circle text-primary me-2"></i>
+                                    Thông tin cơ bản
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Tên sự kiện <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-lg" name="title"
+                                        placeholder="VD: Đêm nhạc Acoustic" required>
+                                    <div class="text-danger small error-message" id="error-title"></div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Danh mục <span
+                                            class="text-danger">*</span></label>
+                                    <select class="form-select form-select-lg" name="categoryId" required>
+                                        <option value="">-- Chọn danh mục --</option>
+                                        <option th:each="cat : ${categories}" th:value="${cat.id}"
+                                            th:text="${cat.name}">Category</option>
+                                    </select>
+                                    <div class="text-danger small error-message" id="error-categoryId"></div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Mô tả sự kiện <span
+                                            class="text-danger">*</span></label>
+                                    <textarea class="form-control" rows="5" name="description"
+                                        placeholder="Mô tả chi tiết..." required></textarea>
+                                    <div class="text-danger small error-message" id="error-description"></div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Địa điểm <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-lg" name="location"
+                                        placeholder="VD: SVĐ Quân khu 7" required>
+                                    <div class="text-danger small error-message" id="error-location"></div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Event Times -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div
+                                class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                <h5 class="fw-bold mb-0">
+                                    <i class="bi bi-clock text-primary me-2"></i>
+                                    Thời gian diễn ra
+                                </h5>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addEventTime()">
+                                    <i class="bi bi-plus-lg"></i> Thêm khung giờ
+                                </button>
+                            </div>
+                            <div class="card-body p-4" id="eventTimesContainer">
+                                <div class="row g-3 mb-3 event-time-row">
+                                    <div class="col-md-5">
+                                        <label class="form-label fw-medium">Bắt đầu <span
+                                                class="text-danger">*</span></label>
+                                        <input type="datetime-local" class="form-control" name="eventTimes[0].startTime"
+                                            required>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label fw-medium">Kết thúc <span
+                                                class="text-danger">*</span></label>
+                                        <input type="datetime-local" class="form-control" name="eventTimes[0].endTime"
+                                            required>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="button" class="btn btn-outline-danger w-100"
+                                            onclick="if(document.querySelectorAll('.event-time-row').length > 1) this.closest('.event-time-row').remove()">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ticket Types (New) -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div
+                                class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                <h5 class="fw-bold mb-0">
+                                    <i class="bi bi-ticket-perforated text-primary me-2"></i>
+                                    Loại vé
+                                </h5>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addTicketType()">
+                                    <i class="bi bi-plus-lg"></i> Thêm loại vé
+                                </button>
+                            </div>
+                            <div class="card-body p-4" id="ticketTypesContainer">
+                                <!-- Template Row Removed - Handled by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Media Files (Upload) -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div class="card-header bg-white border-bottom py-3">
+                                <h5 class="fw-bold mb-0">
+                                    <i class="bi bi-images text-primary me-2"></i>
+                                    Hình ảnh & Truyền thông
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <!-- Hidden Inputs for URLs -->
+                                <input type="hidden" name="bannerUrl" id="bannerUrl">
+                                <input type="hidden" name="logoUrl" id="logoUrl">
+                                <input type="hidden" name="ticketMapUrl" id="ticketMapUrl">
+                                <div id="galleryUrlsContainer"></div>
+
+                                <div class="mb-4">
+                                    <label class="form-label fw-medium">Banner Sự kiện (Bắt buộc) <span
+                                            class="text-danger">*</span></label>
+                                    <input type="file" class="form-control" id="bannerFile" accept="image/*" required>
+                                    <div class="form-text text-muted">Ảnh bìa chính hiển thị đầu trang chi tiết.</div>
+                                </div>
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-medium">Logo Sự kiện (Bắt buộc) <span
+                                                class="text-danger">*</span></label>
+                                        <input type="file" class="form-control" id="logoFile" accept="image/*" required>
+                                        <div class="form-text text-muted">Logo hiển thị trên danh sách và vé.</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-medium">Sơ đồ vị trí (Bắt buộc) <span
+                                                class="text-danger">*</span></label>
+                                        <input type="file" class="form-control" id="ticketMapFile" accept="image/*"
+                                            required>
+                                        <div class="form-text text-muted">Ảnh sơ đồ chỗ ngồi hoặc layout sự kiện.</div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Thư viện ảnh/video khác (Tùy chọn)</label>
+                                    <input type="file" class="form-control" id="galleryFiles" multiple
+                                        accept="image/*,video/*">
+                                    <div class="form-text text-muted">Có thể chọn nhiều file. Tối đa 10 files.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit -->
+                        <div class="d-flex gap-3 justify-content-end mb-5">
+                            <a th:href="@{/admin/events}"
+                                class="btn btn-outline-secondary btn-lg rounded-3 px-5">Hủy</a>
+                            <button type="submit" class="btn btn-gradient btn-lg rounded-3 px-5 fw-bold"
+                                style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); border: none; color: white;">
+                                <i class="bi bi-check-lg me-2"></i> Tạo sự kiện
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Shared Cloudinary Logic -->
+                    <script src="/js/cloudinary-upload.js"></script>
+
+                    <script>
+                        document.getElementById('createEventForm').addEventListener('submit', async function (e) {
+                            e.preventDefault();
+
+                            // 1. Client-side Validation
+                            const galleryInput = document.getElementById('galleryFiles');
+                            const maxFiles = 10;
+                            if (galleryInput.files.length > maxFiles) {
+                                alert(`Bạn chỉ được phép tải lên tối đa ${maxFiles} ảnh/video trong thư viện.`);
+                                return;
+                            }
+
+                            // 2. Prepare Uploads
+                            const submitBtn = this.querySelector('button[type="submit"]');
+                            const resetButton = setButtonLoading(submitBtn, 'Đang tải file lên Cloudinary...');
+
+                            try {
+                                const bannerFile = document.getElementById('bannerFile').files[0];
+                                const logoFile = document.getElementById('logoFile').files[0];
+                                const ticketMapFile = document.getElementById('ticketMapFile').files[0];
+                                const galleryFiles = document.getElementById('galleryFiles').files;
+
+                                // Upload concurrently
+                                const uploadPromises = [];
+
+                                if (bannerFile) uploadPromises.push(uploadToCloudinary(bannerFile).then(url => document.getElementById('bannerUrl').value = url));
+                                if (logoFile) uploadPromises.push(uploadToCloudinary(logoFile).then(url => document.getElementById('logoUrl').value = url));
+                                if (ticketMapFile) uploadPromises.push(uploadToCloudinary(ticketMapFile).then(url => document.getElementById('ticketMapUrl').value = url));
+
+                                if (galleryFiles.length > 0) {
+                                    const galleryContainer = document.getElementById('galleryUrlsContainer');
+                                    galleryContainer.innerHTML = ''; // Clear previous
+                                    for (let i = 0; i < galleryFiles.length; i++) {
+                                        uploadPromises.push(
+                                            uploadToCloudinary(galleryFiles[i]).then(url => {
+                                                const input = document.createElement('input');
+                                                input.type = 'hidden';
+                                                input.name = 'galleryUrls';
+                                                input.value = url;
+                                                galleryContainer.appendChild(input);
+                                            })
+                                        );
+                                    }
+                                }
+
+                                await Promise.all(uploadPromises);
+
+                                // 3. Submit to Backend (as x-www-form-urlencoded)
+                                setButtonLoading(submitBtn, 'Đang tạo sự kiện...');
+
+                                const formData = new FormData(this);
+                                const searchParams = new URLSearchParams();
+
+                                for (const [key, value] of formData) {
+                                    // Skip any file objects just to be safe (though names are removed)
+                                    if (value instanceof File) continue;
+                                    searchParams.append(key, value);
+                                }
+
+                                const response = await fetch('/admin/events/create', {
+                                    method: 'POST',
+                                    body: searchParams // Sends application/x-www-form-urlencoded
+                                });
+                                const data = await response.json();
+
+                                if (data.status === 'success') {
+                                    alert('Tạo sự kiện thành công!');
+                                    window.location.href = data.redirectUrl;
+                                } else if (data.status === 'validation_error') {
+                                    for (const [field, message] of Object.entries(data.errors)) {
+                                        const errorDiv = document.getElementById('error-' + field);
+                                        if (errorDiv) errorDiv.textContent = message;
+                                    }
+                                    alert('Vui lòng kiểm tra lại thông tin nhập.');
+                                } else {
+                                    alert('Lỗi: ' + data.message);
+                                }
+
+                            } catch (error) {
+                                console.error('Error:', error);
+                                alert('Đã xảy ra lỗi khi upload ảnh hoặc lưu sự kiện. Vui lòng thử lại. ' + error.message);
+                            } finally {
+                                submitBtn.innerHTML = originalBtnText;
+                                submitBtn.disabled = false;
+                            }
+                        });
+
+
+                        // Init Ticket Type (Add one row on load)
+                        const ticketContainer = document.getElementById('ticketTypesContainer');
+
+                        function addTicketType() {
+                            const index = document.querySelectorAll('.ticket-type-row').length;
+                            const visibleRows = Array.from(document.querySelectorAll('.ticket-type-row')).filter(r => r.style.display !== 'none').length;
+
+                            const newRow = document.createElement('div');
+                            newRow.className = 'row g-3 mb-3 ticket-type-row';
+                            newRow.innerHTML = `
+                <div class="col-md-4">
+                    <label class="form-label fw-medium">Tên vé <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="ticketTypes[${visibleRows}].name" placeholder="VD: VIP" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-medium">Giá vé (VNĐ) <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" name="ticketTypes[${visibleRows}].price" min="0" placeholder="0" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-medium">Số lượng <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" name="ticketTypes[${visibleRows}].quantity" min="1" placeholder="100" required>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-danger w-100" onclick="this.closest('.ticket-type-row').remove(); reindexTicketTypes();">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+                            ticketContainer.appendChild(newRow);
+                        }
+
+                        window.addEventListener('DOMContentLoaded', () => {
+                            addTicketType();
+                        });
+
+                        function reindexTicketTypes() {
+                            const rows = Array.from(document.querySelectorAll('.ticket-type-row')).filter(r => r.style.display !== 'none');
+                            rows.forEach((row, idx) => {
+                                row.querySelector('input[name$=".name"]').name = `ticketTypes[${idx}].name`;
+                                row.querySelector('input[name$=".price"]').name = `ticketTypes[${idx}].price`;
+                                row.querySelector('input[name$=".quantity"]').name = `ticketTypes[${idx}].quantity`;
+                            });
+                        }
+
+                        // Event Time Logic 
+                        function addEventTime() {
+                            const container = document.getElementById('eventTimesContainer');
+                            const idx = document.querySelectorAll('.event-time-row').length;
+                            const newRow = document.createElement('div');
+                            newRow.className = 'row g-3 mb-3 event-time-row';
+                            newRow.innerHTML = `
+                                <div class="col-md-5">
+                                    <label class="form-label fw-medium">Bắt đầu <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" name="eventTimes[${idx}].startTime" required>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label fw-medium">Kết thúc <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" name="eventTimes[${idx}].endTime" required>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="button" class="btn btn-outline-danger w-100" onclick="this.closest('.event-time-row').remove();">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+             `;
+                            container.appendChild(newRow);
+                        }
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
