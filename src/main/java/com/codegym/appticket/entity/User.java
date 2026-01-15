@@ -30,17 +30,14 @@ public class User extends Parent {
     @Column(name = "password", nullable = false)
     private String password;
 
-    //Enabled = false đại diện cho tài khoản người dùng đang chờ xác nhận mail
+    // Enabled = false đại diện cho tài khoản người dùng đang chờ xác nhận mail
     // (nếu họ xác nhận mail thì mới enabled tài khoản)
-    //Nhưng vì chưa phát triển tính năng gửi mail nên tạm thời để true để phục vụ tạo tài khoản user
+    // Nhưng vì chưa phát triển tính năng gửi mail nên tạm thời để true để phục vụ
+    // tạo tài khoản user
     @Column(name = "enabled")
     private Boolean enabled = true;
 
     @ManyToMany
-    @JoinTable(
-            name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
+    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
 }

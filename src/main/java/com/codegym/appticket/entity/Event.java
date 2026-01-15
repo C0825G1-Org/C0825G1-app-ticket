@@ -3,6 +3,9 @@ package com.codegym.appticket.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "events")
 @Getter
@@ -35,4 +38,10 @@ public class Event extends Parent {
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private EventStatus status = EventStatus.PENDING;
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventTime> eventTimes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventMedia> eventMedias = new ArrayList<>();
 }
