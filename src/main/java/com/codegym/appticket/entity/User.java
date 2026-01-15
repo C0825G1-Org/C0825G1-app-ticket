@@ -36,6 +36,11 @@ public class User extends Parent {
     @Column(name = "enabled")
     private Boolean enabled = true;
 
+    // isBlocked = true nghĩa là admin đã khóa tài khoản này
+    // User vẫn hiển thị trong danh sách admin nhưng không thể thao tác
+    @Column(name = "is_blocked")
+    private Boolean isBlocked = false;
+
     @ManyToMany
     @JoinTable(
             name = "user_roles",

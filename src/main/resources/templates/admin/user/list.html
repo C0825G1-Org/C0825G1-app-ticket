@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="_csrf" th:content="${_csrf != null} ? ${_csrf.token} : ''" />
+    <meta name="_csrf_header" th:content="${_csrf != null} ? ${_csrf.headerName} : ''" />
     <th:block th:replace="~{common/styles :: styles}"></th:block>
 </head>
 
@@ -28,7 +30,13 @@
         <!-- Content -->
         <div class="container-fluid p-4">
 
-            <h2 class="fw-bold mb-4">Quản lý Người dùng</h2>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold mb-0">Quản lý Người dùng</h2>
+                <a th:href="@{/admin/users/create}" class="btn btn-primary rounded-3"
+                    style="background-color: var(--primary-color); border: none;">
+                    <i class="bi bi-plus-circle me-2"></i>Thêm người dùng
+                </a>
+            </div>
 
             <!-- Stats Cards -->
             <div class="row g-4 mb-4">
@@ -68,7 +76,7 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <div class="text-muted small mb-1">Bị khóa</div>
-                                    <h3 class="fw-bold mb-0 text-danger" th:text="${blockedUsers} ?: '0'">65</h3>
+                                    <h3 class="fw-bold mb-0 text-danger" th:text="${lockedUsers} ?: '0'">65</h3>
                                 </div>
                                 <div class="bg-danger-subtle text-danger rounded-circle p-3">
                                     <i class="bi bi-person-x fs-4"></i>
@@ -97,27 +105,27 @@
             <!-- Filters & Search -->
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">
-                    <form th:action="@{/admin/users}" method="get" class="row g-3">
+                    <form onsubmit="return false;" class="row g-3">
                         <div class="col-md-5">
-                            <input type="text" name="keyword" th:value="${keyword}" class="form-control"
-                                placeholder="Tìm theo tên, email, số điện thoại...">
+                            <input type="text" id="searchInput" class="form-control"
+                                placeholder="Tìm theo tên, email, số điện thoại..." onkeyup="debounceSearch()">
                         </div>
                         <div class="col-md-2">
-                            <select name="role" class="form-select">
+                            <select id="roleSelect" class="form-select" onchange="searchUsers(0)">
                                 <option value="">Tất cả vai trò</option>
-                                <option value="USER" th:selected="${role == 'USER'}">USER</option>
-                                <option value="ADMIN" th:selected="${role == 'ADMIN'}">ADMIN</option>
+                                <option th:each="role : ${roles}" th:value="${role.id}" th:text="${role.name}">USER
+                                </option>
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <select name="status" class="form-select">
+                            <select id="statusSelect" class="form-select" onchange="searchUsers(0)">
                                 <option value="">Tất cả trạng thái</option>
-                                <option value="active" th:selected="${status == 'active'}">Hoạt động</option>
-                                <option value="blocked" th:selected="${status == 'blocked'}">Bị khóa</option>
+                                <option value="ACTIVE">Hoạt động</option>
+                                <option value="LOCKED">Bị khóa</option>
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <button type="submit" class="btn btn-primary w-100"
+                            <button type="button" onclick="searchUsers(0)" class="btn btn-primary w-100"
                                 style="background-color: var(--primary-color); border: none;">
                                 <i class="bi bi-search me-1"></i> Tìm kiếm
                             </button>
@@ -126,20 +134,36 @@
                 </div>
             </div>
 
-            <!-- Success/Error Messages -->
-            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
-                <span th:text="${success}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-                <span th:text="${error}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <!-- Toast Container -->
+            <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+                <div th:if="${success}" id="successToast" class="toast align-items-center text-bg-success border-0"
+                    role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <span th:text="${success}"></span>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                            data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+                <div th:if="${error}" id="errorToast" class="toast align-items-center text-bg-danger border-0"
+                    role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="bi bi-exclamation-circle me-2"></i>
+                            <span th:text="${error}"></span>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                            data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
             </div>
 
             <!-- Users Table -->
             <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-body p-0">
-                    <div class="table-responsive">
+                <div class="card-body p-0" style="min-height: 400px;">
+                    <div class="table-responsive" style="overflow: visible;">
                         <table class="table table-hover mb-0">
                             <thead class="bg-light">
                                 <tr class="text-muted small text-uppercase">
@@ -152,8 +176,8 @@
                                     <th class="px-4 py-3 fw-bold text-end">Thao tác</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr th:each="user : ${users}" th:classappend="${!user.enabled} ? 'opacity-75' : ''">
+                            <tbody id="userTableBody">
+                                <tr th:each="user : ${users}">
                                     <td class="px-4 py-3">
                                         <div class="d-flex align-items-center gap-3">
                                             <img th:src="'https://ui-avatars.com/api/?name=' + ${user.fullName} + '&background=7c3aed&color=fff'"
@@ -164,14 +188,14 @@
                                     <td class="px-4 py-3 text-muted" th:text="${user.email}">nguyenvana@gmail.com</td>
                                     <td class="px-4 py-3 text-muted" th:text="${user.phoneNumber}">0912345678</td>
                                     <td class="px-4 py-3">
-                                        <span th:each="role : ${user.roles}"
-                                            th:class="${role.name == 'ADMIN'} ? 'badge bg-danger-subtle text-danger' : 'badge bg-primary-subtle text-primary'"
-                                            th:text="${role.name}">USER</span>
+                                        <span th:each="roleName : ${user.roleNames}"
+                                            th:class="${roleName == 'ADMIN'} ? 'badge bg-danger-subtle text-danger' : 'badge bg-primary-subtle text-primary'"
+                                            th:text="${roleName}">USER</span>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <span th:if="${user.enabled}"
+                                        <span th:unless="${user.isBlocked}"
                                             class="badge bg-success-subtle text-success rounded-pill">Hoạt động</span>
-                                        <span th:unless="${user.enabled}"
+                                        <span th:if="${user.isBlocked}"
                                             class="badge bg-danger-subtle text-danger rounded-pill">Bị khóa</span>
                                     </td>
                                     <td class="px-4 py-3 text-muted"
@@ -182,7 +206,28 @@
                                                 data-bs-toggle="dropdown">
                                                 Hành động
                                             </button>
-                                            <ul class="dropdown-menu dropdown-menu-end">
+                                            <!-- Menu cho user bị khóa - Xem chi tiết + Mở khóa -->
+                                            <ul th:if="${user.isBlocked}" class="dropdown-menu dropdown-menu-end">
+                                                <li>
+                                                    <a class="dropdown-item"
+                                                        th:href="@{/admin/users/{id}(id=${user.id})}">
+                                                        <i class="bi bi-eye me-2"></i>Xem chi tiết
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <hr class="dropdown-divider">
+                                                </li>
+                                                <li>
+                                                    <form th:action="@{/admin/users/{id}/toggle-lock(id=${user.id})}"
+                                                        method="post" style="display:inline;">
+                                                        <button type="submit" class="dropdown-item text-success">
+                                                            <i class="bi bi-unlock me-2"></i>Mở khóa
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                            <!-- Menu cho user bình thường - hiện đầy đủ -->
+                                            <ul th:unless="${user.isBlocked}" class="dropdown-menu dropdown-menu-end">
                                                 <li>
                                                     <a class="dropdown-item"
                                                         th:href="@{/admin/users/{id}(id=${user.id})}">
@@ -198,21 +243,24 @@
                                                 <li>
                                                     <hr class="dropdown-divider">
                                                 </li>
-                                                <li th:if="${user.enabled}">
-                                                    <form th:action="@{/admin/users/{id}/toggle(id=${user.id})}"
+                                                <li>
+                                                    <form th:action="@{/admin/users/{id}/toggle-lock(id=${user.id})}"
                                                         method="post" style="display:inline;">
-                                                        <button type="submit" class="dropdown-item text-danger">
+                                                        <button type="submit" class="dropdown-item text-warning">
                                                             <i class="bi bi-lock me-2"></i>Khóa tài khoản
                                                         </button>
                                                     </form>
                                                 </li>
-                                                <li th:unless="${user.enabled}">
-                                                    <form th:action="@{/admin/users/{id}/toggle(id=${user.id})}"
-                                                        method="post" style="display:inline;">
-                                                        <button type="submit" class="dropdown-item text-success">
-                                                            <i class="bi bi-unlock me-2"></i>Mở khóa
-                                                        </button>
-                                                    </form>
+                                                <li>
+                                                    <hr class="dropdown-divider">
+                                                </li>
+                                                <li>
+                                                    <button type="button" class="dropdown-item text-danger"
+                                                        data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                        th:data-user-id="${user.id}"
+                                                        th:data-user-name="${user.fullName}">
+                                                        <i class="bi bi-trash me-2"></i>Xóa người dùng
+                                                    </button>
                                                 </li>
                                             </ul>
                                         </div>
@@ -229,24 +277,25 @@
                         </table>
                     </div>
                 </div>
-                <div class="card-footer bg-white border-top py-3" th:if="${totalPages > 1}">
+                <div class="card-footer bg-white border-top py-3" id="paginationContainer" th:if="${totalPages > 1}">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="text-muted small">
-                            Hiển thị <span th:text="${(currentPage - 1) * pageSize + 1}">1</span>-<span
-                                th:text="${currentPage * pageSize}">10</span>
-                            trong <span th:text="${totalUsers}">1,245</span> người dùng
+                            Hiển thị <span id="pageStart" th:text="${(currentPage - 1) * pageSize + 1}">1</span>-<span
+                                id="pageEnd" th:text="${currentPage * pageSize}">10</span>
+                            trong <span id="totalUsers" th:text="${totalUsers}">1,245</span> người dùng
                         </div>
                         <nav>
-                            <ul class="pagination pagination-sm mb-0">
+                            <ul class="pagination pagination-sm mb-0" id="paginationList">
                                 <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
-                                    <a class="page-link" th:href="@{/admin/users(page=${currentPage - 1})}">Trước</a>
+                                    <a class="page-link" th:href="@{/admin/users(page=${currentPage - 2})}">Trước</a>
                                 </li>
+                                <!-- Server-side pagination content rendered here initially -->
                                 <li th:each="i : ${#numbers.sequence(1, totalPages)}" class="page-item"
                                     th:classappend="${i == currentPage} ? 'active'">
-                                    <a class="page-link" th:href="@{/admin/users(page=${i})}" th:text="${i}">1</a>
+                                    <a class="page-link" th:text="${i}">1</a>
                                 </li>
                                 <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                                    <a class="page-link" th:href="@{/admin/users(page=${currentPage + 1})}">Sau</a>
+                                    <a class="page-link" th:href="@{/admin/users(page=${currentPage})}">Sau</a>
                                 </li>
                             </ul>
                         </nav>
@@ -257,8 +306,245 @@
         </div>
     </main>
 
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Xác nhận xóa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-0">Bạn có chắc chắn muốn xóa người dùng <strong
+                            id="deleteUserName"></strong>?</p>
+                    <p class="text-danger small mt-2 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Hành động này
+                        không thể hoàn tác!</p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary rounded-3"
+                        data-bs-dismiss="modal">Hủy</button>
+                    <form id="deleteForm" method="post">
+                        <button type="submit" class="btn btn-danger rounded-3">
+                            <i class="bi bi-trash me-1"></i>Xóa
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Auto-show toasts
+        document.addEventListener('DOMContentLoaded', function () {
+            var successToast = document.getElementById('successToast');
+            var errorToast = document.getElementById('errorToast');
+
+            if (successToast) {
+                var toast = new bootstrap.Toast(successToast, { delay: 4000 });
+                toast.show();
+            }
+            if (errorToast) {
+                var toast = new bootstrap.Toast(errorToast, { delay: 5000 });
+                toast.show();
+            }
+        });
+
+        // Delete modal handler
+        if (deleteModal) {
+            deleteModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                var userId = button.getAttribute('data-user-id');
+                var userName = button.getAttribute('data-user-name');
+
+                document.getElementById('deleteUserName').textContent = userName;
+                document.getElementById('deleteForm').action = '/admin/users/' + userId + '/delete';
+            });
+        }
+
+        // AJAX Search Logic
+        let searchTimeout;
+        let currentSearchPage = 0;
+        const searchInput = document.getElementById('searchInput');
+        const roleSelect = document.getElementById('roleSelect');
+        const statusSelect = document.getElementById('statusSelect');
+        const tableBody = document.getElementById('userTableBody');
+        const paginationContainer = document.getElementById('paginationContainer');
+
+        function debounceSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchUsers(0);
+            }, 500);
+        }
+
+        function searchUsers(page) {
+            currentSearchPage = page;
+            const keyword = searchInput.value;
+            const roleId = roleSelect.value;
+            const status = statusSelect.value;
+            const size = 10; // Default size
+
+            const url = `/api/admin/users?page=${page}&size=${size}&keyword=${encodeURIComponent(keyword)}&roleId=${roleId}&status=${status}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    renderTable(data.content);
+                    renderPagination(data);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function renderTable(users) {
+            tableBody.innerHTML = '';
+
+            if (!users || users.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1"></i>
+                            <p class="mt-2">Không tìm thấy người dùng nào</p>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            users.forEach(user => {
+                const createdDate = new Date(user.createdDate).toLocaleDateString('vi-VN');
+                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=7c3aed&color=fff`;
+
+                let roleBadges = user.roleNames.map(role => {
+                    const bgClass = role === 'ADMIN' ? 'bg-danger-subtle text-danger' : 'bg-primary-subtle text-primary';
+                    return `<span class="badge ${bgClass} me-1">${role}</span>`;
+                }).join('');
+
+                let statusBadge = user.isBlocked
+                    ? `<span class="badge bg-danger-subtle text-danger rounded-pill">Bị khóa</span>`
+                    : `<span class="badge bg-success-subtle text-success rounded-pill">Hoạt động</span>`;
+
+                let actionMenu = '';
+                if (user.isBlocked) {
+                    actionMenu = `
+                        <li><a class="dropdown-item" href="/admin/users/${user.id}"><i class="bi bi-eye me-2"></i>Xem chi tiết</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <button type="button" class="dropdown-item text-success" onclick="toggleLock(${user.id})">
+                                <i class="bi bi-unlock me-2"></i>Mở khóa
+                            </button>
+                        </li>`;
+                } else {
+                    actionMenu = `
+                        <li><a class="dropdown-item" href="/admin/users/${user.id}"><i class="bi bi-eye me-2"></i>Xem chi tiết</a></li>
+                        <li><a class="dropdown-item" href="/admin/users/${user.id}/edit"><i class="bi bi-pencil me-2"></i>Chỉnh sửa</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <button type="button" class="dropdown-item text-warning" onclick="toggleLock(${user.id})">
+                                <i class="bi bi-lock me-2"></i>Khóa tài khoản
+                            </button>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" 
+                                data-user-id="${user.id}" data-user-name="${user.fullName}">
+                                <i class="bi bi-trash me-2"></i>Xóa người dùng
+                            </button>
+                        </li>`;
+                }
+
+                const row = `
+                    <tr>
+                        <td class="px-4 py-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="${avatarUrl}" class="rounded-circle" width="40" height="40">
+                                <div class="fw-bold">${user.fullName}</div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-muted">${user.email}</td>
+                        <td class="px-4 py-3 text-muted">${user.phoneNumber || ''}</td>
+                        <td class="px-4 py-3">${roleBadges}</td>
+                        <td class="px-4 py-3">${statusBadge}</td>
+                        <td class="px-4 py-3 text-muted">${createdDate}</td>
+                        <td class="px-4 py-3 text-end">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary rounded-3 dropdown-toggle" data-bs-toggle="dropdown">Hành động</button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    ${actionMenu}
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>`;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        function renderPagination(data) {
+            if (data.totalPages <= 1) {
+                // Hide pagination or clear it
+                // Need to ensure paginationContainer is visible if it was hidden
+                // But simplified: show info update
+            }
+            // Update info
+            document.getElementById('pageStart').textContent = (data.number * data.size) + 1;
+            document.getElementById('pageEnd').textContent = Math.min((data.number + 1) * data.size, data.totalElements);
+            document.getElementById('totalUsers').textContent = data.totalElements;
+
+            // Update Page List
+            const paginationList = document.getElementById('paginationList');
+            if (!paginationList) return;
+
+            paginationList.innerHTML = '';
+
+            // Prev
+            paginationList.innerHTML += `
+                <li class="page-item ${data.first ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="searchUsers(${data.number - 1}); return false;">Trước</a>
+                </li>`;
+
+            // Pages
+            for (let i = 0; i < data.totalPages; i++) {
+                paginationList.innerHTML += `
+                <li class="page-item ${i === data.number ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="searchUsers(${i}); return false;">${i + 1}</a>
+                </li>`;
+            }
+
+            // Next
+            paginationList.innerHTML += `
+                <li class="page-item ${data.last ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="searchUsers(${data.number + 1}); return false;">Sau</a>
+                </li>`;
+        }
+
+        function toggleLock(userId) {
+            const csrfMeta = document.querySelector("meta[name='_csrf']");
+            const csrfHeaderMeta = document.querySelector("meta[name='_csrf_header']");
+            const csrfToken = csrfMeta ? csrfMeta.getAttribute("content") : '';
+            const csrfHeader = csrfHeaderMeta ? csrfHeaderMeta.getAttribute("content") : '';
+
+            const headers = {};
+            if (csrfToken && csrfHeader) {
+                headers[csrfHeader] = csrfToken;
+            }
+
+            fetch(`/api/admin/users/${userId}/toggle-status`, {
+                method: 'POST',
+                headers: headers
+            })
+                .then(response => {
+                    if (response.ok) {
+                        // Reload current search
+                        searchUsers(currentSearchPage);
+                        // Show success toast (optional, reuse BS toast logic if possible)
+                    } else {
+                        alert('Lỗi khi thay đổi trạng thái');
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+    </script>
 </body>
 
 </html>

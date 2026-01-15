@@ -85,6 +85,14 @@
             </div>
 
             <!-- Error/Success Messages -->
+            <!-- Check param.error for Security redirect, or attribute error for manual errors -->
+            <div th:if="${param.error}" class="alert alert-danger">
+                Email hoặc mật khẩu không chính xác!
+            </div>
+            <div th:if="${param.logout}" class="alert alert-success">
+                Đăng xuất thành công!
+            </div>
+
             <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
             <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
 
@@ -97,7 +105,7 @@
                             <i class="bi bi-envelope text-muted"></i>
                         </span>
                         <input type="email" name="email" class="form-control form-control-lg border-start-0 ps-0"
-                            placeholder="your@email.com" required>
+                            placeholder="your@email.com">
                     </div>
                 </div>
 
@@ -108,7 +116,7 @@
                             <i class="bi bi-lock text-muted"></i>
                         </span>
                         <input type="password" name="password" class="form-control form-control-lg border-start-0 ps-0"
-                            placeholder="••••••••" required>
+                            placeholder="••••••••">
                     </div>
                 </div>
 
@@ -132,24 +140,16 @@
             <div class="position-relative my-4">
                 <hr>
                 <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small">
-                    Hoặc đăng nhập với
+                    Hoặc tiếp tục với
                 </span>
             </div>
 
             <!-- Social Login -->
-            <div class="row g-2 mb-4">
-                <div class="col-6">
-                    <button class="btn social-btn w-100 py-2 rounded-3">
-                        <i class="bi bi-google text-danger me-2"></i>
-                        Google
-                    </button>
-                </div>
-                <div class="col-6">
-                    <button class="btn social-btn w-100 py-2 rounded-3">
-                        <i class="bi bi-facebook text-primary me-2"></i>
-                        Facebook
-                    </button>
-                </div>
+            <div class="mb-4">
+                <button class="btn social-btn w-100 py-2 rounded-3">
+                    <i class="bi bi-google text-danger me-2"></i>
+                    Đăng nhập bằng Google
+                </button>
             </div>
 
             <!-- Register Link -->
