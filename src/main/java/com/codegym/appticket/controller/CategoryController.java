@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
-@RequestMapping("/admin/category")
+@RequestMapping("/admin/categories")
 public class CategoryController {
     private final ICategoryService categoryService;
 
@@ -31,20 +31,18 @@ public class CategoryController {
     }
 
     @PostMapping("/create")
-    public String createCategory(@Valid @ModelAttribute EventCategory category,
-                                 RedirectAttributes redirectAttributes,
-                                 BindingResult bindingResult) {
+    public String createCategory(@Valid @ModelAttribute("category") EventCategory category,
+                                 BindingResult bindingResult,
+                                 Model model,
+                                 RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
+            model.addAttribute("category", category);
             return "admin/category/create";
         }
 
-        try {
-            categoryService.save(category);
-            redirectAttributes.addFlashAttribute("success", "Thêm danh mục thành công!");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra khi thêm danh mục!");
-        }
-        return "redirect:/admin/category";
+        categoryService.save(category);
+        redirectAttributes.addFlashAttribute("success", "Thêm danh mục thành công!");
+        return "redirect:/admin/categories";
     }
 
     @GetMapping("/{id}/edit")
@@ -57,35 +55,45 @@ public class CategoryController {
             return "admin/category/edit";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Không tìm thấy danh mục!");
-            return "redirect:/admin/category";
+            return "redirect:/admin/categories";
         }
     }
 
     @PostMapping("/{id}/edit")
     public String updateCategory(@PathVariable Long id,
-                                 @ModelAttribute EventCategory category,
-                                  RedirectAttributes redirectAttributes) {
-        try {
+                                 @Valid @ModelAttribute("category") EventCategory category,
+                                 BindingResult bindingResult,
+                                 Model model,
+                                 RedirectAttributes redirectAttributes) {
+
+        EventCategory eventCategory = categoryService.findById(id);
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("category", category);
+            return "admin/category/edit";
+        }
+
+        if (eventCategory != null) {
             category.setId(id);
             categoryService.save(category);
             redirectAttributes.addFlashAttribute("success", "Cập nhật danh mục thành công!");
-        } catch (Exception e) {
+        } else {
             redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra khi cập nhật danh mục!");
         }
-        return "redirect:/admin/category";
+
+        return "redirect:/admin/categories";
     }
 
     @PostMapping("/{id}/delete")
     public String deleteCategory(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            if (categoryService.delete(id)) {
+        EventCategory category = categoryService.findById(id);
+
+        if (category != null) {
+            categoryService.delete(id);
                 redirectAttributes.addFlashAttribute("success", "Xóa danh mục thành công!");
             } else {
                 redirectAttributes.addFlashAttribute("error", "Không tìm thấy danh mục để xóa!");
             }
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra khi xóa danh mục! Có thể danh mục đang được sử dụng.");
-        }
-        return "redirect:/admin/category";
+        return "redirect:/admin/categories";
     }
 }
