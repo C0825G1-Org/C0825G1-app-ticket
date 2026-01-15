@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Danh mục - Admin - EventPro</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <th:block th:replace="~{common/styles :: styles}"></th:block>
+</head>
+<style>
+    body {
+        font-family: 'Outfit', sans-serif;
+    }
+</style>
+
+<body>
+
+    <!-- Sidebar -->
+    <div th:replace="~{common/header :: public-navbar}"></div>
+
+    <!-- HERO -->
+    <section class="pt-5 mt-5">
+        <div class="container text-center py-5">
+            <span class="badge bg-primary mb-3">Nền tảng đặt vé #1</span>
+
+            <h1 class="display-5 fw-bold">
+                Khám phá & Đặt vé <br>
+                <span class="text-primary">Sự kiện Đẳng cấp</span>
+            </h1>
+
+            <p class="text-muted col-lg-8 mx-auto my-4">
+                Hàng ngàn sự kiện âm nhạc, hội thảo, thể thao đang chờ bạn khám phá.
+            </p>
+
+            <!-- SEARCH -->
+            <div class="card shadow-sm p-4 col-lg-10 mx-auto">
+                <form class="row g-3">
+                    <div class="col-lg-5">
+                        <input type="text" class="form-control form-control-lg" placeholder="Tìm kiếm sự kiện...">
+                    </div>
+                    <div class="col-lg-3">
+                        <select class="form-select form-select-lg">
+                            <option>Toàn quốc</option>
+                            <option>Hà Nội</option>
+                            <option>TP. HCM</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-2">
+                        <input type="date" class="form-control form-control-lg">
+                    </div>
+                    <div class="col-lg-2 d-grid">
+                        <button class="btn btn-primary btn-lg">Tìm</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- TRENDING -->
+    <section class="py-5 bg-white">
+        <div class="container">
+            <div class="text-center mb-4">
+                <span class="badge bg-danger">HOT</span>
+                <h2 class="fw-bold mt-2">Sự kiện nổi bật</h2>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card shadow-sm h-100">
+                        <img src="https://images.unsplash.com/photo-1459749411177-0473ef71607b?w=1200"
+                            class="card-img-top" alt="">
+                        <div class="card-body">
+                            <span class="badge bg-warning text-dark mb-2">#1</span>
+                            <h5 class="fw-bold">Đại nhạc hội EDM Summer Splash</h5>
+                            <p class="text-muted mb-1">
+                                <i class="bi bi-geo-alt"></i> Đà Nẵng
+                            </p>
+                            <p class="text-muted">
+                                <i class="bi bi-calendar"></i> 15/07/2026
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3">
+                    <div class="card shadow-sm h-100">
+                        <img src="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=800"
+                            class="card-img-top">
+                        <div class="card-body">
+                            <span class="badge bg-secondary">#2</span>
+                            <h6 class="fw-bold mt-2">AI & Future Tech</h6>
+                            <p class="text-danger fw-bold">1.200.000đ</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3">
+                    <div class="card shadow-sm h-100">
+                        <img src="https://images.unsplash.com/photo-1543906965-f9520aa2ed8a?w=800" class="card-img-top">
+                        <div class="card-body">
+                            <span class="badge bg-secondary">#3</span>
+                            <h6 class="fw-bold mt-2">Triển lãm nghệ thuật</h6>
+                            <p class="text-danger fw-bold">300.000đ</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CATEGORIES -->
+    <section class="py-5">
+        <div class="container">
+            <h2 class="fw-bold mb-4">Danh mục</h2>
+
+            <div class="row g-3 text-center">
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="card shadow-sm py-4">
+                        <i class="bi bi-music-note-beamed fs-3 text-primary"></i>
+                        <p class="fw-bold mt-2 mb-0">Âm nhạc</p>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="card shadow-sm py-4">
+                        <i class="bi bi-easel fs-3 text-secondary"></i>
+                        <p class="fw-bold mt-2 mb-0">Workshop</p>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="card shadow-sm py-4">
+                        <i class="bi bi-trophy fs-3 text-warning"></i>
+                        <p class="fw-bold mt-2 mb-0">Thể thao</p>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="card shadow-sm py-4">
+                        <i class="bi bi-briefcase fs-3 text-info"></i>
+                        <p class="fw-bold mt-2 mb-0">Kinh doanh</p>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="card shadow-sm py-4">
+                        <i class="bi bi-palette fs-3 text-danger"></i>
+                        <p class="fw-bold mt-2 mb-0">Nghệ thuật</p>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="card shadow-sm py-4">
+                        <i class="bi bi-grid fs-3 text-success"></i>
+                        <p class="fw-bold mt-2 mb-0">Khác</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upcoming Events -->
+    <section class="py-5 bg-light">
+        <div class="container">
+
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1">Sự kiện sắp tới</h2>
+                    <p class="text-muted mb-0">Đừng bỏ lỡ những sự kiện hot nhất tuần này</p>
+                </div>
+                <a href="events.html" class="fw-bold text-primary text-decoration-none">
+                    Xem tất cả <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Event list -->
+            <div class="row g-4">
+
+                <!-- Card 1 -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 shadow-sm">
+                        <div class="position-relative">
+                            <img src="https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=800"
+                                class="card-img-top" alt="Event">
+                            <span class="badge bg-primary position-absolute top-0 start-0 m-3">Music</span>
+                        </div>
+
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="fw-bold text-truncate">EDM Symphony Night</h6>
+
+                            <div class="text-muted small mb-3">
+                                <i class="bi bi-geo-alt-fill text-primary me-1"></i>
+                                TP. Hồ Chí Minh
+                            </div>
+
+                            <div class="mt-auto d-flex justify-content-between align-items-center pt-3 border-top">
+                                <small class="text-muted">Từ</small>
+                                <span class="fw-bold text-danger">500.000đ</span>
+                            </div>
+
+                            <a href="event-detail.html" class="stretched-link"></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 shadow-sm">
+                        <div class="position-relative">
+                            <img src="https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=800"
+                                class="card-img-top" alt="Event">
+                            <span class="badge bg-info position-absolute top-0 start-0 m-3">Business</span>
+                        </div>
+
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="fw-bold text-truncate">Vietnam Tech Summit 2026</h6>
+
+                            <div class="text-muted small mb-3">
+                                <i class="bi bi-geo-alt-fill text-primary me-1"></i>
+                                Hà Nội
+                            </div>
+
+                            <div class="mt-auto d-flex justify-content-between align-items-center pt-3 border-top">
+                                <small class="text-muted">Từ</small>
+                                <span class="fw-bold text-danger">Miễn phí</span>
+                            </div>
+
+                            <a href="event-detail.html" class="stretched-link"></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 shadow-sm">
+                        <div class="position-relative">
+                            <img src="https://images.unsplash.com/photo-1591123120675-6f7f1aae0e5b?w=800"
+                                class="card-img-top" alt="Event">
+                            <span class="badge bg-danger position-absolute top-0 start-0 m-3">Art</span>
+                        </div>
+
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="fw-bold text-truncate">Workshop Vẽ Canvas</h6>
+
+                            <div class="text-muted small mb-3">
+                                <i class="bi bi-geo-alt-fill text-primary me-1"></i>
+                                Đà Nẵng
+                            </div>
+
+                            <div class="mt-auto d-flex justify-content-between align-items-center pt-3 border-top">
+                                <small class="text-muted">Từ</small>
+                                <span class="fw-bold text-danger">300.000đ</span>
+                            </div>
+
+                            <a href="event-detail.html" class="stretched-link"></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 shadow-sm">
+                        <div class="position-relative">
+                            <img src="https://images.unsplash.com/photo-1522158637959-30385a09e0da?w=800"
+                                class="card-img-top" alt="Event">
+                            <span class="badge bg-primary position-absolute top-0 start-0 m-3">Music</span>
+                        </div>
+
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="fw-bold text-truncate">Countdown Party 2027</h6>
+
+                            <div class="text-muted small mb-3">
+                                <i class="bi bi-geo-alt-fill text-primary me-1"></i>
+                                Quận 1, TP. HCM
+                            </div>
+
+                            <div class="mt-auto d-flex justify-content-between align-items-center pt-3 border-top">
+                                <small class="text-muted">Từ</small>
+                                <span class="fw-bold text-danger">Miễn phí</span>
+                            </div>
+
+                            <a href="event-detail.html" class="stretched-link"></a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <footer th:replace="~{common/footer :: footer}"></footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

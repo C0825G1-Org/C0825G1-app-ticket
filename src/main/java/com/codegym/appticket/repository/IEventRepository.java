@@ -7,6 +7,9 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import com.codegym.appticket.entity.User;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 
 @Repository
@@ -23,4 +26,9 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                         @Param("startDateTime") LocalDateTime startDateTime,
                         @Param("endDateTime") LocalDateTime endDateTime,
                         org.springframework.data.domain.Pageable pageable);
+    // Đếm số sự kiện user đã tạo
+    long countByCreatedBy(User createdBy);
+
+    // Lấy danh sách sự kiện user đã tạo, sắp xếp mới nhất
+    List<Event> findByCreatedByOrderByCreatedDateDesc(User createdBy, Pageable pageable);
 }

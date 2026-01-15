@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Danh mục - Admin - EventPro</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <th:block th:replace="~{common/styles :: styles}"></th:block>
+</head>
+<style>
+    body {
+        font-family: 'Outfit', sans-serif;
+    }
+</style>
+<body>
+
+    <!-- Sidebar -->
+    <div th:replace="~{common/sidebar :: admin-sidebar}"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Custom Header for Category Page -->
+        <header class="bg-white border-bottom sticky-top">
+            <div class="container-fluid py-3 px-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-link d-lg-none text-dark p-0" type="button"
+                            onclick="document.querySelector('.sidebar').classList.toggle('show')">
+                            <i class="bi bi-list fs-4"></i>
+                        </button>
+                        <h4 class="mb-0 fw-bold">Quản lý Danh mục</h4>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-link text-muted position-relative p-2">
+                            <i class="bi bi-bell fs-5"></i>
+                            <span
+                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                style="font-size: 0.6rem;">
+                                3
+                            </span>
+                        </button>
+                        <div class="d-flex align-items-center gap-2">
+                            <img th:src="${session.user != null} ? 'https://ui-avatars.com/api/?name=' + ${session.user.fullName} + '&background=0f172a&color=fff' : 'https://ui-avatars.com/api/?name=Admin&background=0f172a&color=fff'"
+                                class="rounded-circle" width="40" height="40">
+                            <div class="d-none d-md-block">
+                                <div class="fw-bold small"
+                                    th:text="${session.user != null} ? ${session.user.fullName} : 'Admin'">Admin</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">Quản trị viên</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <div class="container-fluid p-4">
+
+            <div class="d-flex justify-content-end align-items-center mb-4">
+                <a href="/admin/categories/create" class="btn btn-primary rounded-3"
+                    style="background-color: var(--primary-color); border: none;">
+                    <i class="bi bi-plus-circle me-2"></i>Thêm danh mục mới
+                </a>
+            </div>
+
+            <!-- Success/Error Messages -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle me-2"></i>
+                <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Categories Table -->
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr class="text-muted small ">
+                                    <th class="px-4 py-3 fw-bold" style="width: 80px;">ID</th>
+                                    <th class="px-4 py-3 fw-bold">Tên danh mục</th>
+                                    <th class="px-4 py-3 fw-bold">Mô tả</th>
+                                    <th class="px-4 py-3 fw-bold text-end" style="width: 150px;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="category : ${categories}">
+                                    <td class="px-4 py-3">
+                                        <span
+                                            th:text="${category.id}">1</span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div>
+                                                <div class="fw-bold" th:text="${category.name}">Âm nhạc</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 text-muted">
+                                        <span th:text="${category.description != null && !category.description.isEmpty()} 
+                                            ? ${#strings.abbreviate(category.description, 80)} 
+                                            : 'Chưa có mô tả'">
+                                            Các sự kiện liên quan đến âm nhạc, hòa nhạc, concert...
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-end">
+                                        <div class="btn-group" role="group">
+                                            <a th:href="@{/admin/categories/{id}/edit(id=${category.id})}"
+                                                class="btn btn-sm btn-outline-primary rounded-start-3"
+                                                title="Chỉnh sửa">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger rounded-end-3"
+                                                data-bs-toggle="modal"
+                                                th:data-bs-target="'#deleteModal' + ${category.id}" title="Xóa">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+
+                                        <!-- Delete Confirmation Modal -->
+                                        <div class="modal fade" th:id="'deleteModal' + ${category.id}" tabindex="-1">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content rounded-4 border-0 shadow">
+                                                    <div class="modal-header border-0 pb-0">
+                                                        <h5 class="modal-title fw-bold">Xác nhận xóa</h5>
+                                                        <button type="button" class="btn-close"
+                                                            data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body pt-2">
+                                                        <div class="text-center mb-3">
+                                                            <div
+                                                                class="bg-danger-subtle text-danger rounded-circle p-3 d-inline-flex">
+                                                                <i class="bi bi-exclamation-triangle fs-1"></i>
+                                                            </div>
+                                                        </div>
+                                                        <p class="text-center mb-0">
+                                                            Bạn có chắc chắn muốn xóa danh mục
+                                                            <strong th:text="${category.name}">Âm nhạc</strong>?
+                                                        </p>
+                                                        <p class="text-center text-muted small mb-0">
+                                                            Hành động này không thể hoàn tác!
+                                                        </p>
+                                                    </div>
+                                                    <div class="modal-footer border-0 pt-0">
+                                                        <button type="button" class="btn btn-secondary rounded-3"
+                                                            data-bs-dismiss="modal">Hủy</button>
+                                                        <form
+                                                            th:action="@{/admin/categories/{id}/delete(id=${category.id})}"
+                                                            method="post" style="display:inline;">
+                                                            <button type="submit" class="btn btn-danger rounded-3">
+                                                                <i class="bi bi-trash me-1"></i>Xóa
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Empty state -->
+                                <tr th:if="${#lists.isEmpty(categories)}">
+                                    <td colspan="6" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                                            <p class="mb-2">Chưa có danh mục nào</p>
+                                            <a th:href="@{/admin/categories/create}" class="btn btn-primary btn-sm rounded-3"
+                                                style="background-color: var(--primary-color); border: none;">
+                                                <i class="bi bi-plus-circle me-1"></i>Thêm danh mục đầu tiên
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

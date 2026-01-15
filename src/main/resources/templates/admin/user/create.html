@@ -41,19 +41,19 @@
             <!-- Create Form -->
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-4">
-                    <form th:action="@{/admin/users/create}" th:object="${user}" method="post">
+                    <form th:action="@{/admin/users/create}" th:object="${user}" method="post" novalidate>
                         <div class="row g-4">
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Họ và tên <span class="text-danger">*</span></label>
                                 <input type="text" th:field="*{fullName}" class="form-control form-control-lg rounded-3"
-                                    placeholder="Nguyễn Văn A" required>
+                                    placeholder="Nguyễn Văn A">
                                 <div th:if="${#fields.hasErrors('fullName')}" class="text-danger small"
                                     th:errors="*{fullName}"></div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Email <span class="text-danger">*</span></label>
                                 <input type="email" th:field="*{email}" class="form-control form-control-lg rounded-3"
-                                    placeholder="email@example.com" required>
+                                    placeholder="email@example.com">
                                 <div th:if="${#fields.hasErrors('email')}" class="text-danger small"
                                     th:errors="*{email}"></div>
                             </div>
@@ -65,26 +65,17 @@
                                     th:errors="*{phoneNumber}"></div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">Mật khẩu <span class="text-danger">*</span></label>
-                                <input type="password" th:field="*{password}"
-                                    class="form-control form-control-lg rounded-3" placeholder="••••••••" required>
-                                <small class="text-muted">Tối thiểu 8 ký tự</small>
-                                <div th:if="${#fields.hasErrors('password')}" class="text-danger small"
-                                    th:errors="*{password}"></div>
-                            </div>
-                            <div class="col-md-6">
                                 <label class="form-label fw-bold">Vai trò</label>
                                 <select name="roleId" class="form-select form-select-lg rounded-3">
                                     <option th:each="role : ${roles}" th:value="${role.id}" th:text="${role.name}">USER
                                     </option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Trạng thái</label>
-                                <div class="form-check form-switch mt-2">
-                                    <input class="form-check-input" type="checkbox" th:field="*{enabled}"
-                                        id="enabledCheck">
-                                    <label class="form-check-label" for="enabledCheck">Kích hoạt tài khoản</label>
+                            <div class="col-12">
+                                <div class="alert alert-info mb-0 rounded-3">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <strong>Mật khẩu mặc định:</strong> <code>User@123</code> - Người dùng có thể đổi
+                                    mật khẩu sau khi đăng nhập.
                                 </div>
                             </div>
                         </div>
@@ -105,6 +96,37 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const emailInput = document.getElementById('email');
+            if (emailInput) {
+                // Create feedback element if not exists
+                let feedback = document.createElement('div');
+                feedback.className = 'invalid-feedback';
+                emailInput.parentNode.appendChild(feedback);
+
+                emailInput.addEventListener('blur', function () {
+                    const email = this.value;
+                    if (!email) return;
+
+                    fetch(`/api/admin/users/check-email?email=${encodeURIComponent(email)}`)
+                        .then(res => res.json())
+                        .then(exists => {
+                            if (exists) {
+                                this.classList.remove('is-valid');
+                                this.classList.add('is-invalid');
+                                feedback.textContent = 'Email này đã được sử dụng';
+                            } else {
+                                this.classList.remove('is-invalid');
+                                this.classList.add('is-valid');
+                            }
+                        })
+                        .catch(err => console.error('Error checking email:', err));
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>
