@@ -40,6 +40,13 @@ public interface IUserService extends IService<UserDTO> {
      */
     void toggleLock(Long id);
 
+    void delete(Long id);
+
+    // Registration & OTP
+    void registerUser(com.codegym.appticket.dto.auth.RegisterDTO dto);
+    boolean verifyOtp(String email, String otp);
+
+    // ==================== IUserService Specific Methods ====================user
     /**
      * Reset mật khẩu cho user
      */
@@ -52,6 +59,23 @@ public interface IUserService extends IService<UserDTO> {
      * Lấy thông tin user để cập nhật (cho form edit)
      */
     UserUpdateDTO getUserForUpdate(Long id);
+
+    /**
+     * Gửi OTP quên mật khẩu
+     */
+    void initiatePasswordReset(String email);
+
+    /**
+     * Xác thực OTP quên mật khẩu
+     */
+    boolean verifyPasswordResetOtp(String email, String otp);
+
+    /**
+     * Đặt lại mật khẩu (cần có OTP đã xác thực trong session hoặc logic tương tự)
+     * Tuy nhiên, ở bước này ta sẽ trust là controller đã verify OTP.
+     * Hoặc an toàn hơn: truyển cả OTP vào để verify lần cuối trước khi đổi pass.
+     */
+    void updatePassword(String email, String newPassword);
 
     boolean existsByEmail(String email);
 }

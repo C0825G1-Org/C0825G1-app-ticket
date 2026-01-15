@@ -20,6 +20,12 @@ public class SecurityConfig {
     @Autowired
     private UserInforDetailService userDetailsService;
 
+    @Autowired
+    private CustomLoginSuccessHandler customLoginSuccessHandler;
+
+    @Autowired
+    private com.codegym.appticket.service.impl.CustomOAuth2UserService customOAuth2UserService;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -39,7 +45,7 @@ public class SecurityConfig {
                 // .csrf((csrf) -> csrf.disable()) 
                 .authorizeHttpRequests((authorizeHttpRequests) ->
                         authorizeHttpRequests
-                                .requestMatchers("/login", "/register", "/forgot-password", "/verify/**", "/error/**").permitAll()
+                                .requestMatchers("/login", "/register", "/forgot-password", "/verify-forgot-password", "/reset-password", "/verify-otp", "/error/**").permitAll()
                                 .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**", "/webjars/**").permitAll()
                                 .requestMatchers("/admin/**").hasAnyAuthority("ADMIN")
                                 .anyRequest().authenticated())
@@ -50,7 +56,7 @@ public class SecurityConfig {
                                 .loginPage("/login")
                                 .failureUrl("/login?error=true")
                                 .loginProcessingUrl("/login")
-                                .defaultSuccessUrl("/admin/users", true)
+                                .successHandler(customLoginSuccessHandler)
                                 .permitAll())
                 .rememberMe((remember) ->
                         remember
@@ -58,11 +64,16 @@ public class SecurityConfig {
                                 .rememberMeParameter("remember")
                                 .tokenValiditySeconds(7 * 24 * 60 * 60)
                                 .userDetailsService(userDetailsService))
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login")
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService))
+                        .successHandler(customLoginSuccessHandler))
                 .logout((logout) ->
                         logout.deleteCookies("JSESSIONID", "remember-me")
                                 .invalidateHttpSession(true)
                                 .logoutUrl("/logout")
-                                .logoutSuccessUrl("/login?logout")
+                                .logoutSuccessUrl("/")
                                 .permitAll())
                 .exceptionHandling((exception) ->
                         exception

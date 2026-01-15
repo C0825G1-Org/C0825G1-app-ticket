@@ -69,4 +69,6 @@ public interface IUserRepository extends JpaRepository<User, Long> {
      */
     @Query(value = "select u from User u where u.email = :email and u.isDeleted is false")
     User findByEmailAndNotDeleted(@Param("email") String email);
+
+    void deleteByEnabledFalseAndOtpExpiryBefore(LocalDateTime dateTime);
 }

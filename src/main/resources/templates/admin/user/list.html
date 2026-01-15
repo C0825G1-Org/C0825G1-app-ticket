@@ -324,6 +324,7 @@
                     <button type="button" class="btn btn-outline-secondary rounded-3"
                         data-bs-dismiss="modal">Hủy</button>
                     <form id="deleteForm" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                         <button type="submit" class="btn btn-danger rounded-3">
                             <i class="bi bi-trash me-1"></i>Xóa
                         </button>

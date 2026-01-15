@@ -1,5 +1,7 @@
 package com.codegym.appticket.service.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.codegym.appticket.dto.user.UserDTO;
 import com.codegym.appticket.dto.user.*;
 import com.codegym.appticket.entity.Role;
@@ -23,6 +25,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.codegym.appticket.dto.auth.RegisterDTO;
+import com.codegym.appticket.entity.AuthenticationProvider;
+import jakarta.mail.MessagingException;
+import java.util.Random;
+
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
@@ -38,7 +46,11 @@ public class UserService implements IUserService {
 
     private final IUserRepository IUserRepository;
     private final IRoleRepository IRoleRepository;
-    private final PasswordEncoder passwordEncoder;
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     private final IBookingRepository IBookingRepository;
     private final IBookingDetailRepository IBookingDetailRepository;
     private final IEventRepository IEventRepository;
@@ -339,6 +351,65 @@ public class UserService implements IUserService {
         return IUserRepository.existsByEmail(email);
     }
 
+    // ==================== Registration & OTP Methods ====================
+
+    @Transactional
+    public void registerUser(RegisterDTO dto) {
+        if (!dto.getPassword().equals(dto.getConfirmPassword())) {
+            throw new RuntimeException("Mật khẩu xác nhận không khớp");
+        }
+        if (IUserRepository.existsByEmail(dto.getEmail())) {
+            throw new RuntimeException("Email đã được sử dụng");
+        }
+
+        User user = new User();
+        user.setFullName(dto.getFullName());
+        user.setEmail(dto.getEmail());
+        user.setPhoneNumber(dto.getPhoneNumber());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setAuthProvider(AuthenticationProvider.LOCAL);
+        user.setCreatedDate(LocalDateTime.now());
+        
+        // OTP Logic
+        String otp = String.format("%06d", new Random().nextInt(999999));
+        user.setOtpCode(otp);
+        user.setOtpExpiry(LocalDateTime.now().plusMinutes(5));
+        user.setEnabled(false); // Wait for verification
+
+        Role role = IRoleRepository.findByName("USER").orElseThrow(() -> new RuntimeException("Role USER not found"));
+        user.setRoles(new HashSet<>(java.util.Collections.singletonList(role)));
+
+        IUserRepository.save(user);
+
+        try {
+            emailService.sendOtpEmail(user.getEmail(), otp);
+        } catch (MessagingException | UnsupportedEncodingException e) {
+            throw new RuntimeException("Lỗi gửi mail xác thực: " + e.getMessage());
+        }
+    }
+
+    public boolean verifyOtp(String email, String otp) {
+        User user = IUserRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+        
+        if (user.getEnabled()) {
+            return true; // Already verified
+        }
+
+        if (user.getOtpCode() == null || !user.getOtpCode().equals(otp)) {
+            throw new RuntimeException("Mã OTP không chính xác");
+        }
+
+        if (user.getOtpExpiry().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Mã OTP đã hết hạn");
+        }
+
+        user.setEnabled(true);
+        user.setOtpCode(null);
+        user.setOtpExpiry(null);
+        IUserRepository.save(user);
+        return true;
+    }
+
     // ==================== Helper Methods ====================
 
     private UserDTO toUserDTO(User user) {
@@ -355,5 +426,54 @@ public class UserService implements IUserService {
                 .collect(Collectors.toSet()));
         dto.setCreatedDate(user.getCreatedDate());
         return dto;
+    }
+    // ==================== Forgot Password Methods ====================
+
+    @Override
+    @Transactional
+    public void initiatePasswordReset(String email) {
+        User user = IUserRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email không tồn tại trong hệ thống"));
+
+        // Generate OTP
+        String otp = String.format("%06d", new Random().nextInt(999999));
+        user.setOtpCode(otp);
+        user.setOtpExpiry(LocalDateTime.now().plusMinutes(5));
+        IUserRepository.save(user);
+
+        try {
+            emailService.sendOtpEmail(user.getEmail(), otp);
+        } catch (MessagingException | UnsupportedEncodingException e) {
+            throw new RuntimeException("Lỗi gửi mail xác thực: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public boolean verifyPasswordResetOtp(String email, String otp) {
+        User user = IUserRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email không tồn tại"));
+
+        if (user.getOtpCode() == null || !user.getOtpCode().equals(otp)) {
+            throw new RuntimeException("Mã OTP không chính xác");
+        }
+
+        if (user.getOtpExpiry().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Mã OTP đã hết hạn");
+        }
+
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public void updatePassword(String email, String newPassword) {
+        User user = IUserRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email không tồn tại"));
+        
+        user.setPassword(passwordEncoder.encode(newPassword));
+        // Clear OTP after successful reset
+        user.setOtpCode(null);
+        user.setOtpExpiry(null);
+        IUserRepository.save(user);
     }
 }
