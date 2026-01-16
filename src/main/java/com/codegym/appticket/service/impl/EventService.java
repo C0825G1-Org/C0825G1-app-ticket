@@ -74,7 +74,7 @@ public class EventService implements IEventService {
                 event.setDescription(dto.getDescription());
                 event.setLocation(dto.getLocation());
                 event.setCategory(category);
-                event.setStatus(EventStatus.PENDING);
+                event.setStatus(dto.getStatus() != null ? dto.getStatus() : EventStatus.PENDING);
                 // Note: createdBy sẽ được set thông qua Security Context hoặc từ controller
 
                 Event savedEvent = eventRepository.save(event);
@@ -201,21 +201,58 @@ public class EventService implements IEventService {
                         event.getEventTimes().addAll(newEventTimes);
                 }
 
-                // Cập nhật TicketTypes: xóa cũ và tạo mới
-                ticketTypeRepository.deleteByEventId(event.getId());
-                if (dto.getTicketTypes() != null && !dto.getTicketTypes().isEmpty()) {
-                        List<com.codegym.appticket.entity.TicketType> ticketTypes = dto.getTicketTypes().stream()
-                                        .map(ticketTypeDTO -> {
-                                                com.codegym.appticket.entity.TicketType ticketType = new com.codegym.appticket.entity.TicketType();
-                                                ticketType.setEvent(event);
-                                                ticketType.setName(ticketTypeDTO.getName());
-                                                ticketType.setPrice(ticketTypeDTO.getPrice());
-                                                ticketType.setQuantity(ticketTypeDTO.getQuantity());
-                                                return ticketType;
-                                        })
-                                        .collect(Collectors.toList());
-                        ticketTypeRepository.saveAll(ticketTypes);
+                // Cập nhật TicketTypes: Smart Update (Update existing, Create new, Delete
+                // removed)
+                List<com.codegym.appticket.entity.TicketType> currentTicketTypes = ticketTypeRepository
+                                .findByEventId(id);
+                List<com.codegym.appticket.dto.event.TicketTypeDTO> incomingTicketTypes = dto.getTicketTypes() != null
+                                ? dto.getTicketTypes()
+                                : new java.util.ArrayList<>();
+
+                // 1. Identify types to delete (present in DB but not in DTO)
+                // Note: We only delete if they truly disappeared from UI.
+                // However, deleting might still fail if booked. Ideally, we catch exception or
+                // just leave them?
+                // For a robust system, we try to delete. If FK fail, we throw exception or
+                // ignore.
+                // Let's try to delete them.
+                List<Long> incomingIds = incomingTicketTypes.stream()
+                                .map(com.codegym.appticket.dto.event.TicketTypeDTO::getId)
+                                .filter(java.util.Objects::nonNull)
+                                .collect(Collectors.toList());
+
+                List<com.codegym.appticket.entity.TicketType> toDelete = currentTicketTypes.stream()
+                                .filter(tt -> !incomingIds.contains(tt.getId()))
+                                .collect(Collectors.toList());
+
+                if (!toDelete.isEmpty()) {
+                        ticketTypeRepository.deleteAll(toDelete);
                 }
+
+                // 2. Update existing & Create new
+                List<com.codegym.appticket.entity.TicketType> toSave = new java.util.ArrayList<>();
+                for (com.codegym.appticket.dto.event.TicketTypeDTO ttDto : incomingTicketTypes) {
+                        com.codegym.appticket.entity.TicketType ticketType;
+
+                        if (ttDto.getId() != null) {
+                                // Update existing
+                                ticketType = currentTicketTypes.stream()
+                                                .filter(tt -> tt.getId().equals(ttDto.getId()))
+                                                .findFirst()
+                                                .orElseThrow(() -> new RuntimeException(
+                                                                "Không tìm thấy loại vé với ID: " + ttDto.getId()));
+                        } else {
+                                // Create new
+                                ticketType = new com.codegym.appticket.entity.TicketType();
+                                ticketType.setEvent(event);
+                        }
+
+                        ticketType.setName(ttDto.getName());
+                        ticketType.setPrice(ttDto.getPrice());
+                        ticketType.setQuantity(ttDto.getQuantity());
+                        toSave.add(ticketType);
+                }
+                ticketTypeRepository.saveAll(toSave);
 
                 // Cập nhật EventMedias: Logic upload đè
                 // 1. Banner
@@ -245,7 +282,8 @@ public class EventService implements IEventService {
                                                         com.codegym.appticket.entity.MediaPurpose.TICKET_MAP, false));
                 }
 
-                // 4. Gallery (Append mode)
+                // 4. Gallery (Replace mode)
+                removeMediaByPurpose(event, com.codegym.appticket.entity.MediaPurpose.GALLERY);
                 if (dto.getGalleryUrls() != null && !dto.getGalleryUrls().isEmpty()) {
                         for (String url : dto.getGalleryUrls()) {
                                 if (url != null && !url.isEmpty()) {

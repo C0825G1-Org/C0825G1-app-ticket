@@ -34,7 +34,7 @@ public class EventController {
             model.addAttribute("events", eventService.findAll(pageable));
         }
         model.addAttribute("categories", eventCategoryService.findAll());
-        return "event/list";
+        return "admin/event/list";
     }
 
     @GetMapping("/{id}")
@@ -42,7 +42,7 @@ public class EventController {
         try {
             EventDTO event = eventService.findById(id);
             model.addAttribute("event", event);
-            return "event/detail";
+            return "admin/event/detail";
         } catch (RuntimeException e) {
             model.addAttribute("errorMessage", e.getMessage());
             return "error/404";
@@ -58,7 +58,7 @@ public class EventController {
 
         model.addAttribute("eventCreateDTO", dto);
         model.addAttribute("categories", eventCategoryService.findAll());
-        return "event/create";
+        return "admin/event/create";
     }
 
     @PostMapping("/create")
@@ -80,6 +80,7 @@ public class EventController {
         }
 
         try {
+            dto.setStatus(com.codegym.appticket.entity.EventStatus.APPROVED);
             EventDTO createdEvent = eventService.create(dto);
             response.put("status", "success");
             response.put("message", "Tạo sự kiện thành công!");
@@ -139,7 +140,7 @@ public class EventController {
             model.addAttribute("eventUpdateDTO", updateDTO);
             model.addAttribute("eventId", id);
             model.addAttribute("categories", eventCategoryService.findAll());
-            return "event/edit";
+            return "admin/event/edit";
         } catch (RuntimeException e) {
             model.addAttribute("errorMessage", e.getMessage());
             return "redirect:/admin/events";

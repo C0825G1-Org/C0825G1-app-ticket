@@ -5,7 +5,7 @@
 
 // Configuration defaults (can be overridden by global variables if needed)
 const CLOUDINARY_DEFAULTS = {
-    CLOUD_NAME: 'dugf7ukeo',
+    CLOUD_NAME: 'dwakianst',
     UPLOAD_PRESET: 'app-ticket',
     API_URL: (cloudName) => `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
     VIDEO_URL: (cloudName) => `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`

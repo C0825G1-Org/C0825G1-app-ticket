@@ -45,4 +45,6 @@ public class EventCreateDTO {
     private String logoUrl;
     private String ticketMapUrl;
     private List<String> galleryUrls;
+
+    private com.codegym.appticket.entity.EventStatus status;
 }
