@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 @RequestMapping("/admin/events")
 @RequiredArgsConstructor
-public class EventController {
+public class AdminEventController {
 
     private final IEventService eventService;
     private final IEventCategoryService eventCategoryService;
