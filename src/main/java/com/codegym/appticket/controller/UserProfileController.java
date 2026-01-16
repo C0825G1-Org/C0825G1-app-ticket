@@ -17,7 +17,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.codegym.appticket.dto.user.UserInfoUserDetails;
 
 @Controller
-@RequestMapping("/profile")
+                        @RequestMapping("/profile")
 @RequiredArgsConstructor
 public class UserProfileController {
 
