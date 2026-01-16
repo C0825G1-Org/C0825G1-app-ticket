@@ -23,7 +23,7 @@ public class TicketController {
     @GetMapping("/my-tickets")
     public String myTickets(Model model) {
         // Giả lập lấy user theo email (Thay cho ID cố định)
-        String mockEmail = "tranlegianguyen97dn@gmail.com";
+        String mockEmail = "nguyenns6802@gmail.com";
         com.codegym.appticket.entity.User mockUser = ticketService.getUserByEmail(mockEmail);
         Long userId = mockUser.getId();
         

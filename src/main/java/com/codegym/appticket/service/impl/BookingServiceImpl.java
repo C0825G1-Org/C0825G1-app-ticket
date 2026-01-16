@@ -42,7 +42,7 @@ public class BookingServiceImpl implements IBookingService {
         
         Booking booking = new Booking();
         booking.setUser(user);
-        booking.setStatus(BookingStatus.SUCCESS); // Mặc định là thành công cho website truyền thống này
+        booking.setStatus(BookingStatus.PENDING); // Chờ thanh toán
         booking = bookingRepository.save(booking);
 
         for (Map.Entry<Long, Integer> entry : ticketQuantities.entrySet()) {
@@ -86,10 +86,7 @@ public class BookingServiceImpl implements IBookingService {
             }
         }
 
-        // Tác vụ bổ sung: Gửi Amazon/Gmail xác nhận
-        // Chúng ta lấy bản ghi booking đầy đủ để đảm bảo có List<BookingDetail>
-        Booking finalBooking = bookingRepository.findById(booking.getId()).orElse(booking);
-        emailService.sendBookingConfirmation(finalBooking);
+        // Đã xóa gửi email ở đây, chuyển sang confirmBooking
 
         return booking;
     }
@@ -129,5 +126,30 @@ public class BookingServiceImpl implements IBookingService {
     @Override
     public List<Ticket> getTicketsByBookingId(Long bookingId) {
         return ticketRepository.findByBookingId(bookingId);
+    }
+
+    @Override
+    @Transactional
+    public void confirmBooking(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        if (booking.getStatus() == BookingStatus.SUCCESS) return;
+
+        booking.setStatus(BookingStatus.SUCCESS);
+        bookingRepository.save(booking);
+
+        // Gửi email xác nhận
+        emailService.sendBookingConfirmation(booking);
+    }
+
+    @Override
+    public long calculateTotalAmount(Long bookingId) {
+        List<BookingDetail> details = bookingDetailRepository.findByBookingId(bookingId);
+        java.math.BigDecimal total = java.math.BigDecimal.ZERO;
+        for (BookingDetail d : details) {
+            total = total.add(d.getTicketType().getPrice().multiply(new java.math.BigDecimal(d.getQuantity())));
+        }
+        return total.longValue();
     }
 }

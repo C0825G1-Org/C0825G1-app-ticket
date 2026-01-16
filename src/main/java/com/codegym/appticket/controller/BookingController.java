@@ -20,6 +20,7 @@ import java.util.Map;
 public class BookingController {
 
     private final IBookingService bookingService;
+    private final com.codegym.appticket.service.IVnPayService vnPayService;
 
     // 1. Trang Form đặt vé
     @GetMapping("/book/{eventId}")
@@ -68,9 +69,10 @@ public class BookingController {
     @PostMapping("/save")
     public String save(@RequestParam Long eventId,
                        @RequestParam Map<String, String> params,
-                       RedirectAttributes redirectAttributes) {
+                       RedirectAttributes redirectAttributes,
+                       jakarta.servlet.http.HttpServletRequest request) {
         // Giả lập lấy user theo email
-        String mockEmail = "tranlegianguyen97dn@gmail.com";
+        String mockEmail = "nguyenns6802@gmail.com";
         
         Map<Long, Integer> ticketQuantities = new HashMap<>();
         for (Map.Entry<String, String> entry : params.entrySet()) {
@@ -86,7 +88,11 @@ public class BookingController {
             Long userId = mockUser.getId();
             
             Booking booking = bookingService.createBooking(eventId, userId, ticketQuantities);
-            return "redirect:/bookings/success/" + booking.getId();
+            
+            long totalAmount = bookingService.calculateTotalAmount(booking.getId());
+            String paymentUrl = vnPayService.createPaymentUrl(request, booking.getId(), totalAmount);
+            
+            return "redirect:" + paymentUrl;
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/bookings/book/" + eventId;
