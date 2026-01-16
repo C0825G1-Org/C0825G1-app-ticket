@@ -34,50 +34,59 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
     // Đếm số sự kiện user đã tạo
     long countByCreatedBy(User createdBy);
 
+    // Đếm số sự kiện theo trạng thái (cho admin dashboard/notification)
+    long countByStatus(com.codegym.appticket.entity.EventStatus status);
+
     // Lấy danh sách sự kiện user đã tạo, sắp xếp mới nhất
     List<Event> findByCreatedByOrderByCreatedDateDesc(User createdBy, Pageable pageable);
 
-    // @Query(value = """
-    //         SELECT 
-    //             e.id AS id,
-    //             e.title AS title,
-    //             e.description AS description,
-    //             e.location AS location,
-    //             (SELECT em.file_url 
-    //              FROM event_media em 
-    //              WHERE em.event_id = e.id 
-    //              ORDER BY em.created_date ASC 
-    //              LIMIT 1) AS image,
-    //             MIN(et.start_time) AS eventDate,
-    //             c.name AS categoryName,
-    //             SUM(bd.quantity) AS totalTickets
-    //         FROM events e
-    //         LEFT JOIN event_categories c ON c.id = e.category_id
-    //         LEFT JOIN event_times et ON et.event_id = e.id
-    //         JOIN ticket_types tt ON tt.event_id = e.id
-    //         JOIN booking_details bd ON bd.ticket_type_id = tt.id
-    //         JOIN bookings b ON b.id = bd.booking_id
-    //         WHERE b.status = 'SUCCESS'
-    //           AND e.status = 'APPROVED'
-    //         GROUP BY e.id, e.title, e.description, e.location, c.name
-    //         ORDER BY totalTickets DESC
-    //         LIMIT 3
-    //     """, nativeQuery = true)
-    @Query(value = """
-    SELECT 
-        e.id AS id,
-        e.title AS title,
-        SUM(bd.quantity) AS totalTickets
-    FROM events e
-    JOIN ticket_types tt ON tt.event_id = e.id
-    JOIN booking_details bd ON bd.ticket_type_id = tt.id
-    JOIN bookings b ON b.id = bd.booking_id
-    WHERE b.status = 'SUCCESS'
-      AND e.status = 'APPROVED'
-    GROUP BY e.id
-    ORDER BY totalTickets DESC
-    LIMIT 3
-""", nativeQuery = true)
+    // Lấy top 10 sự kiện mới nhất theo trạng thái (cho notification)
+    List<Event> findTop10ByStatusOrderByCreatedDateDesc(com.codegym.appticket.entity.EventStatus status);
+
+    // Tìm kiếm theo status (tách biệt để không sửa hàm search cũ)
+    org.springframework.data.domain.Page<Event> findByStatus(com.codegym.appticket.entity.EventStatus status, Pageable pageable);
+
+     @Query(value = """
+             SELECT
+                 e.id AS id,
+                 e.title AS title,
+                 e.description AS description,
+                 e.location AS location,
+                 (SELECT em.media_url
+                  FROM event_media em
+                  WHERE em.event_id = e.id
+                  ORDER BY em.created_at ASC
+                  LIMIT 1) AS image,
+                 MIN(et.start_time) AS eventDate,
+                 c.name AS categoryName,
+                 SUM(bd.quantity) AS totalTickets
+             FROM events e
+             LEFT JOIN event_categories c ON c.id = e.category_id
+             LEFT JOIN event_times et ON et.event_id = e.id
+             JOIN ticket_types tt ON tt.event_id = e.id
+             JOIN booking_details bd ON bd.ticket_type_id = tt.id
+             JOIN bookings b ON b.id = bd.booking_id
+             WHERE b.status = 'SUCCESS'
+               AND e.status = 'APPROVED'
+             GROUP BY e.id, e.title, e.description, e.location, c.name
+             ORDER BY totalTickets DESC
+             LIMIT 3
+         """, nativeQuery = true)
+//    @Query(value = """
+//    SELECT
+//        e.id AS id,
+//        e.title AS title,
+//        SUM(bd.quantity) AS totalTickets
+//    FROM events e
+//    JOIN ticket_types tt ON tt.event_id = e.id
+//    JOIN booking_details bd ON bd.ticket_type_id = tt.id
+//    JOIN bookings b ON b.id = bd.booking_id
+//    WHERE b.status = 'SUCCESS'
+//      AND e.status = 'APPROVED'
+//    GROUP BY e.id
+//    ORDER BY totalTickets DESC
+//    LIMIT 3
+//""", nativeQuery = true)
     List<TrendingEventDTO> findTopTrendingEvents();
 
     @Query("""
@@ -100,10 +109,10 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
 //                e.title AS title,
 //                e.description AS description,
 //                e.location AS location,
-//                (SELECT em.file_url
+//                (SELECT em.media_url
 //                 FROM event_media em
 //                 WHERE em.event_id = e.id
-//                 ORDER BY em.created_date ASC
+//                 ORDER BY em.created_at ASC
 //                 LIMIT 1) AS image,
 //                c.name AS categoryName,
 //                MIN(et.start_time) AS startTime,
@@ -153,7 +162,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
             WHERE e.status = 'APPROVED'
             GROUP BY e.id, e.title, e.description, e.location, c.name
             ORDER BY e.created_date DESC
-        """, 
+        """,
         countQuery = """
             SELECT COUNT(DISTINCT e.id)
             FROM events e

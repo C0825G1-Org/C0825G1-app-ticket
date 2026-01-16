@@ -25,18 +25,31 @@ public class UserProfileController {
 
     private Long getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof UserInfoUserDetails) {
-            return ((UserInfoUserDetails) auth.getPrincipal()).getUser().getId();
+        if (auth != null) {
+            Object principal = auth.getPrincipal();
+            if (principal instanceof UserInfoUserDetails) {
+                return ((UserInfoUserDetails) principal).getUser().getId();
+            } else if (principal instanceof com.codegym.appticket.config.CustomOAuth2User) {
+                String email = ((com.codegym.appticket.config.CustomOAuth2User) principal).getEmail();
+                // Fetch user ID by email
+                return userService.getUserByEmail(email).getId();
+            }
         }
-        // Handle OAuth2 User if needed (CustomOAuth2User) - for now just Standard
-        // If it's OAuth2, properties might be different.
         throw new RuntimeException("User not authenticated or unknown principal type");
     }
     
     // Helper to get email from context (safer than trusting client)
     private String getCurrentUserEmail() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth.getName(); // Should return email/username
+        if (auth != null) {
+            Object principal = auth.getPrincipal();
+            if (principal instanceof UserInfoUserDetails) {
+                return ((UserInfoUserDetails) principal).getUsername();
+            } else if (principal instanceof com.codegym.appticket.config.CustomOAuth2User) {
+                return ((com.codegym.appticket.config.CustomOAuth2User) principal).getEmail();
+            }
+        }
+        return auth.getName(); // Fallback
     }
 
     @GetMapping

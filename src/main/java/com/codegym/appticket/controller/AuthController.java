@@ -26,6 +26,13 @@ public class AuthController {
 
     @GetMapping("/login")
     public String login() {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !(auth instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)) {
+            if (auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+                return "redirect:/admin/dashboard";
+            }
+            return "redirect:/profile";
+        }
         return "auth/login";
     }
 

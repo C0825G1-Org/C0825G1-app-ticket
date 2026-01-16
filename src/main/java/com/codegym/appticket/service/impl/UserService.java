@@ -496,4 +496,10 @@ public class UserService implements IUserService {
         
         IUserRepository.save(user);
     }
+    @Override
+    public UserDTO getUserByEmail(String email) {
+        User user = IUserRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user với email: " + email));
+        return toUserDTO(user);
+    }
 }

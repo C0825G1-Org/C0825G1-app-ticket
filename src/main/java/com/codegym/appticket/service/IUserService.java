@@ -83,4 +83,6 @@ public interface IUserService extends IService<UserDTO> {
     void updateProfile(Long userId, UserProfileDTO dto);
 
     boolean existsByEmail(String email);
+
+    UserDTO getUserByEmail(String email);
 }

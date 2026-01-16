@@ -38,6 +38,7 @@ public class EventService implements IEventService {
         private final IEventTimeRepository eventTimeRepository;
         private final IEventMediaRepository eventMediaRepository;
         private final com.codegym.appticket.repository.ITicketTypeRepository ticketTypeRepository;
+        private final AdminNotificationService adminNotificationService;
 
         @Override
         public org.springframework.data.domain.Page<EventDTO> findAll(
@@ -74,6 +75,11 @@ public class EventService implements IEventService {
         }
 
         @Override
+        public org.springframework.data.domain.Page<EventDTO> findByStatus(com.codegym.appticket.entity.EventStatus status, org.springframework.data.domain.Pageable pageable) {
+                return eventRepository.findByStatus(status, pageable).map(this::convertToDTO);
+        }
+
+        @Override
         @Transactional
         public EventDTO create(EventCreateDTO dto) {
                 EventCategory category = eventCategoryRepository.findById(dto.getCategoryId())
@@ -86,8 +92,7 @@ public class EventService implements IEventService {
                 event.setLocation(dto.getLocation());
                 event.setCategory(category);
                 event.setStatus(EventStatus.PENDING);
-                // Note: createdBy sẽ được set thông qua Security Context hoặc từ controller
-
+                
                 Event savedEvent = eventRepository.save(event);
 
                 // Tạo EventTimes
@@ -124,7 +129,6 @@ public class EventService implements IEventService {
                 List<EventMedia> eventMedias = new java.util.ArrayList<>();
 
                 // 1. Banner
-                // 1. Banner
                 if (dto.getBannerUrl() != null && !dto.getBannerUrl().isEmpty()) {
                         eventMedias.add(createMedia(savedEvent, dto.getBannerUrl(),
                                         com.codegym.appticket.entity.MediaType.IMAGE,
@@ -149,9 +153,6 @@ public class EventService implements IEventService {
                 if (dto.getGalleryUrls() != null && !dto.getGalleryUrls().isEmpty()) {
                         for (String url : dto.getGalleryUrls()) {
                                 if (url != null && !url.isEmpty()) {
-                                        // Simple logic: if connection ends with .mp4 then video, else image.
-                                        // Or keep it simple as IMAGE for now as detailed content type check is harder
-                                        // with just URL
                                         com.codegym.appticket.entity.MediaType type = url.endsWith(".mp4")
                                                         || url.endsWith(".webm")
                                                                         ? com.codegym.appticket.entity.MediaType.VIDEO
@@ -167,6 +168,14 @@ public class EventService implements IEventService {
                 }
 
                 Event finalEvent = eventRepository.save(savedEvent);
+
+                // Notify Admins
+                try {
+                    adminNotificationService.sendNotification(finalEvent);
+                } catch (Exception e) {
+                    System.err.println("Error sending notification: " + e.getMessage());
+                }
+
                 return convertToDTO(finalEvent);
         }
 
