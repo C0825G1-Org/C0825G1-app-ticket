@@ -64,7 +64,7 @@ public class UserService implements IUserService {
     @Transactional(readOnly = true)
     public java.util.List<UserDTO> findAll() {
         return IUserRepository.findAll().stream()
-                .filter(u -> u.getIsDeleted() == null || !u.getIsDeleted())
+                .filter(u -> !u.isDeleted())
                 .map(this::toUserDTO)
                 .collect(Collectors.toList());
     }
@@ -93,7 +93,7 @@ public class UserService implements IUserService {
             user.setPhoneNumber(dto.getPhoneNumber());
             user.setPassword(passwordEncoder.encode(DEFAULT_PASSWORD));
             user.setEnabled(dto.getEnabled() != null ? dto.getEnabled() : true);
-            user.setIsDeleted(false);
+            user.setDeleted(false);
         }
         User savedUser = IUserRepository.save(user);
         return toUserDTO(savedUser);
@@ -103,7 +103,7 @@ public class UserService implements IUserService {
     public void delete(Long id) {
         User user = IUserRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user với ID: " + id));
-        user.setIsDeleted(true);
+        user.setDeleted(true);
         IUserRepository.save(user);
     }
 
@@ -156,7 +156,7 @@ public class UserService implements IUserService {
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setEnabled(user.getEnabled());
         dto.setIsBlocked(user.getIsBlocked());
-        dto.setIsDeleted(user.getIsDeleted());
+        dto.setIsDeleted(user.isDeleted());
         dto.setRoleNames(user.getRoles().stream()
                 .map(Role::getName)
                 .collect(Collectors.toSet()));
@@ -179,7 +179,7 @@ public class UserService implements IUserService {
         
         // 1. Get recent bookings (limit 10)
         Pageable limit10 = PageRequest.of(0, 10);
-        java.util.List<Booking> recentBookings = IBookingRepository.findByUserOrderByCreatedDateDesc(user, limit10);
+        java.util.List<Booking> recentBookings = IBookingRepository.findByUserOrderByBookingTimeDesc(user, limit10);
         if (recentBookings != null) {
             for (Booking booking : recentBookings) {
                 String description;
@@ -201,7 +201,7 @@ public class UserService implements IUserService {
                 activities.add(new UserDetailDTO.ActivityDTO(
                     "BOOKING",
                     description + " - " + (booking.getStatus() == BookingStatus.SUCCESS ? "Thành công" : "Đang xử lý"),
-                    booking.getCreatedDate()
+                    booking.getBookingTime()
                 ));
             }
         }
@@ -248,7 +248,7 @@ public class UserService implements IUserService {
         user.setPhoneNumber(dto.getPhoneNumber());
         user.setPassword(passwordEncoder.encode(DEFAULT_PASSWORD));
         user.setEnabled(dto.getEnabled() != null ? dto.getEnabled() : true);
-        user.setIsDeleted(false);
+        user.setDeleted(false);
         user.setAuthProvider(AuthenticationProvider.LOCAL);
 
         // Set role
@@ -421,7 +421,7 @@ public class UserService implements IUserService {
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setEnabled(user.getEnabled());
         dto.setIsBlocked(user.getIsBlocked());
-        dto.setIsDeleted(user.getIsDeleted());
+        dto.setIsDeleted(user.isDeleted());
         dto.setRoleNames(user.getRoles().stream()
                 .map(Role::getName)
                 .collect(Collectors.toSet()));

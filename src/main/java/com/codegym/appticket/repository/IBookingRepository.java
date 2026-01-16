@@ -13,7 +13,7 @@ import java.util.List;
 public interface IBookingRepository extends JpaRepository<Booking, Long> {
     
     // Lấy danh sách booking của user, sắp xếp theo ngày tạo giảm dần
-    List<Booking> findByUserOrderByCreatedDateDesc(User user, Pageable pageable);
+    List<Booking> findByUserOrderByBookingTimeDesc(User user, Pageable pageable);
     
     // Đếm số booking thành công (nếu cần count số đơn hàng)
     long countByUserAndStatus(User user, BookingStatus status);

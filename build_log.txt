@@ -1,0 +1,40 @@
+> Task :clean
+
+> Task :compileJava FAILED
+D:\app_ticket\app-ticket\src\main\java\com\codegym\appticket\entity\User.java:17: error: cannot find symbol
+    @CreatedBy
+     ^
+  symbol:   class CreatedBy
+  location: class User
+D:\app_ticket\app-ticket\src\main\java\com\codegym\appticket\entity\User.java:21: error: cannot find symbol
+    @LastModifiedBy
+     ^
+  symbol:   class LastModifiedBy
+  location: class User
+2 errors
+
+[Incubating] Problems report is available at: file:///D:/app_ticket/app-ticket/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileJava'.
+> Compilation failed; see the compiler output below.
+  D:\app_ticket\app-ticket\src\main\java\com\codegym\appticket\entity\User.java:17: error: cannot find symbol
+      @CreatedBy
+       ^
+    symbol:   class CreatedBy
+    location: class User
+  D:\app_ticket\app-ticket\src\main\java\com\codegym\appticket\entity\User.java:21: error: cannot find symbol
+      @LastModifiedBy
+       ^
+    symbol:   class LastModifiedBy
+    location: class User
+  2 errors
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to generate a Build Scan (powered by Develocity).
+
+BUILD FAILED in 3s
+2 actionable tasks: 2 executed

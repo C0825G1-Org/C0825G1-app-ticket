@@ -314,6 +314,7 @@ public class EventService implements IEventService {
                                 .location(event.getLocation())
                                 .categoryId(event.getCategory() != null ? event.getCategory().getId() : null)
                                 .categoryName(event.getCategory() != null ? event.getCategory().getName() : null)
+                                .categoryName(event.getCategory() != null ? event.getCategory().getName() : null)
                                 .createdById(event.getCreatedBy() != null ? event.getCreatedBy().getId() : null)
                                 .createdByName(event.getCreatedBy() != null ? event.getCreatedBy().getFullName() : null)
                                 .status(event.getStatus())

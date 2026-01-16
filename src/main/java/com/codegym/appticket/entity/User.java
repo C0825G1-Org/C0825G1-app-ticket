@@ -2,6 +2,8 @@ package com.codegym.appticket.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.LastModifiedBy;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -13,6 +15,14 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User extends Parent {
+
+    @CreatedBy
+    @Column(name = "created_by")
+    private String createdBy;
+
+    @LastModifiedBy
+    @Column(name = "last_modified_by")
+    private String lastModifiedBy;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
