@@ -12,6 +12,9 @@ public interface IEventService {
     org.springframework.data.domain.Page<EventDTO> search(com.codegym.appticket.dto.event.EventSearchDTO dto,
             org.springframework.data.domain.Pageable pageable);
 
+    org.springframework.data.domain.Page<EventDTO> findByStatus(com.codegym.appticket.entity.EventStatus status,
+            org.springframework.data.domain.Pageable pageable);
+
     EventDTO findById(Long id);
 
     EventDTO create(EventCreateDTO dto);
