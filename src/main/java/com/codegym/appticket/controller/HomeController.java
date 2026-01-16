@@ -5,6 +5,7 @@ import com.codegym.appticket.dto.event.EventSearchDTO;
 import com.codegym.appticket.dto.home.HomeEventDTO;
 import com.codegym.appticket.dto.home.TrendingEventDTO;
 import com.codegym.appticket.dto.home.UpComingEventDTO;
+import com.codegym.appticket.repository.IEventRepository;
 import com.codegym.appticket.service.IEventCategoryService;
 import com.codegym.appticket.service.IEventService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
@@ -26,6 +28,9 @@ public class HomeController {
     
     @Autowired
     private IEventCategoryService eventCategoryService;
+    
+    @Autowired
+    private IEventRepository eventRepository;
 
     @GetMapping("/")
     public String showHomePage(Model model) {
@@ -93,5 +98,25 @@ public class HomeController {
         model.addAttribute("events", events);
         
         return "home/event";
+    }
+
+    @GetMapping("/event/{id}")
+    public String showEventDetail(@PathVariable Long id, Model model) {
+        // Fetch event details
+        var eventDetail = eventRepository.findEventDetailById(id);
+        
+        if (eventDetail == null) {
+            // Event not found or not approved
+            return "redirect:/events";
+        }
+        
+        // Fetch ticket types with available quantities
+        var ticketTypes = eventRepository.findTicketTypesByEventId(id);
+        
+        model.addAttribute("event", eventDetail);
+        model.addAttribute("ticketTypes", ticketTypes);
+        model.addAttribute("currentPage", "event-detail");
+        
+        return "home/event_detail";
     }
 }

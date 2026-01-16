@@ -1,6 +1,8 @@
 package com.codegym.appticket.repository;
 
+import com.codegym.appticket.dto.home.EventDetailDTO;
 import com.codegym.appticket.dto.home.HomeEventDTO;
+import com.codegym.appticket.dto.home.TicketTypeDTO;
 import com.codegym.appticket.dto.home.TrendingEventDTO;
 import com.codegym.appticket.dto.home.UpComingEventDTO;
 import com.codegym.appticket.entity.Event;
@@ -89,56 +91,42 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
 //""", nativeQuery = true)
     List<TrendingEventDTO> findTopTrendingEvents();
 
-    @Query("""
-            SELECT e.id AS id,
-                   e.title AS title,
-                   e.location AS location,
-                   MIN(et.startTime) AS startTime
-            FROM Event e
-            JOIN e.eventTimes et
-            WHERE et.startTime > CURRENT_TIMESTAMP
-              AND e.status = 'APPROVED'
-            GROUP BY e.id, e.title, e.location
-            ORDER BY startTime ASC
-        """)
-    List<UpComingEventDTO> findTopUpcomingEvents(Pageable pageable);
-
-//    @Query(value = """
-//            SELECT
-//                e.id AS id,
-//                e.title AS title,
-//                e.description AS description,
-//                e.location AS location,
-//                (SELECT em.media_url
-//                 FROM event_media em
-//                 WHERE em.event_id = e.id
-//                 ORDER BY em.created_at ASC
-//                 LIMIT 1) AS image,
-//                c.name AS categoryName,
-//                MIN(et.start_time) AS startTime,
-//                MIN(tt.price) AS minPrice
-//            FROM events e
-//            LEFT JOIN event_categories c ON c.id = e.category_id
-//            JOIN event_times et ON et.event_id = e.id
-//            LEFT JOIN ticket_types tt ON tt.event_id = e.id
-//            WHERE et.start_time > NOW()
-//              AND e.status = 'APPROVED'
-//            GROUP BY e.id, e.title, e.description, e.location, c.name
-//            ORDER BY startTime ASC
-//            LIMIT 4
-//        """, nativeQuery = true)
-    @Query("""
-            SELECT e.id AS id,
-                   e.title AS title,
-                   e.location AS location,
-                   MIN(et.startTime) AS startTime
-            FROM Event e
-            JOIN e.eventTimes et
-            WHERE et.startTime > CURRENT_TIMESTAMP
-              AND e.status = 'APPROVED'
-            GROUP BY e.id, e.title, e.location
-            ORDER BY startTime ASC
-    """)
+   @Query(value = """
+           SELECT
+               e.id AS id,
+               e.title AS title,
+               e.description AS description,
+               e.location AS location,
+               (SELECT em.media_url
+                FROM event_media em
+                WHERE em.event_id = e.id
+                ORDER BY em.created_at ASC
+                LIMIT 1) AS image,
+               c.name AS categoryName,
+               MIN(et.start_time) AS startTime,
+               MIN(tt.price) AS minPrice
+           FROM events e
+           LEFT JOIN event_categories c ON c.id = e.category_id
+           JOIN event_times et ON et.event_id = e.id
+           LEFT JOIN ticket_types tt ON tt.event_id = e.id
+           WHERE et.start_time > NOW()
+             AND e.status = 'APPROVED'
+           GROUP BY e.id, e.title, e.description, e.location, c.name
+           ORDER BY startTime ASC
+           LIMIT 4
+       """, nativeQuery = true)
+    // @Query("""
+    //         SELECT e.id AS id,
+    //                e.title AS title,
+    //                e.location AS location,
+    //                MIN(et.startTime) AS startTime
+    //         FROM Event e
+    //         JOIN e.eventTimes et
+    //         WHERE et.startTime > CURRENT_TIMESTAMP
+    //           AND e.status = 'APPROVED'
+    //         GROUP BY e.id, e.title, e.location
+    //         ORDER BY startTime ASC
+    // """)
     List<UpComingEventDTO> findUpComingEvents();
 
     @Query(value = """
@@ -170,4 +158,45 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
         """,
         nativeQuery = true)
     Page<HomeEventDTO> findAllEvent(Pageable pageable);
+
+    // Get event detail by ID
+    @Query(value = """
+            SELECT 
+                e.id AS id,
+                e.title AS title,
+                e.description AS description,
+                e.location AS location,
+                c.name AS categoryName,
+                (SELECT em.media_url 
+                 FROM event_media em 
+                 WHERE em.event_id = e.id 
+                 ORDER BY em.created_at ASC 
+                 LIMIT 1) AS mediaUrl,
+                MIN(et.start_time) AS startTime,
+                MAX(et.end_time) AS endTime
+            FROM events e
+            LEFT JOIN event_categories c ON c.id = e.category_id
+            LEFT JOIN event_times et ON et.event_id = e.id
+            WHERE e.id = :eventId AND e.status = 'APPROVED'
+            GROUP BY e.id, e.title, e.description, e.location, c.name
+        """, nativeQuery = true)
+    EventDetailDTO findEventDetailById(@Param("eventId") Long eventId);
+
+    // Get ticket types for an event
+    @Query(value = """
+            SELECT 
+                tt.id AS id,
+                tt.name AS name,
+                tt.price AS price,
+                (tt.quantity - COALESCE(SUM(bd.quantity), 0)) AS availableQuantity
+            FROM ticket_types tt
+            LEFT JOIN booking_details bd ON bd.ticket_type_id = tt.id
+            LEFT JOIN bookings b ON b.id = bd.booking_id AND b.status = 'SUCCESS'
+            WHERE tt.event_id = :eventId
+            GROUP BY tt.id, tt.name, tt.price, tt.quantity
+            HAVING availableQuantity > 0
+            ORDER BY tt.price ASC
+        """, nativeQuery = true)
+    List<TicketTypeDTO> findTicketTypesByEventId(@Param("eventId") Long eventId);
 }
+

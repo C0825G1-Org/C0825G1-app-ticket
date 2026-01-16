@@ -159,7 +159,7 @@
                     <div th:if="${events != null and !events.isEmpty()}" class="row g-4 mb-4">
                         <div th:each="event : ${events}" class="col-md-6 col-lg-4">
                             <div class="card card-event h-100 border-0 shadow-sm" style="cursor: pointer;"
-                                th:onclick="'window.location.href=\'/events/' + ${event.id} + '\''">
+                                th:onclick="'window.location.href=\'/event/' + ${event.id} + '\''">
 
                                 <!-- Event Image -->
                                 <div class="position-relative overflow-hidden">
