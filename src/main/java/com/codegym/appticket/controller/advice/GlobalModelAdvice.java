@@ -14,8 +14,14 @@ public class GlobalModelAdvice {
 
     private final IEventRepository eventRepository;
 
+    private final jakarta.servlet.http.HttpServletRequest request;
+
     @ModelAttribute("pendingEventCount")
     public long getPendingEventCount() {
+        if (request.getRequestURI().contains("/stream")) {
+            return 0;
+        }
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated()) {
              try {
