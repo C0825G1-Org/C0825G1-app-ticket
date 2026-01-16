@@ -24,16 +24,13 @@ public class PaymentController {
         // Validate signature
         int checksum = vnPayService.orderReturn(request);
         
-        if (checksum == 1) { // Success & Valid Signature
-             // Check status code again just to be safe, though orderReturn checks it too? 
-             // orderReturn returns 1 only if responseCode is "00" AND signature is valid.
-             
+        if (checksum == 1) {
+
              Long bookingId = Long.parseLong(orderId);
-             bookingService.confirmBooking(bookingId);
+             String transactionNo = request.getParameter("vnp_TransactionNo");
+             bookingService.confirmBooking(bookingId, transactionNo);
              return "redirect:/bookings/success/" + bookingId;
         } else {
-             // Failed or Invalid Signature
-             // If checksum is 0 (Failed) or -1 (Invalid)
              if (orderId != null && !orderId.isEmpty()) {
                  try {
                     Long bookingId = Long.parseLong(orderId);
