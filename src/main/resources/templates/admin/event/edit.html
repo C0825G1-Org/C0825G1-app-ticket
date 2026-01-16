@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{common/layout :: head('Chỉnh sửa sự kiện')}">
+</head>
+
+<body>
+    <div th:replace="~{common/layout :: admin-layout(~{::content})}">
+        <div th:fragment="content">
+
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="fw-bold mb-0">Chỉnh sửa sự kiện</h4>
+                    <p class="text-muted small mb-0">Cập nhật thông tin sự kiện</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a th:href="@{/admin/events}" class="btn btn-outline-secondary rounded-3">
+                        <i class="bi bi-arrow-left me-2"></i> Quay lại
+                    </a>
+                </div>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+
+                    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+                    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+
+
+
+                    <form id="editEventForm" th:data-event-id="${eventId}" th:object="${eventUpdateDTO}"
+                        enctype="multipart/form-data">
+
+                        <!-- Basic Info -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div class="card-header bg-white border-bottom py-3">
+                                <h5 class="fw-bold mb-0"><i class="bi bi-info-circle text-primary me-2"></i>Thông tin cơ
+                                    bản</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Tên sự kiện <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-lg" th:field="*{title}"
+                                        required>
+                                    <div class="text-danger small error-message" id="error-title"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Danh mục <span
+                                            class="text-danger">*</span></label>
+                                    <select class="form-select form-select-lg" th:field="*{categoryId}" required>
+                                        <option th:each="cat : ${categories}" th:value="${cat.id}"
+                                            th:text="${cat.name}">Category</option>
+                                    </select>
+                                    <div class="text-danger small error-message" id="error-categoryId"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Mô tả sự kiện <span
+                                            class="text-danger">*</span></label>
+                                    <textarea class="form-control" rows="5" th:field="*{description}"
+                                        required></textarea>
+                                    <div class="text-danger small error-message" id="error-description"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Địa điểm <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-lg" th:field="*{location}"
+                                        required>
+                                    <div class="text-danger small error-message" id="error-location"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Trạng thái</label>
+                                    <select class="form-select" th:field="*{status}">
+                                        <option value="PENDING">Chờ duyệt (PENDING)</option>
+                                        <option value="APPROVED">Đã duyệt (APPROVED)</option>
+                                        <option value="REJECTED">Từ chối (REJECTED)</option>
+                                        <option value="CANCELLED">Đã hủy (CANCELLED)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Event Times -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div
+                                class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                <h5 class="fw-bold mb-0"><i class="bi bi-clock text-primary me-2"></i>Thời gian diễn ra
+                                </h5>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addEventTime()">
+                                    <i class="bi bi-plus-lg"></i> Thêm khung giờ
+                                </button>
+                            </div>
+                            <div class="card-body p-4" id="eventTimesContainer">
+                                <div class="row g-3 mb-3 event-time-row" th:each="time, stat : *{eventTimes}">
+                                    <div class="col-md-5">
+                                        <label class="form-label fw-medium">Bắt đầu <span
+                                                class="text-danger">*</span></label>
+                                        <input type="datetime-local" class="form-control"
+                                            th:name="|eventTimes[${stat.index}].startTime|"
+                                            th:value="${#temporals.format(time.startTime, 'yyyy-MM-dd''T''HH:mm')}"
+                                            required>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label fw-medium">Kết thúc <span
+                                                class="text-danger">*</span></label>
+                                        <input type="datetime-local" class="form-control"
+                                            th:name="|eventTimes[${stat.index}].endTime|"
+                                            th:value="${#temporals.format(time.endTime, 'yyyy-MM-dd''T''HH:mm')}"
+                                            required>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="button" class="btn btn-outline-danger w-100"
+                                            onclick="this.closest('.event-time-row').remove()">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ticket Types -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div
+                                class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                <h5 class="fw-bold mb-0"><i class="bi bi-ticket-perforated text-primary me-2"></i>Loại
+                                    vé</h5>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addTicketType()">
+                                    <i class="bi bi-plus-lg"></i> Thêm loại vé
+                                </button>
+                            </div>
+                            <div class="card-body p-4" id="ticketTypesContainer">
+                                <div class="row g-3 mb-3 ticket-type-row" th:each="ticket, stat : *{ticketTypes}">
+                                    <div class="col-md-4">
+                                        <input type="hidden" th:field="*{ticketTypes[__${stat.index}__].id}">
+                                        <label class="form-label fw-medium">Tên vé <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control"
+                                            th:field="*{ticketTypes[__${stat.index}__].name}" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-medium">Giá vé (VNĐ) <span
+                                                class="text-danger">*</span></label>
+                                        <input type="number" class="form-control"
+                                            th:field="*{ticketTypes[__${stat.index}__].price}" min="0" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-medium">Số lượng <span
+                                                class="text-danger">*</span></label>
+                                        <input type="number" class="form-control"
+                                            th:field="*{ticketTypes[__${stat.index}__].quantity}" min="1" required>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="button" class="btn btn-outline-danger w-100"
+                                            onclick="this.closest('.ticket-type-row').remove(); reindexTicketTypes();">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Media Files -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div class="card-header bg-white border-bottom py-3">
+                                <h5 class="fw-bold mb-0"><i class="bi bi-images text-primary me-2"></i>Hình ảnh & Truyền
+                                    thông</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <!-- Hidden Inputs for URLs (Bound to DTO) -->
+                                <input type="hidden" th:field="*{bannerUrl}" id="bannerUrl">
+                                <input type="hidden" th:field="*{logoUrl}" id="logoUrl">
+                                <input type="hidden" th:field="*{ticketMapUrl}" id="ticketMapUrl">
+
+                                <!-- Gallery Container for Hidden Inputs (Now used for NEW uploads mainly) -->
+                                <div id="galleryUrlsContainer">
+                                    <!-- Existing gallery URLs are now inside the visual wrapper below -->
+                                </div>
+
+                                <!-- Banner -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-medium">Banner Sự kiện (Thay đổi nếu chọn file
+                                        mới)</label>
+                                    <div th:if="*{bannerUrl}" class="mb-2">
+                                        <img th:src="*{bannerUrl}" class="img-thumbnail" style="max-height: 150px;">
+                                    </div>
+                                    <input type="file" class="form-control" id="bannerFile" accept="image/*">
+                                </div>
+                                <!-- Logo & Ticket Map -->
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-medium">Logo Sự kiện</label>
+                                        <div th:if="*{logoUrl}" class="mb-2">
+                                            <img th:src="*{logoUrl}" class="img-thumbnail" style="max-height: 100px;">
+                                        </div>
+                                        <input type="file" class="form-control" id="logoFile" accept="image/*">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-medium">Sơ đồ vị trí</label>
+                                        <div th:if="*{ticketMapUrl}" class="mb-2">
+                                            <img th:src="*{ticketMapUrl}" class="img-thumbnail"
+                                                style="max-height: 100px;">
+                                        </div>
+                                        <input type="file" class="form-control" id="ticketMapFile" accept="image/*">
+                                    </div>
+                                </div>
+                                <!-- Gallery -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Thư viện ảnh/video (Thêm mới)</label>
+
+                                    <!-- Display Existing Gallery -->
+                                    <div class="d-flex flex-wrap gap-2 mb-2">
+                                        <!-- Iterate over galleryUrls to show images and allow removal -->
+                                        <!-- Note: logic depends on index matching the hidden input list above -->
+                                        <div th:each="url, stat : *{galleryUrls}"
+                                            class="gallery-item-wrapper position-relative">
+                                            <input type="hidden" name="galleryUrls" th:value="${url}">
+                                            <img th:src="${url}" class="img-thumbnail"
+                                                style="width: 80px; height: 80px; object-fit: cover;">
+                                            <button type="button"
+                                                class="btn btn-sm btn-danger position-absolute top-0 start-100 translate-middle badge rounded-pill"
+                                                onclick="this.closest('.gallery-item-wrapper').remove()">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <input type="file" class="form-control" id="galleryFiles" multiple
+                                        accept="image/*,video/*">
+                                    <div class="form-text text-muted">Có thể chọn nhiều file. Tối đa 10 files.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit -->
+                        <div class="d-flex gap-3 justify-content-end mb-5">
+                            <a th:href="@{/admin/events}"
+                                class="btn btn-outline-secondary btn-lg rounded-3 px-5">Hủy</a>
+                            <button type="submit" class="btn btn-gradient btn-lg rounded-3 px-5 fw-bold"
+                                style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); border: none; color: white;">
+                                <i class="bi bi-check-lg me-2"></i> Lưu thay đổi
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Shared Cloudinary Logic -->
+                    <script src="/js/cloudinary-upload.js"></script>
+
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            // SweetAlert2 Toast Mixin
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true,
+                                didOpen: (toast) => {
+                                    toast.onmouseenter = Swal.stopTimer;
+                                    toast.onmouseleave = Swal.resumeTimer;
+                                }
+                            });
+
+
+                            document.getElementById('editEventForm').addEventListener('submit', async function (e) {
+                                e.preventDefault();
+
+                                // 1. Client-side Validation
+                                const galleryInput = document.getElementById('galleryFiles');
+                                const maxFiles = 10;
+                                if (galleryInput.files.length > maxFiles) {
+                                    Toast.fire({
+                                        icon: 'warning',
+                                        title: `Bạn chỉ được phép tải lên tối đa ${maxFiles} ảnh/video mới trong thư viện.`
+                                    });
+                                    return;
+                                }
+
+                                // 2. Prepare Uploads
+                                const submitBtn = this.querySelector('button[type="submit"]');
+                                const originalBtnText = submitBtn.innerHTML;
+                                const resetButton = setButtonLoading(submitBtn, 'Đang tải file lên Cloudinary...');
+
+                                try {
+                                    const bannerFile = document.getElementById('bannerFile').files[0];
+                                    const logoFile = document.getElementById('logoFile').files[0];
+                                    const ticketMapFile = document.getElementById('ticketMapFile').files[0];
+                                    const galleryFiles = document.getElementById('galleryFiles').files;
+
+                                    const uploadPromises = [];
+
+                                    // If new files selected, upload and update hidden inputs
+                                    if (bannerFile) uploadPromises.push(uploadToCloudinary(bannerFile).then(url => document.getElementById('bannerUrl').value = url));
+                                    if (logoFile) uploadPromises.push(uploadToCloudinary(logoFile).then(url => document.getElementById('logoUrl').value = url));
+                                    if (ticketMapFile) uploadPromises.push(uploadToCloudinary(ticketMapFile).then(url => document.getElementById('ticketMapUrl').value = url));
+
+                                    // For gallery: append new uploads to existing hidden inputs
+                                    if (galleryFiles.length > 0) {
+                                        const galleryContainer = document.getElementById('galleryUrlsContainer');
+                                        for (let i = 0; i < galleryFiles.length; i++) {
+                                            uploadPromises.push(
+                                                uploadToCloudinary(galleryFiles[i]).then(url => {
+                                                    const input = document.createElement('input');
+                                                    input.type = 'hidden';
+                                                    input.name = 'galleryUrls';
+                                                    input.value = url;
+                                                    galleryContainer.appendChild(input);
+                                                })
+                                            );
+                                        }
+                                    }
+
+                                    await Promise.all(uploadPromises);
+
+                                    // 3. Submit to Backend (as x-www-form-urlencoded)
+                                    setButtonLoading(submitBtn, 'Đang lưu thay đổi...');
+
+                                    const formData = new FormData(this);
+                                    const searchParams = new URLSearchParams();
+
+                                    for (const [key, value] of formData) {
+                                        if (value instanceof File) continue; // Skip file inputs
+                                        searchParams.append(key, value);
+                                    }
+
+                                    const eventId = this.dataset.eventId;
+
+                                    const response = await fetch(`/admin/events/edit/${eventId}`, {
+                                        method: 'POST',
+                                        body: searchParams
+                                    });
+                                    const data = await response.json();
+
+                                    if (data.status === 'success') {
+                                        Toast.fire({
+                                            icon: 'success',
+                                            title: 'Cập nhật sự kiện thành công!'
+                                        });
+                                        setTimeout(() => {
+                                            window.location.href = data.redirectUrl;
+                                        }, 1500);
+                                    } else if (data.status === 'validation_error') {
+                                        for (const [field, message] of Object.entries(data.errors)) {
+                                            const errorDiv = document.getElementById('error-' + field);
+                                            if (errorDiv) errorDiv.textContent = message;
+                                        }
+                                        Toast.fire({
+                                            icon: 'error',
+                                            title: 'Vui lòng kiểm tra lại thông tin nhập.'
+                                        });
+                                    } else {
+                                        Toast.fire({
+                                            icon: 'error',
+                                            title: 'Lỗi: ' + data.message
+                                        });
+                                    }
+
+                                } catch (error) {
+                                    console.error('Error:', error);
+                                    Toast.fire({
+                                        icon: 'error',
+                                        title: 'Đã xảy ra lỗi: ' + error.message
+                                    });
+                                } finally {
+                                    submitBtn.innerHTML = originalBtnText;
+                                    submitBtn.disabled = false;
+                                }
+                            });
+
+                            // Make global functions available
+                            window.deleteEvent = function (id, title) {
+                                Swal.fire({
+                                    title: `Xóa sự kiện "${title}"?`,
+                                    text: "Hành động này không thể hoàn tác!",
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#d33',
+                                    cancelButtonColor: '#3085d6',
+                                    confirmButtonText: 'Đồng ý xóa',
+                                    cancelButtonText: 'Hủy'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        fetch('/api/events/' + id, {
+                                            method: 'DELETE',
+                                            headers: { 'Content-Type': 'application/json' }
+                                        })
+                                            .then(response => {
+                                                if (response.ok) {
+                                                    Swal.fire(
+                                                        'Đã xóa!',
+                                                        'Sự kiện đã được xóa thành công.',
+                                                        'success'
+                                                    ).then(() => {
+                                                        window.location.href = '/admin/events';
+                                                    });
+                                                } else {
+                                                    Swal.fire('Lỗi!', 'Xóa sự kiện thất bại.', 'error');
+                                                }
+                                            })
+                                            .catch(error => {
+                                                console.error('Error:', error);
+                                                Swal.fire('Lỗi!', 'Đã xảy ra lỗi khi xóa sự kiện.', 'error');
+                                            });
+                                    }
+                                });
+                            };
+                        });
+
+                        function removeGalleryItem(button) {
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    title: 'Bạn có chắc muốn xóa ảnh này?',
+                                    text: "Ảnh sẽ bị xóa khỏi danh sách ngay lập tức!",
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#d33',
+                                    cancelButtonColor: '#3085d6',
+                                    confirmButtonText: 'Xóa',
+                                    cancelButtonText: 'Hủy'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        button.closest('.gallery-item-wrapper').remove();
+                                    }
+                                });
+                            } else {
+                                if (confirm('Bạn có chắc muốn xóa ảnh này?')) {
+                                    button.closest('.gallery-item-wrapper').remove();
+                                }
+                            }
+                        }
+
+                        function addTicketType() {
+                            const container = document.getElementById('ticketTypesContainer');
+                            const idx = document.querySelectorAll('.ticket-type-row').length;
+                            const newRow = document.createElement('div');
+                            newRow.className = 'row g-3 mb-3 ticket-type-row';
+                            newRow.innerHTML = `
+                                <div class="col-md-4">
+                                    <label class="form-label fw-medium">Tên vé <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="ticketTypes[${idx}].name" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-medium">Giá vé (VNĐ) <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" name="ticketTypes[${idx}].price" min="0" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-medium">Số lượng <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" name="ticketTypes[${idx}].quantity" min="1" required>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="button" class="btn btn-outline-danger w-100" onclick="this.closest('.ticket-type-row').remove(); reindexTicketTypes();">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            `;
+                            container.appendChild(newRow);
+                        }
+
+                        function reindexTicketTypes() {
+                            const rows = document.querySelectorAll('.ticket-type-row');
+                            rows.forEach((row, idx) => {
+                                const idInput = row.querySelector('input[name$=".id"]');
+                                if (idInput) {
+                                    idInput.name = `ticketTypes[${idx}].id`;
+                                }
+                                row.querySelector('input[name$=".name"]').name = `ticketTypes[${idx}].name`;
+                                row.querySelector('input[name$=".price"]').name = `ticketTypes[${idx}].price`;
+                                row.querySelector('input[name$=".quantity"]').name = `ticketTypes[${idx}].quantity`;
+                            });
+                        }
+
+                        function addEventTime() {
+                            const container = document.getElementById('eventTimesContainer');
+                            const idx = document.querySelectorAll('.event-time-row').length;
+                            const newRow = document.createElement('div');
+                            newRow.className = 'row g-3 mb-3 event-time-row';
+                            newRow.innerHTML = `
+                                <div class="col-md-5">
+                                    <label class="form-label fw-medium">Bắt đầu <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" name="eventTimes[${idx}].startTime" required>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label fw-medium">Kết thúc <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" name="eventTimes[${idx}].endTime" required>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="button" class="btn btn-outline-danger w-100" onclick="this.closest('.event-time-row').remove()">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            `;
+                            container.appendChild(newRow);
+                        }
+                    </script>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
