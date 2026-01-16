@@ -6,6 +6,7 @@ import com.codegym.appticket.dto.event.EventMediaDTO;
 import com.codegym.appticket.dto.event.EventTimeDTO;
 import com.codegym.appticket.dto.event.EventUpdateDTO;
 import com.codegym.appticket.dto.event.TicketTypeDTO;
+import com.codegym.appticket.dto.home.HomeEventDTO;
 import com.codegym.appticket.dto.home.TrendingEventDTO;
 import com.codegym.appticket.dto.home.UpComingEventDTO;
 import com.codegym.appticket.entity.Event;
@@ -20,6 +21,8 @@ import com.codegym.appticket.repository.IEventTimeRepository;
 import com.codegym.appticket.service.IEventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,7 +45,12 @@ public class EventService implements IEventService {
                 return eventRepository.findAll(pageable).map(this::convertToDTO);
         }
 
-        @Override
+    @Override
+    public Page<HomeEventDTO> findAllEvent(Pageable pageable) {
+        return eventRepository.findAllEvent(pageable);
+    }
+
+    @Override
         public org.springframework.data.domain.Page<EventDTO> search(com.codegym.appticket.dto.event.EventSearchDTO dto,
                         org.springframework.data.domain.Pageable pageable) {
                 java.time.LocalDateTime start = dto.getStartDate() != null ? dto.getStartDate().atStartOfDay() : null;
@@ -334,4 +342,6 @@ public class EventService implements IEventService {
     public List<TrendingEventDTO> findTopTrendingEvents() {
         return eventRepository.findTopTrendingEvents();
     }
+
+
 }

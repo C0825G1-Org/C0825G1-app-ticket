@@ -21,7 +21,8 @@ body {
 .hero-section {
     padding-top: 120px;
     padding-bottom: 80px;
-    background: linear-gradient(180deg, rgba(248, 250, 252, 0.7) 0%, rgba(248, 250, 252, 0.9) 100%),
+    /*background: linear-gradient(180deg, rgba(248, 250, 252, 0.7) 0%, rgba(248, 250, 252, 0.9) 100%),*/
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0) 0%, #f8fafc 100%),
     url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
     background-size: cover;
     background-position: center;
@@ -147,4 +148,13 @@ body {
 
 .hover-info:hover .category-icon {
     background-color: #0dcaf0;
+}
+
+.card-event:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
+}
+
+.card-event:hover img {
+    transform: scale(1.05);
 }

@@ -2,13 +2,13 @@ package com.codegym.appticket.dto.home;
 
 import java.time.LocalDateTime;
 
-public interface TrendingEventDTO {
+public interface HomeEventDTO {
     Long getId();
     String getTitle();
     String getDescription();
     String getLocation();
-    String getImage();
-    LocalDateTime getEventDate();
+    String getMediaUrl();
     String getCategoryName();
-    Long getTotalTickets();
+    LocalDateTime getStartTime();
+    Double getPrice();
 }
