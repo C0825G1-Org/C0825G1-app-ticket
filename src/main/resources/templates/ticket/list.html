@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{common/layout :: head('Vé của tôi')}"></head>
+
+<body>
+    <div th:replace="~{common/layout :: user-layout(~{:: .my-tickets})}">
+        <div class="my-tickets container py-5">
+            <h2 class="mb-4">Vé của tôi</h2>
+
+            <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <span th:text="${message}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Mã vé</th>
+                                    <th>Sự kiện</th>
+                                    <th>Loại vé</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-end pe-4">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="ticket : ${tickets}">
+                                    <td class="ps-4">
+                                        <code th:text="${ticket.ticketCode}">TICKET-123</code>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div>
+                                                <h6 class="mb-0"
+                                                    th:text="${ticket.bookingDetail.booking.status == 'CANCELLED' ? '[Đã hủy] ' : ''} + ${ticket.bookingDetail.ticketType.event.title}">
+                                                    Tên sự kiện</h6>
+                                                <small class="text-muted"
+                                                    th:text="${ticket.bookingDetail.ticketType.event.location}">Địa
+                                                    điểm</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info text-dark"
+                                            th:text="${ticket.bookingDetail.ticketType.name}">Loại vé</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${ticket.used}" class="badge bg-secondary">Đã sử dụng</span>
+                                        <span
+                                            th:if="${!ticket.used && ticket.bookingDetail.booking.status.name() == 'SUCCESS'}"
+                                            class="badge bg-success">Chưa sử dụng</span>
+                                        <span th:if="${ticket.bookingDetail.booking.status.name() == 'CANCELLED'}"
+                                            class="badge bg-danger">Đã hủy</span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group">
+                                            <a th:href="@{/tickets/detail/{id}(id=${ticket.id})}"
+                                                class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                                            <a th:if="${!ticket.used && ticket.bookingDetail.booking.status == 'SUCCESS'}"
+                                                th:href="@{/tickets/qrcode/{id}(id=${ticket.id})}"
+                                                class="btn btn-sm btn-outline-success">QR Code</a>
+
+                                            <form
+                                                th:if="${!ticket.used && ticket.bookingDetail.booking.status == 'SUCCESS'}"
+                                                th:action="@{/bookings/cancel/{id}(id=${ticket.bookingDetail.booking.id})}"
+                                                method="post"
+                                                onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')">
+                                                <button type="submit"
+                                                    class="btn btn-sm btn-outline-danger ms-1">Hủy</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(tickets)}">
+                                    <td colspan="5" class="text-center py-5">
+                                        <p class="text-muted">Bạn chưa có vé nào.</p>
+                                        <a th:href="@{/}" class="btn btn-primary">Khám phá sự kiện</a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -20,22 +20,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Parent {
 
-    @CreatedBy
-    @Column(name = "created_by_user")
-    private String createdByUser;
-
-    @LastModifiedBy
-    @Column(name = "last_modified_by_user")
-    private String lastModifiedByUser;
-
     @CreatedDate
-    @Column(name = "created_date")
-    private LocalDateTime createdDate;
+    @Column(name = "created_at", updatable = false)
+    private java.time.LocalDateTime createdAt;
 
-    @LastModifiedDate
-    @Column(name = "last_modified_date")
-    private LocalDateTime lastModifiedDate;
-
-    @Column(name = "is_deleted")
-    private Boolean isDeleted = false;
+    // Các trường khác như createdByUser, lastModifiedByUser, isDeleted 
+    // không có trong SQL schema nên sẽ được loại bỏ hoặc tạm thời comment lại
+    // để tránh lỗi Mapping nếu người dùng không muốn thay đổi cấu trúc DB.
 }

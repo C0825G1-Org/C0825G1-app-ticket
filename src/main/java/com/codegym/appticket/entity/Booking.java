@@ -9,7 +9,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Booking extends Parent {
+public class Booking {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,6 +18,9 @@ public class Booking extends Parent {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    @Column(name = "booking_time", insertable = false, updatable = false)
+    private java.time.LocalDateTime bookingTime;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
