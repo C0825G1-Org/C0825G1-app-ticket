@@ -29,5 +29,5 @@ public class Parent {
     private java.time.LocalDateTime lastModifiedDate;
     
     @Column(name = "is_deleted")
-    private boolean isDeleted = false;
+    private Boolean isDeleted = false;
 }

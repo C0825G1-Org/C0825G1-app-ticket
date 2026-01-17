@@ -102,24 +102,35 @@ public class UserProfileController {
 
     @PostMapping("/password/otp")
     @ResponseBody // Ajax call
-    public String sendPasswordOtp() {
+    public org.springframework.http.ResponseEntity<?> sendPasswordOtp(@RequestParam("currentPassword") String currentPassword,
+                                                                    @RequestParam("newPassword") String newPassword,
+                                                                    @RequestParam("confirmPassword") String confirmPassword) {
         try {
+            if (!newPassword.equals(confirmPassword)) {
+                return org.springframework.http.ResponseEntity.badRequest().body("Mật khẩu xác nhận không khớp!");
+            }
+            
+            Long userId = getCurrentUserId();
+            if (!userService.checkPassword(userId, currentPassword)) {
+                return org.springframework.http.ResponseEntity.badRequest().body("Mật khẩu hiện tại không chính xác!");
+            }
+
             String email = getCurrentUserEmail();
             userService.initiatePasswordReset(email);
-            return "SUCCESS";
+            return org.springframework.http.ResponseEntity.ok("SUCCESS");
         } catch (Exception e) {
-            return "ERROR: " + e.getMessage();
+            return org.springframework.http.ResponseEntity.internalServerError().body("ERROR: " + e.getMessage());
         }
     }
 
     @PostMapping("/password/change")
-    public String changePassword(@RequestParam("otp") String otp, 
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<?> changePassword(@RequestParam("otp") String otp, 
                                @RequestParam("newPassword") String newPassword,
-                               @RequestParam("confirmPassword") String confirmPassword,
-                               RedirectAttributes redirectAttributes) {
+                               @RequestParam("confirmPassword") String confirmPassword) {
         try {
             if (!newPassword.equals(confirmPassword)) {
-                throw new RuntimeException("Mật khẩu xác nhận không khớp!");
+                 return org.springframework.http.ResponseEntity.badRequest().body("Mật khẩu xác nhận không khớp!");
             }
             
             String email = getCurrentUserEmail();
@@ -128,15 +139,13 @@ public class UserProfileController {
             if (userService.verifyPasswordResetOtp(email, otp)) {
                 // Update Password
                 userService.updatePassword(email, newPassword);
-                redirectAttributes.addFlashAttribute("success", "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
-                return "redirect:/login?logout"; // Force logout
+                return org.springframework.http.ResponseEntity.ok("SUCCESS");
             } else {
-                throw new RuntimeException("Mã OTP không chính xác hoặc đã hết hạn!");
+                 return org.springframework.http.ResponseEntity.badRequest().body("Mã OTP không chính xác hoặc đã hết hạn!");
             }
             
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Lỗi đổi mật khẩu: " + e.getMessage());
-            return "redirect:/profile"; // Redirect back to profile tab (need JS to keep tab open)
+            return org.springframework.http.ResponseEntity.internalServerError().body("Lỗi đổi mật khẩu: " + e.getMessage());
         }
     }
 }

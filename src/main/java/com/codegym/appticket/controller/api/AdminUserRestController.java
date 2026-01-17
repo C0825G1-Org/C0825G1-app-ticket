@@ -30,11 +30,7 @@ public class AdminUserRestController {
         return ResponseEntity.ok(users);
     }
 
-    @PostMapping("/{id}/toggle-status")
-    public ResponseEntity<Void> toggleStatus(@PathVariable Long id) {
-        userService.toggleLock(id);
-        return ResponseEntity.ok().build();
-    }
+
 
     @GetMapping("/check-email")
     public ResponseEntity<Boolean> checkEmail(@RequestParam String email) {

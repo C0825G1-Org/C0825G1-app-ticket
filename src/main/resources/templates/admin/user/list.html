@@ -206,7 +206,7 @@
                                                 data-bs-toggle="dropdown">
                                                 Hành động
                                             </button>
-                                            <!-- Menu cho user bị khóa - Xem chi tiết + Mở khóa -->
+                                            <!-- Menu cho user bị khóa - Xem chi tiết + Mở khóa + Xóa -->
                                             <ul th:if="${user.isBlocked}" class="dropdown-menu dropdown-menu-end">
                                                 <li>
                                                     <a class="dropdown-item"
@@ -218,15 +218,16 @@
                                                     <hr class="dropdown-divider">
                                                 </li>
                                                 <li>
-                                                    <form th:action="@{/admin/users/{id}/toggle-lock(id=${user.id})}"
-                                                        method="post" style="display:inline;">
-                                                        <button type="submit" class="dropdown-item text-success">
-                                                            <i class="bi bi-unlock me-2"></i>Mở khóa
-                                                        </button>
-                                                    </form>
+                                                    <button type="button" class="dropdown-item text-success"
+                                                        data-bs-toggle="modal" data-bs-target="#unlockModal"
+                                                        th:data-user-id="${user.id}"
+                                                        th:data-user-name="${user.fullName}">
+                                                        <i class="bi bi-unlock me-2"></i>Mở khóa
+                                                    </button>
                                                 </li>
+
                                             </ul>
-                                            <!-- Menu cho user bình thường - hiện đầy đủ -->
+                                            <!-- Menu cho user bình thường - Xem chi tiết + Sửa + Khóa (Không có xóa) -->
                                             <ul th:unless="${user.isBlocked}" class="dropdown-menu dropdown-menu-end">
                                                 <li>
                                                     <a class="dropdown-item"
@@ -244,22 +245,11 @@
                                                     <hr class="dropdown-divider">
                                                 </li>
                                                 <li>
-                                                    <form th:action="@{/admin/users/{id}/toggle-lock(id=${user.id})}"
-                                                        method="post" style="display:inline;">
-                                                        <button type="submit" class="dropdown-item text-warning">
-                                                            <i class="bi bi-lock me-2"></i>Khóa tài khoản
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                                <li>
-                                                    <hr class="dropdown-divider">
-                                                </li>
-                                                <li>
-                                                    <button type="button" class="dropdown-item text-danger"
-                                                        data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                    <button type="button" class="dropdown-item text-warning"
+                                                        data-bs-toggle="modal" data-bs-target="#lockModal"
                                                         th:data-user-id="${user.id}"
                                                         th:data-user-name="${user.fullName}">
-                                                        <i class="bi bi-trash me-2"></i>Xóa người dùng
+                                                        <i class="bi bi-lock me-2"></i>Khóa tài khoản
                                                     </button>
                                                 </li>
                                             </ul>
@@ -306,27 +296,63 @@
         </div>
     </main>
 
-    <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1">
+
+
+    <!-- Lock Modal -->
+    <div class="modal fade" id="lockModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4">
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold">Xác nhận xóa</h5>
+                    <h5 class="modal-title fw-bold text-warning">Khóa tài khoản</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted mb-0">Bạn có chắc chắn muốn xóa người dùng <strong
-                            id="deleteUserName"></strong>?</p>
-                    <p class="text-danger small mt-2 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Hành động này
-                        không thể hoàn tác!</p>
+                    <p class="text-muted mb-2">Khóa tài khoản của <strong id="lockUserName"></strong>?</p>
+                    <div class="mb-3">
+                        <label for="lockReason" class="form-label small fw-bold">Lý do khóa (sẽ gửi email):</label>
+                        <textarea class="form-control" id="lockReason" name="reason" rows="3" required
+                            placeholder="Nhập lý do khóa tài khoản..."></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-outline-secondary rounded-3"
                         data-bs-dismiss="modal">Hủy</button>
-                    <form id="deleteForm" method="post">
+                    <form id="lockForm" method="post">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                        <button type="submit" class="btn btn-danger rounded-3">
-                            <i class="bi bi-trash me-1"></i>Xóa
+                        <input type="hidden" name="reason" id="hiddenLockReason">
+                        <button type="button" onclick="submitLock()" class="btn btn-warning rounded-3 text-white">
+                            <i class="bi bi-lock me-1"></i>Khóa
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unlock Modal -->
+    <div class="modal fade" id="unlockModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-success">Mở khóa tài khoản</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-2">Mở khóa tài khoản cho <strong id="unlockUserName"></strong>?</p>
+                    <div class="mb-3">
+                        <label for="unlockReason" class="form-label small fw-bold">Lý do mở khóa (sẽ gửi email):</label>
+                        <textarea class="form-control" id="unlockReason" name="reason" rows="3" required
+                            placeholder="Nhập lý do mở khóa..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary rounded-3"
+                        data-bs-dismiss="modal">Hủy</button>
+                    <form id="unlockForm" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <input type="hidden" name="reason" id="hiddenUnlockReason">
+                        <button type="button" onclick="submitUnlock()" class="btn btn-success rounded-3">
+                            <i class="bi bi-unlock me-1"></i>Mở khóa
                         </button>
                     </form>
                 </div>
@@ -353,16 +379,42 @@
             }
         });
 
-        // Delete modal handler
-        if (deleteModal) {
-            deleteModal.addEventListener('show.bs.modal', function (event) {
+        // Modal declarations
+        const lockModal = document.getElementById('lockModal');
+        const unlockModal = document.getElementById('unlockModal');
+
+        // Lock modal handler
+        if (lockModal) {
+            lockModal.addEventListener('show.bs.modal', function (event) {
                 var button = event.relatedTarget;
                 var userId = button.getAttribute('data-user-id');
                 var userName = button.getAttribute('data-user-name');
-
-                document.getElementById('deleteUserName').textContent = userName;
-                document.getElementById('deleteForm').action = '/admin/users/' + userId + '/delete';
+                document.getElementById('lockUserName').textContent = userName;
+                document.getElementById('lockForm').action = '/admin/users/' + userId + '/lock';
+                const reasonInput = document.getElementById('lockReason');
+                if (reasonInput) reasonInput.value = '';
             });
+        }
+        function submitLock() {
+            document.getElementById('hiddenLockReason').value = document.getElementById('lockReason').value;
+            document.getElementById('lockForm').submit();
+        }
+
+        // Unlock modal handler
+        if (unlockModal) {
+            unlockModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                var userId = button.getAttribute('data-user-id');
+                var userName = button.getAttribute('data-user-name');
+                document.getElementById('unlockUserName').textContent = userName;
+                document.getElementById('unlockForm').action = '/admin/users/' + userId + '/unlock';
+                const reasonInput = document.getElementById('unlockReason');
+                if (reasonInput) reasonInput.value = '';
+            });
+        }
+        function submitUnlock() {
+            document.getElementById('hiddenUnlockReason').value = document.getElementById('unlockReason').value;
+            document.getElementById('unlockForm').submit();
         }
 
         // AJAX Search Logic
@@ -432,8 +484,18 @@
                         <li><a class="dropdown-item" href="/admin/users/${user.id}"><i class="bi bi-eye me-2"></i>Xem chi tiết</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <button type="button" class="dropdown-item text-success" onclick="toggleLock(${user.id})">
+                            <button type="button" class="dropdown-item text-success" 
+                                data-bs-toggle="modal" data-bs-target="#unlockModal" 
+                                data-user-id="${user.id}" data-user-name="${user.fullName}">
                                 <i class="bi bi-unlock me-2"></i>Mở khóa
+                            </button>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <button type="button" class="dropdown-item text-danger" 
+                                data-bs-toggle="modal" data-bs-target="#deleteModal" 
+                                data-user-id="${user.id}" data-user-name="${user.fullName}">
+                                <i class="bi bi-trash me-2"></i>Xóa người dùng
                             </button>
                         </li>`;
                 } else {
@@ -442,15 +504,10 @@
                         <li><a class="dropdown-item" href="/admin/users/${user.id}/edit"><i class="bi bi-pencil me-2"></i>Chỉnh sửa</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <button type="button" class="dropdown-item text-warning" onclick="toggleLock(${user.id})">
-                                <i class="bi bi-lock me-2"></i>Khóa tài khoản
-                            </button>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" 
+                            <button type="button" class="dropdown-item text-warning" 
+                                data-bs-toggle="modal" data-bs-target="#lockModal" 
                                 data-user-id="${user.id}" data-user-name="${user.fullName}">
-                                <i class="bi bi-trash me-2"></i>Xóa người dùng
+                                <i class="bi bi-lock me-2"></i>Khóa tài khoản
                             </button>
                         </li>`;
                 }
@@ -519,32 +576,7 @@
                 </li>`;
         }
 
-        function toggleLock(userId) {
-            const csrfMeta = document.querySelector("meta[name='_csrf']");
-            const csrfHeaderMeta = document.querySelector("meta[name='_csrf_header']");
-            const csrfToken = csrfMeta ? csrfMeta.getAttribute("content") : '';
-            const csrfHeader = csrfHeaderMeta ? csrfHeaderMeta.getAttribute("content") : '';
 
-            const headers = {};
-            if (csrfToken && csrfHeader) {
-                headers[csrfHeader] = csrfToken;
-            }
-
-            fetch(`/api/admin/users/${userId}/toggle-status`, {
-                method: 'POST',
-                headers: headers
-            })
-                .then(response => {
-                    if (response.ok) {
-                        // Reload current search
-                        searchUsers(currentSearchPage);
-                        // Show success toast (optional, reuse BS toast logic if possible)
-                    } else {
-                        alert('Lỗi khi thay đổi trạng thái');
-                    }
-                })
-                .catch(err => console.error(err));
-        }
     </script>
 </body>
 

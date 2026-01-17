@@ -47,7 +47,8 @@ public class SecurityConfig {
                         authorizeHttpRequests
                                 .requestMatchers("/", "/login", "/register", "/forgot-password", "/verify-forgot-password", "/reset-password", "/verify-otp", "/error/**").permitAll()
                                 .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**", "/webjars/**", "/events", "/event/**").permitAll()
-                                .requestMatchers("/admin/**").hasAnyAuthority("ADMIN")
+                                .requestMatchers("/admin/users/**", "/admin/reports/**").hasAnyAuthority("ADMIN")
+                                .requestMatchers("/admin/**").hasAnyAuthority("ADMIN", "STAFF")
                                 .anyRequest().authenticated())
                 .formLogin((formLogin) ->
                         formLogin

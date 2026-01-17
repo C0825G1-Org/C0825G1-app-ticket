@@ -29,7 +29,7 @@
                     <span>Quản lý sự kiện</span>
                 </a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" sec:authorize="hasAuthority('ADMIN')">
                 <a th:href="@{/admin/users}" class="nav-link"
                     th:classappend="${#strings.equals(currentPage, 'users')} ? 'active' : ''">
                     <i class="bi bi-people"></i>
@@ -43,7 +43,7 @@
                     <span>Danh mục</span>
                 </a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" sec:authorize="hasAuthority('ADMIN')">
                 <a th:href="@{/admin/reports}" class="nav-link"
                     th:classappend="${#strings.equals(currentPage, 'reports')} ? 'active' : ''">
                     <i class="bi bi-bar-chart"></i>

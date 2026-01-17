@@ -254,13 +254,8 @@
                                     <div th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"
                                         class="text-danger small mt-1"></div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Email</label>
-                                    <input type="email" class="form-control form-control-lg rounded-3"
-                                        th:field="*{email}">
-                                    <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}"
-                                        class="text-danger small mt-1"></div>
-                                </div>
+                                <!-- Email input removed from display, kept hidden for binding/validation -->
+                                <input type="hidden" th:field="*{email}">
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Số điện thoại</label>
                                     <input type="tel" class="form-control form-control-lg rounded-3"
@@ -282,52 +277,73 @@
                     <!-- Change Password Tab -->
                     <div class="tab-pane fade" id="password" role="tabpanel">
 
-                        <!-- Step 1: Request OTP -->
-                        <div id="otp-request-step">
-                            <div class="alert alert-info">
-                                <i class="bi bi-info-circle me-2"></i>
-                                Để bảo mật, chúng tôi cần gửi mã OTP xác thực đến email của bạn trước khi đổi mật khẩu.
-                            </div>
-                            <button id="btnSendOtp" class="btn btn-gradient btn-lg px-5 rounded-3">
-                                <i class="bi bi-envelope-paper me-2"></i>
-                                Gửi mã OTP xác nhận
-                            </button>
-                        </div>
-
-                        <!-- Step 2: Change Password Form (Hidden initially) -->
-                        <form id="change-password-form" th:action="@{/profile/password/change}" method="post"
-                            style="display: none;">
-                            <div class="alert alert-success fs-6">
-                                <i class="bi bi-check-circle me-2"></i>
-                                Mã OTP đã được gửi đến email của bạn. Vui lòng kiểm tra và nhập bên dưới.
+                        <form id="request-change-password-form">
+                            <!-- Error Alert -->
+                            <div id="passwordError" class="alert alert-danger d-none" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i><span id="passwordErrorText"></span>
                             </div>
 
                             <div class="row g-4">
                                 <div class="col-12">
-                                    <label class="form-label fw-bold">Mã OTP (6 số)</label>
-                                    <input type="text" name="otp" class="form-control form-control-lg rounded-3"
-                                        placeholder="Nhập mã OTP" required>
+                                    <label class="form-label fw-bold">Mật khẩu hiện tại</label>
+                                    <input type="password" id="currentPassword" name="currentPassword"
+                                        class="form-control form-control-lg rounded-3"
+                                        placeholder="Nhập mật khẩu hiện tại" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Mật khẩu mới</label>
-                                    <input type="password" name="newPassword"
+                                    <input type="password" id="newPassword" name="newPassword"
                                         class="form-control form-control-lg rounded-3" placeholder="Nhập mật khẩu mới"
                                         required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Xác nhận mật khẩu mới</label>
-                                    <input type="password" name="confirmPassword"
+                                    <input type="password" id="confirmPassword" name="confirmPassword"
                                         class="form-control form-control-lg rounded-3"
                                         placeholder="Nhập lại mật khẩu mới" required>
                                 </div>
                             </div>
                             <div class="mt-4">
-                                <button type="submit" class="btn btn-gradient btn-lg px-5 rounded-3">
-                                    <i class="bi bi-shield-check me-2"></i>
+                                <button type="button" id="btnRequestChange"
+                                    class="btn btn-gradient btn-lg px-5 rounded-3">
+                                    <i class="bi bi-shield-lock me-2"></i>
                                     Đổi mật khẩu
                                 </button>
                             </div>
                         </form>
+                    </div>
+
+                    <!-- OTP Modal -->
+                    <div class="modal fade" id="otpModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content border-0 shadow-lg rounded-4">
+                                <div class="modal-header border-0 pb-0">
+                                    <h5 class="modal-title fw-bold">Xác thực OTP</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body pt-2">
+                                    <p class="text-muted small mb-3">Mã OTP đã được gửi đến email của bạn. Vui lòng nhập
+                                        mã để xác nhận đổi mật khẩu.</p>
+                                    <input type="text" id="otpInput"
+                                        class="form-control form-control-lg rounded-3 text-center letter-spacing-2"
+                                        placeholder="NHẬP MÃ OTP (6 số)" maxlength="6">
+                                    <!-- OTP Error -->
+                                    <div id="otpError" class="text-danger small mt-2 text-center d-none"></div>
+                                    <!-- OTP Success -->
+                                    <div id="otpSuccess" class="text-success small mt-2 text-center d-none">
+                                        <i class="bi bi-check-circle-fill me-1"></i>Đổi mật khẩu thành công! Đang chuyển
+                                        hướng...
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-0 pt-0">
+                                    <button type="button" class="btn btn-light rounded-3"
+                                        data-bs-dismiss="modal">Hủy</button>
+                                    <button type="button" id="btnConfirmOtp" class="btn btn-gradient rounded-3 px-4">Xác
+                                        nhận</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Activity History Tab -->
@@ -380,28 +396,92 @@
                 }
             }
 
-            // OTP Button Click
-            $("#btnSendOtp").click(function () {
-                var btn = $(this);
-                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Đang gửi...');
+            // Helper to show error
+            function showPasswordError(msg) {
+                $("#passwordErrorText").text(msg);
+                $("#passwordError").removeClass("d-none");
+            }
 
-                $.post("/profile/password/otp", function (data) {
-                    if (data === "SUCCESS") {
-                        $("#otp-request-step").fadeOut(function () {
-                            $("#change-password-form").fadeIn();
-                        });
-                    } else {
-                        alert("Lỗi: " + data);
-                        btn.prop('disabled', false).html('<i class="bi bi-envelope-paper me-2"></i>Gửi mã OTP xác nhận');
-                    }
+            function hidePasswordError() {
+                $("#passwordError").addClass("d-none");
+                $("#passwordErrorText").text("");
+            }
+
+            // Request Password Change
+            $("#btnRequestChange").click(function () {
+                var btn = $(this);
+                hidePasswordError();
+
+                var currentPassword = $("#currentPassword").val();
+                var newPassword = $("#newPassword").val();
+                var confirmPassword = $("#confirmPassword").val();
+
+                // Client-side validation removed per request
+                // Server will handle validation and return error messages
+
+                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...');
+
+                $.post("/profile/password/otp", {
+                    currentPassword: currentPassword,
+                    newPassword: newPassword,
+                    confirmPassword: confirmPassword
+                }, function (data) {
+                    btn.prop('disabled', false).html('<i class="bi bi-shield-lock me-2"></i>Đổi mật khẩu');
+                    $("#otpError").addClass("d-none").text(""); // Clear previous OTP errors
+                    $("#otpSuccess").addClass("d-none");
+
+                    // Note: Since we expect ResponseEntity<?> now, data might be parsed JSON automatically or text
+                    // If server returns ResponseEntity.ok("SUCCESS"), data is "SUCCESS" string.
+                    // If JSON, it's object.
+
+                    var otpModal = new bootstrap.Modal(document.getElementById('otpModal'));
+                    otpModal.show();
+
                 }).fail(function (xhr) {
-                    var errorMsg = "Lỗi kết nối đến server!";
+                    btn.prop('disabled', false).html('<i class="bi bi-shield-lock me-2"></i>Đổi mật khẩu');
+                    var errorMsg = xhr.responseText || "Lỗi kết nối đến server!";
                     if (xhr.status === 403) {
                         errorMsg = "Lỗi bảo mật (CSRF). Vui lòng tải lại trang.";
                     }
-                    alert(errorMsg);
-                    console.error("Error:", xhr);
-                    btn.prop('disabled', false).html('<i class="bi bi-envelope-paper me-2"></i>Gửi mã OTP xác nhận');
+                    showPasswordError(errorMsg);
+                });
+            });
+
+            // Confirm OTP
+            $("#btnConfirmOtp").click(function () {
+                var btn = $(this);
+                var otp = $("#otpInput").val();
+                var newPassword = $("#newPassword").val();
+                var confirmPassword = $("#confirmPassword").val();
+
+                $("#otpError").addClass("d-none").text("");
+                $("#otpSuccess").addClass("d-none");
+
+                if (!otp) {
+                    $("#otpError").removeClass("d-none").text("Vui lòng nhập mã OTP!");
+                    return;
+                }
+
+                btn.prop('disabled', true).text('Đang xác thực...');
+
+                $.post("/profile/password/change", {
+                    otp: otp,
+                    newPassword: newPassword,
+                    confirmPassword: confirmPassword
+                }, function (data) {
+                    // Success case
+                    $("#otpSuccess").removeClass("d-none");
+                    btn.text('Thành công!').addClass('btn-success').removeClass('btn-gradient');
+
+                    // Delay redirect
+                    setTimeout(function () {
+                        window.location.href = "/login?logout";
+                    }, 1500);
+
+                }).fail(function (xhr) {
+                    btn.prop('disabled', false).text('Xác nhận');
+                    var errorMsg = xhr.responseText || "Lỗi xác thực!";
+                    $("#otpError").removeClass("d-none").text(errorMsg);
                 });
             });
         });

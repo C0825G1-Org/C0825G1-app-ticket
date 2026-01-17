@@ -30,6 +30,7 @@ public interface IUserRepository extends JpaRepository<User, Long> {
            "   LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "   u.phoneNumber LIKE CONCAT('%', :keyword, '%')) AND " +
            "(:roleId IS NULL OR r.id = :roleId) AND " +
+           "(NOT EXISTS (SELECT 1 FROM u.roles r2 WHERE r2.name = 'ADMIN')) AND " +
            "(:status IS NULL OR :status = '' OR " +
            "   (:status = 'ACTIVE' AND (u.isBlocked = false OR u.isBlocked IS NULL)) OR " +
            "   (:status = 'LOCKED' AND u.isBlocked = true))")
@@ -71,4 +72,6 @@ public interface IUserRepository extends JpaRepository<User, Long> {
     User findByEmailAndNotDeleted(@Param("email") String email);
 
     void deleteByEnabledFalseAndOtpExpiryBefore(LocalDateTime dateTime);
+
+    java.util.List<User> findAllByIsBlockedTrueAndLockedAtBefore(LocalDateTime dateTime);
 }

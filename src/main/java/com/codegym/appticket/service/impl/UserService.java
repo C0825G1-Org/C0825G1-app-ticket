@@ -64,7 +64,7 @@ public class UserService implements IUserService {
     @Transactional(readOnly = true)
     public java.util.List<UserDTO> findAll() {
         return IUserRepository.findAll().stream()
-                .filter(u -> !u.isDeleted())
+                .filter(u -> !Boolean.TRUE.equals(u.getIsDeleted()))
                 .map(this::toUserDTO)
                 .collect(Collectors.toList());
     }
@@ -93,18 +93,38 @@ public class UserService implements IUserService {
             user.setPhoneNumber(dto.getPhoneNumber());
             user.setPassword(passwordEncoder.encode(DEFAULT_PASSWORD));
             user.setEnabled(dto.getEnabled() != null ? dto.getEnabled() : true);
-            user.setDeleted(false);
+            user.setIsDeleted(false);
         }
         User savedUser = IUserRepository.save(user);
         return toUserDTO(savedUser);
     }
 
+
+
     @Override
     public void delete(Long id) {
+       throw new UnsupportedOperationException("Use deleteUser(Long id, String reason) instead. Reason is required.");
+    }
+
+    @Override
+    public void deleteUser(Long id, String reason) {
         User user = IUserRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user với ID: " + id));
-        user.setDeleted(true);
+        
+        if (user.getIsBlocked() == null || !user.getIsBlocked()) {
+            throw new RuntimeException("Người dùng phải bị KHÓA trước khi có thể Xóa!");
+        }
+
+        user.setIsDeleted(true);
+        user.setDeleteReason(reason);
         IUserRepository.save(user);
+
+        // Send email notification
+        try {
+            emailService.sendDeleteNotification(user.getEmail(), user.getFullName(), reason);
+        } catch (Exception e) {
+            System.err.println("Error sending delete notification: " + e.getMessage());
+        }
     }
 
     // ==================== IUserService Methods ====================
@@ -156,12 +176,13 @@ public class UserService implements IUserService {
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setEnabled(user.getEnabled());
         dto.setIsBlocked(user.getIsBlocked());
-        dto.setIsDeleted(user.isDeleted());
+        dto.setIsDeleted(user.getIsDeleted());
         dto.setRoleNames(user.getRoles().stream()
                 .map(Role::getName)
                 .collect(Collectors.toSet()));
         dto.setCreatedDate(user.getCreatedDate());
         dto.setLastModifiedDate(user.getLastModifiedDate());
+        dto.setLockReason(user.getLockReason());
 
         // Populate stats using repositories
         dto.setTicketCount(IBookingDetailRepository.countTicketsByUserId(id));
@@ -232,6 +253,13 @@ public class UserService implements IUserService {
         
         dto.setActivities(activities);
 
+        // Populate Lock History
+        List<com.codegym.appticket.entity.UserLockHistory> historyEntities = userLockHistoryRepository.findByUserOrderByTimestampDesc(user);
+        List<UserLockHistoryDTO> historyDTOs = historyEntities.stream()
+                .map(h -> new UserLockHistoryDTO(h.getActionType(), h.getReason(), h.getTimestamp(), h.getCreatedBy()))
+                .collect(Collectors.toList());
+        dto.setLockHistory(historyDTOs);
+
         return dto;
     }
 
@@ -248,13 +276,18 @@ public class UserService implements IUserService {
         user.setPhoneNumber(dto.getPhoneNumber());
         user.setPassword(passwordEncoder.encode(DEFAULT_PASSWORD));
         user.setEnabled(dto.getEnabled() != null ? dto.getEnabled() : true);
-        user.setDeleted(false);
+        user.setIsDeleted(false);
         user.setAuthProvider(AuthenticationProvider.LOCAL);
 
         // Set role
         if (dto.getRoleId() != null) {
             Role role = IRoleRepository.findById(dto.getRoleId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy role với ID: " + dto.getRoleId()));
+            
+            if (role.getName().equals("ADMIN")) {
+                throw new RuntimeException("Không được phép tạo tài khoản quản trị viên hệ thống");
+            }
+            
             Set<Role> roles = new HashSet<>();
             roles.add(role);
             user.setRoles(roles);
@@ -268,6 +301,15 @@ public class UserService implements IUserService {
         }
 
         User savedUser = IUserRepository.save(user);
+
+        // Gửi email thông báo
+        try {
+            emailService.sendAccountCreatedEmail(savedUser.getEmail(), savedUser.getFullName(), DEFAULT_PASSWORD);
+        } catch (MessagingException | UnsupportedEncodingException e) {
+            // Log lỗi nhưng không rollback transaction tạo user
+            System.err.println("Lỗi gửi email tạo tài khoản: " + e.getMessage());
+        }
+
         return toUserDTO(savedUser);
     }
 
@@ -280,12 +322,13 @@ public class UserService implements IUserService {
         user.setPhoneNumber(dto.getPhoneNumber());
 
         // Cập nhật email nếu thay đổi
-        if (dto.getEmail() != null && !dto.getEmail().equals(user.getEmail())) {
-            if (IUserRepository.existsByEmail(dto.getEmail())) {
-                throw new RuntimeException("Email đã được sử dụng: " + dto.getEmail());
-            }
-            user.setEmail(dto.getEmail());
-        }
+        // Không cho phép cập nhật email
+        // if (dto.getEmail() != null && !dto.getEmail().equals(user.getEmail())) {
+        //     if (IUserRepository.existsByEmail(dto.getEmail())) {
+        //         throw new RuntimeException("Email đã được sử dụng: " + dto.getEmail());
+        //     }
+        //     user.setEmail(dto.getEmail());
+        // }
         
         // Removed password update logic per requirements
         
@@ -297,6 +340,11 @@ public class UserService implements IUserService {
         if (dto.getRoleId() != null) {
             Role role = IRoleRepository.findById(dto.getRoleId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy role với ID: " + dto.getRoleId()));
+            
+            if (role.getName().equals("ADMIN")) {
+                throw new RuntimeException("Không được phép gán quyền quản trị viên hệ thống");
+            }
+            
             Set<Role> roles = new HashSet<>();
             roles.add(role);
             user.setRoles(roles);
@@ -306,15 +354,62 @@ public class UserService implements IUserService {
         return toUserDTO(savedUser);
     }
 
+    @Autowired
+    private com.codegym.appticket.repository.IUserLockHistoryRepository userLockHistoryRepository;
+
     @Override
-    public void toggleLock(Long id) {
+    public void lockUser(Long id, String reason) {
         User user = IUserRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user với ID: " + id));
         
-        // Toggle isBlocked (khóa/mở khóa tài khoản)
-        Boolean currentBlocked = user.getIsBlocked();
-        user.setIsBlocked(currentBlocked == null || !currentBlocked);
+        user.setIsBlocked(true);
+        user.setLockedAt(LocalDateTime.now());
+        user.setLockReason(reason);
         IUserRepository.save(user);
+
+        // Log history
+        com.codegym.appticket.entity.UserLockHistory history = new com.codegym.appticket.entity.UserLockHistory();
+        history.setUser(user);
+        history.setActionType("LOCK");
+        history.setReason(reason);
+        history.setTimestamp(LocalDateTime.now());
+        history.setCreatedBy("ADMIN"); // TODO: Get logged in user
+        userLockHistoryRepository.save(history);
+
+        try {
+            emailService.sendLockNotification(user.getEmail(), user.getFullName(), reason);
+        } catch (Exception e) {
+            System.err.println("Error sending lock notification: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void unlockUser(Long id, String reason) {
+        User user = IUserRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user với ID: " + id));
+        
+        user.setIsBlocked(false);
+        user.setLockedAt(null);
+        user.setUnlockReason(reason);
+        // Clear lock reason? Maybe keep history? Requirements just say add reason. 
+        // Keeping it is safer for history, or we overwrite new action reason.
+        
+        IUserRepository.save(user);
+
+        // Log history
+        com.codegym.appticket.entity.UserLockHistory history = new com.codegym.appticket.entity.UserLockHistory();
+        history.setUser(user);
+        history.setActionType("UNLOCK");
+        history.setReason(reason);
+        history.setTimestamp(LocalDateTime.now());
+        history.setCreatedBy("ADMIN"); // TODO: Get logged in user
+        userLockHistoryRepository.save(history);
+
+        try {
+            emailService.sendUnlockNotification(user.getEmail(), user.getFullName(), reason);
+        } catch (Exception e) {
+            System.err.println("Error sending unlock notification: " + e.getMessage());
+        }
     }
 
     @Override
@@ -421,7 +516,7 @@ public class UserService implements IUserService {
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setEnabled(user.getEnabled());
         dto.setIsBlocked(user.getIsBlocked());
-        dto.setIsDeleted(user.isDeleted());
+        dto.setIsDeleted(user.getIsDeleted());
         dto.setRoleNames(user.getRoles().stream()
                 .map(Role::getName)
                 .collect(Collectors.toSet()));
@@ -486,13 +581,14 @@ public class UserService implements IUserService {
         user.setPhoneNumber(dto.getPhoneNumber());
 
         // Nếu email thay đổi, kiểm tra trùng lặp
-        if (!user.getEmail().equals(dto.getEmail())) {
-            if (IUserRepository.existsByEmail(dto.getEmail())) {
-                throw new RuntimeException("Email đã được sử dụng: " + dto.getEmail());
-            }
-            user.setEmail(dto.getEmail());
-            // TODO: Có thể yêu cầu verify lại email nếu cần
-        }
+        // Không cho phép cập nhật email
+        // if (!user.getEmail().equals(dto.getEmail())) {
+        //     if (IUserRepository.existsByEmail(dto.getEmail())) {
+        //         throw new RuntimeException("Email đã được sử dụng: " + dto.getEmail());
+        //     }
+        //     user.setEmail(dto.getEmail());
+        //     // TODO: Có thể yêu cầu verify lại email nếu cần
+        // }
         
         IUserRepository.save(user);
     }
@@ -501,5 +597,19 @@ public class UserService implements IUserService {
         User user = IUserRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user với email: " + email));
         return toUserDTO(user);
+    }
+    
+    @Override
+    public List<Role> getManageableRoles() {
+        return IRoleRepository.findAll().stream()
+                .filter(r -> !r.getName().equals("ADMIN"))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean checkPassword(Long userId, String rawPassword) {
+        User user = IUserRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return passwordEncoder.matches(rawPassword, user.getPassword());
     }
 }

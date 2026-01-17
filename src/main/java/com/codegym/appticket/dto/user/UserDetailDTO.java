@@ -28,7 +28,9 @@ public class UserDetailDTO {
     private Boolean isDeleted;
     private Set<String> roleNames;
     private LocalDateTime createdDate;
+
     private LocalDateTime lastModifiedDate;
+    private String lockReason;
 
     // Thống kê
     private Long ticketCount;       // Số vé đã mua
@@ -37,6 +39,7 @@ public class UserDetailDTO {
 
     // Lịch sử hoạt động
     private List<ActivityDTO> activities;
+    private List<UserLockHistoryDTO> lockHistory;
 
     @Getter
     @Setter

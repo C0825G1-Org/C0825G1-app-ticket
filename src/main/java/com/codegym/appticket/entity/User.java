@@ -58,6 +58,18 @@ public class User extends Parent {
     @Column(name = "enabled")
     private Boolean enabled = false; // Default false for new users (wait for OTP)
 
+    @Column(name = "locked_at")
+    private java.time.LocalDateTime lockedAt;
+
+    @Column(name = "lock_reason", columnDefinition = "TEXT")
+    private String lockReason;
+
+    @Column(name = "unlock_reason", columnDefinition = "TEXT")
+    private String unlockReason;
+
+    @Column(name = "delete_reason", columnDefinition = "TEXT")
+    private String deleteReason;
+
     @ManyToMany
     @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
