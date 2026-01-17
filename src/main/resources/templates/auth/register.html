@@ -4,194 +4,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng ký - EventPro</title>
+    <title>Đăng ký - AppTicket</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
     <style>
         :root {
             --primary-color: #7c3aed;
-            --secondary-color: #db2777;
-            --dark-color: #0f172a;
+            --secondary-color: #6d28d9;
+            --accent-color: #8b5cf6;
         }
 
         body {
             font-family: 'Outfit', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+            height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 2rem 0;
         }
 
-        .register-card {
-            max-width: 500px;
-            width: 100%;
-            background: white;
-            border-radius: 1.5rem;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        .login-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
         }
 
-        .btn-gradient {
-            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-            border: none;
-            color: white;
-            transition: transform 0.2s;
-        }
-
-        .btn-gradient:hover {
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(124, 58, 237, 0.3);
-        }
-
-        .form-control:focus {
+        .form-check-input:checked {
+            background-color: var(--primary-color);
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.25rem rgba(124, 58, 237, 0.15);
-        }
-
-        .password-strength {
-            height: 4px;
-            border-radius: 2px;
-            background: #e2e8f0;
-            overflow: hidden;
-        }
-
-        .password-strength-bar {
-            height: 100%;
-            width: 0%;
-            transition: all 0.3s;
         }
     </style>
 </head>
 
 <body>
-
     <div class="container">
-        <div class="register-card mx-auto p-5">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card login-card shadow-lg rounded-4 border-0 p-4">
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <i class="bi bi-ticket-perforated-fill fs-1 text-primary mb-2"></i>
+                            <h4 class="fw-bold">Đăng ký tài khoản</h4>
+                            <p class="text-muted small">Tạo tài khoản để đặt vé ngay</p>
+                        </div>
 
-            <!-- Logo -->
-            <div class="text-center mb-4">
-                <div class="d-inline-flex align-items-center gap-2 mb-3">
-                    <div class="rounded-3 d-flex align-items-center justify-content-center text-white"
-                        style="width: 48px; height: 48px; background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));">
-                        <span class="fs-4 fw-bold">E</span>
+                        <div th:if="${error}" class="alert alert-danger" role="alert">
+                            <i class="bi bi-exclamation-circle me-2"></i><span th:text="${error}"></span>
+                        </div>
+
+                        <form th:action="@{/register}" th:object="${registerDTO}" method="post" novalidate>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">Họ và tên</label>
+                                <input type="text" class="form-control" th:field="*{fullName}"
+                                    placeholder="Nhập họ tên đầy đủ">
+                                <div th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"
+                                    class="text-danger small mt-1"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">Email</label>
+                                <input type="email" class="form-control" th:field="*{email}"
+                                    placeholder="name@example.com">
+                                <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}"
+                                    class="text-danger small mt-1"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">Số điện thoại</label>
+                                <input type="tel" class="form-control" th:field="*{phoneNumber}"
+                                    placeholder="09xxxxxxxxx">
+                                <div th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"
+                                    class="text-danger small mt-1"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">Mật khẩu</label>
+                                <input type="password" class="form-control" th:field="*{password}"
+                                    placeholder="••••••••">
+                                <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}"
+                                    class="text-danger small mt-1"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-muted">Nhập lại mật khẩu</label>
+                                <input type="password" class="form-control" th:field="*{confirmPassword}"
+                                    placeholder="••••••••">
+                                <div th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"
+                                    class="text-danger small mt-1"></div>
+                            </div>
+
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="terms" th:field="*{terms}">
+                                <label class="form-check-label small text-muted" for="terms">
+                                    Tôi đồng ý với <a href="#" class="text-decoration-none"
+                                        style="color: var(--primary-color);">Điều khoản sử dụng</a> và <a href="#"
+                                        class="text-decoration-none" style="color: var(--primary-color);">Chính sách bảo
+                                        mật</a>
+                                </label>
+                                <div th:if="${#fields.hasErrors('terms')}" th:errors="*{terms}"
+                                    class="text-danger small mt-1"></div>
+                            </div>
+
+                            <div class="d-grid mb-4">
+                                <button type="submit" class="btn btn-primary py-2 rounded-3 fw-bold"
+                                    style="background-color: var(--primary-color); border: none;">
+                                    Đăng ký
+                                </button>
+                            </div>
+
+                            <div class="text-center small">
+                                <span class="text-muted">Đã có tài khoản?</span>
+                                <a th:href="@{/login}" class="text-decoration-none fw-bold ms-1"
+                                    style="color: var(--primary-color);">Đăng nhập</a>
+                            </div>
+                        </form>
                     </div>
-                    <span class="fw-bold fs-3">EventPro</span>
                 </div>
-                <h4 class="fw-bold mb-2">Tạo tài khoản mới</h4>
-                <p class="text-muted mb-0">Tham gia cộng đồng EventPro ngay hôm nay</p>
             </div>
-
-            <!-- Error/Success Messages -->
-            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-            <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-
-            <!-- Register Form -->
-            <form th:action="@{/register}" th:object="${user}" method="post">
-                <div class="mb-3">
-                    <label class="form-label fw-medium">Họ và tên</label>
-                    <input type="text" th:field="*{fullName}" class="form-control form-control-lg"
-                        placeholder="Nguyễn Văn A" required>
-                    <div th:if="${#fields.hasErrors('fullName')}" class="text-danger small" th:errors="*{fullName}">
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-medium">Email</label>
-                    <input type="email" th:field="*{email}" class="form-control form-control-lg"
-                        placeholder="your@email.com" required>
-                    <div th:if="${#fields.hasErrors('email')}" class="text-danger small" th:errors="*{email}"></div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-medium">Số điện thoại</label>
-                    <input type="tel" th:field="*{phoneNumber}" class="form-control form-control-lg"
-                        placeholder="0912345678" required>
-                    <div th:if="${#fields.hasErrors('phoneNumber')}" class="text-danger small"
-                        th:errors="*{phoneNumber}"></div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-medium">Mật khẩu</label>
-                    <input type="password" th:field="*{password}" class="form-control form-control-lg"
-                        placeholder="••••••••" required id="password">
-                    <div class="password-strength mt-2">
-                        <div class="password-strength-bar bg-danger" style="width: 0%"></div>
-                    </div>
-                    <small class="text-muted">Tối thiểu 8 ký tự, bao gồm chữ hoa, chữ thường và số</small>
-                    <div th:if="${#fields.hasErrors('password')}" class="text-danger small" th:errors="*{password}">
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-medium">Xác nhận mật khẩu</label>
-                    <input type="password" name="confirmPassword" class="form-control form-control-lg"
-                        placeholder="••••••••" required>
-                </div>
-
-                <div class="form-check mb-4">
-                    <input class="form-check-input" type="checkbox" id="agreeTerms" required>
-                    <label class="form-check-label small text-muted" for="agreeTerms">
-                        Tôi đồng ý với <a th:href="@{/terms}" class="text-primary">Điều khoản sử dụng</a> và
-                        <a th:href="@{/privacy}" class="text-primary">Chính sách bảo mật</a>
-                    </label>
-                </div>
-
-                <button type="submit" class="btn btn-gradient btn-lg w-100 rounded-3 fw-bold mb-3">
-                    Đăng ký
-                </button>
-            </form>
-
-            <!-- Login Link -->
-            <div class="text-center">
-                <span class="text-muted">Đã có tài khoản?</span>
-                <a th:href="@{/login}" class="text-primary text-decoration-none fw-bold ms-1">Đăng nhập</a>
-            </div>
-
-            <!-- Back to Home -->
-            <div class="text-center mt-4">
-                <a th:href="@{/}" class="btn btn-link text-muted text-decoration-none">
-                    <i class="bi bi-arrow-left me-1"></i> Về trang chủ
-                </a>
-            </div>
-
         </div>
     </div>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-        // Simple password strength indicator
-        document.getElementById('password').addEventListener('input', function (e) {
-            const password = e.target.value;
-            const strengthBar = document.querySelector('.password-strength-bar');
-            let strength = 0;
-
-            if (password.length >= 8) strength += 25;
-            if (password.match(/[a-z]/)) strength += 25;
-            if (password.match(/[A-Z]/)) strength += 25;
-            if (password.match(/[0-9]/)) strength += 25;
-
-            strengthBar.style.width = strength + '%';
-
-            if (strength <= 25) {
-                strengthBar.className = 'password-strength-bar bg-danger';
-            } else if (strength <= 50) {
-                strengthBar.className = 'password-strength-bar bg-warning';
-            } else if (strength <= 75) {
-                strengthBar.className = 'password-strength-bar bg-info';
-            } else {
-                strengthBar.className = 'password-strength-bar bg-success';
-            }
-        });
-    </script>
 </body>
 
 </html>
