@@ -134,7 +134,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
             LEFT JOIN ticket_types tt ON tt.event_id = e.id
             WHERE e.status = 'APPROVED'
             GROUP BY e.id, e.title, e.description, e.location, c.name
-            ORDER BY e.created_date DESC
+            ORDER BY e.created_at ASC
         """,
         countQuery = """
             SELECT COUNT(DISTINCT e.id)
@@ -143,6 +143,47 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
         """,
         nativeQuery = true)
     Page<HomeEventDTO> findAllEvent(Pageable pageable);
+
+    // Search events with filters, returns HomeEventDTO for display
+    @Query(value = """
+            SELECT 
+                e.id AS id,
+                e.title AS title,
+                e.description AS description,
+                e.location AS location,
+                (SELECT em.media_url 
+                 FROM event_media em 
+                 WHERE em.event_id = e.id 
+                 ORDER BY em.created_at ASC 
+                 LIMIT 1) AS mediaUrl,
+                c.name AS categoryName,
+                MIN(et.start_time) AS startTime,
+                MIN(tt.price) AS price
+            FROM events e
+            LEFT JOIN event_categories c ON c.id = e.category_id
+            LEFT JOIN event_times et ON et.event_id = e.id
+            LEFT JOIN ticket_types tt ON tt.event_id = e.id
+            WHERE e.status = 'APPROVED'
+              AND (:searchText IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :searchText, '%')))
+              AND (:categoryId IS NULL OR e.category_id = :categoryId)
+              AND (:location IS NULL OR e.location LIKE CONCAT('%', :location, '%'))
+            GROUP BY e.id, e.title, e.description, e.location, c.name
+            ORDER BY e.created_at ASC
+        """,
+        countQuery = """
+            SELECT COUNT(DISTINCT e.id)
+            FROM events e
+            WHERE e.status = 'APPROVED'
+              AND (:searchText IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :searchText, '%')))
+              AND (:categoryId IS NULL OR e.category_id = :categoryId)
+              AND (:location IS NULL OR e.location LIKE CONCAT('%', :location, '%'))
+        """,
+        nativeQuery = true)
+    Page<HomeEventDTO> searchHomeEvents(
+            @Param("searchText") String searchText,
+            @Param("categoryId") Long categoryId,
+            @Param("location") String location,
+            Pageable pageable);
 
     // Get event detail by ID
     @Query(value = """

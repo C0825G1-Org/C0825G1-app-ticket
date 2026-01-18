@@ -399,5 +399,11 @@ public class EventService implements IEventService {
         return eventRepository.findTopTrendingEvents();
     }
 
+    @Override
+    public Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Sort sort = Sort.by(Sort.Direction.ASC, "startTime");
+        return eventRepository.searchHomeEvents(searchText, categoryId, location, pageable);
+    }
 
 }

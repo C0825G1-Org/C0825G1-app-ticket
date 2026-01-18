@@ -1,7 +1,6 @@
 package com.codegym.appticket.controller;
 
 
-import com.codegym.appticket.dto.event.EventSearchDTO;
 import com.codegym.appticket.dto.home.HomeEventDTO;
 import com.codegym.appticket.dto.home.TrendingEventDTO;
 import com.codegym.appticket.dto.home.UpComingEventDTO;
@@ -10,8 +9,6 @@ import com.codegym.appticket.service.IEventCategoryService;
 import com.codegym.appticket.service.IEventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -78,32 +75,8 @@ public class HomeController {
             location = null;
         }
         
-        // Check if there are any actual filters
-        boolean hasFilters = (search != null && !search.isEmpty()) || 
-                           category != null || 
-                           (location != null && !location.isEmpty());
-        
-        Page<?> events;
-        
-        if (hasFilters) {
-            // Create search DTO with filters
-            EventSearchDTO searchDTO = new EventSearchDTO();
-            searchDTO.setTitle(search);
-            searchDTO.setCategoryId(category);
-            
-            // TODO: Add location filtering when EventSearchDTO supports it
-            // For now, location is received but not used in search
-            
-            // Create pageable with sorting
-            // TODO: Implement sorting logic based on sort parameter
-            Pageable pageable = PageRequest.of(page, size);
-            
-            // Search events with filters
-            events = eventService.search(searchDTO, pageable);
-        } else {
-            // If no filters, show all events (same as /events)
-            events = eventService.findAllEvent(page, size);
-        }
+        // Use unified search method that returns HomeEventDTO
+        Page<HomeEventDTO> events = eventService.searchHomeEvents(search, category, location, page, size);
         
         // Load all categories for filter sidebar
         model.addAttribute("categories", eventCategoryService.findAll());

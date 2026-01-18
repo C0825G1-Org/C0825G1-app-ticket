@@ -53,13 +53,13 @@
                                         th:value="${param.search != null ? param.search[0] : ''}">
                                 </div>
 
-                                <div class="input-group">
-                                    <button type="submit" class="btn btn-primary btn-sm w-100 mt-2">
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary btn-sm flex-fill mt-2">
                                         <i class="bi bi-search me-1"></i> Tìm kiếm
                                     </button>
-                                    <button type="clear" class="btn btn-primary btn-sm w-100 mt-2">
-                                        <i class="bi bi-x me-1"></i> Xóa
-                                    </button>
+                                    <a th:href="@{/events}" class="btn btn-primary btn-sm flex-fill mt-2">
+                                        <i class="bi bi-x-circle me-1"></i> Xóa
+                                    </a>
                                 </div>
                             </div>
 
@@ -83,8 +83,8 @@
                                     <option value="Hà Nội"
                                         th:selected="${param.location != null and param.location[0] == 'Hà Nội'}">Hà Nội
                                     </option>
-                                    <option value="TP. HCM"
-                                        th:selected="${param.location != null and param.location[0] == 'TP. HCM'}">TP.
+                                    <option value="Ho Chi Minh"
+                                        th:selected="${param.location != null and param.location[0] == 'Ho Chi Minh'}">TP.
                                         Hồ Chí Minh</option>
                                     <option value="Đà Nẵng"
                                         th:selected="${param.location != null and param.location[0] == 'Đà Nẵng'}">Đà
