@@ -29,6 +29,15 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
     // Đếm số sự kiện user đã tạo
     long countByCreatedBy(User createdBy);
 
+    // Đếm số sự kiện theo trạng thái (cho admin dashboard/notification)
+    long countByStatus(com.codegym.appticket.entity.EventStatus status);
+
     // Lấy danh sách sự kiện user đã tạo, sắp xếp mới nhất
     List<Event> findByCreatedByOrderByCreatedDateDesc(User createdBy, Pageable pageable);
+
+    // Lấy top 10 sự kiện mới nhất theo trạng thái (cho notification)
+    List<Event> findTop10ByStatusOrderByCreatedDateDesc(com.codegym.appticket.entity.EventStatus status);
+
+    // Tìm kiếm theo status (tách biệt để không sửa hàm search cũ)
+    org.springframework.data.domain.Page<Event> findByStatus(com.codegym.appticket.entity.EventStatus status, Pageable pageable);
 }

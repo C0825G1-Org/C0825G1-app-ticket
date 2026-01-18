@@ -249,6 +249,7 @@ public class UserService implements IUserService {
         user.setPassword(passwordEncoder.encode(DEFAULT_PASSWORD));
         user.setEnabled(dto.getEnabled() != null ? dto.getEnabled() : true);
         user.setIsDeleted(false);
+        user.setAuthProvider(AuthenticationProvider.LOCAL);
 
         // Set role
         if (dto.getRoleId() != null) {
@@ -475,5 +476,30 @@ public class UserService implements IUserService {
         user.setOtpCode(null);
         user.setOtpExpiry(null);
         IUserRepository.save(user);
+    }
+    @Override
+    public void updateProfile(Long userId, UserProfileDTO dto) {
+        User user = IUserRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user với ID: " + userId));
+
+        user.setFullName(dto.getFullName());
+        user.setPhoneNumber(dto.getPhoneNumber());
+
+        // Nếu email thay đổi, kiểm tra trùng lặp
+        if (!user.getEmail().equals(dto.getEmail())) {
+            if (IUserRepository.existsByEmail(dto.getEmail())) {
+                throw new RuntimeException("Email đã được sử dụng: " + dto.getEmail());
+            }
+            user.setEmail(dto.getEmail());
+            // TODO: Có thể yêu cầu verify lại email nếu cần
+        }
+        
+        IUserRepository.save(user);
+    }
+    @Override
+    public UserDTO getUserByEmail(String email) {
+        User user = IUserRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user với email: " + email));
+        return toUserDTO(user);
     }
 }

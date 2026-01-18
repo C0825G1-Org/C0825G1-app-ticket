@@ -25,9 +25,12 @@ public class AdminEventController {
 
     @GetMapping
     public String listEvents(@ModelAttribute("eventSearchDTO") com.codegym.appticket.dto.event.EventSearchDTO searchDTO,
+            @RequestParam(required = false) com.codegym.appticket.entity.EventStatus status,
             @org.springframework.data.web.PageableDefault(size = 5) org.springframework.data.domain.Pageable pageable,
             Model model) {
-        if (searchDTO.getTitle() != null || searchDTO.getCategoryId() != null ||
+        if (status != null) {
+            model.addAttribute("events", eventService.findByStatus(status, pageable));
+        } else if (searchDTO.getTitle() != null || searchDTO.getCategoryId() != null ||
                 searchDTO.getStartDate() != null || searchDTO.getEndDate() != null) {
             model.addAttribute("events", eventService.search(searchDTO, pageable));
         } else {

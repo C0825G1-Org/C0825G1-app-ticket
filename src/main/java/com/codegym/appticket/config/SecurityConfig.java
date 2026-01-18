@@ -45,7 +45,7 @@ public class SecurityConfig {
                 // .csrf((csrf) -> csrf.disable()) 
                 .authorizeHttpRequests((authorizeHttpRequests) ->
                         authorizeHttpRequests
-                                .requestMatchers("/login", "/register", "/forgot-password", "/verify-forgot-password", "/reset-password", "/verify-otp", "/error/**").permitAll()
+                                .requestMatchers("/", "/login", "/register", "/forgot-password", "/verify-forgot-password", "/reset-password", "/verify-otp", "/error/**").permitAll()
                                 .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**", "/webjars/**").permitAll()
                                 .requestMatchers("/admin/**").hasAnyAuthority("ADMIN")
                                 .anyRequest().authenticated())

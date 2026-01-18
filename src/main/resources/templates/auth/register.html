@@ -56,11 +56,11 @@
                             <i class="bi bi-exclamation-circle me-2"></i><span th:text="${error}"></span>
                         </div>
 
-                        <form th:action="@{/register}" th:object="${registerDTO}" method="post">
+                        <form th:action="@{/register}" th:object="${registerDTO}" method="post" novalidate>
                             <div class="mb-3">
                                 <label class="form-label small fw-bold text-muted">Họ và tên</label>
                                 <input type="text" class="form-control" th:field="*{fullName}"
-                                    placeholder="Nhập họ tên đầy đủ" required>
+                                    placeholder="Nhập họ tên đầy đủ">
                                 <div th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"
                                     class="text-danger small mt-1"></div>
                             </div>
@@ -68,7 +68,7 @@
                             <div class="mb-3">
                                 <label class="form-label small fw-bold text-muted">Email</label>
                                 <input type="email" class="form-control" th:field="*{email}"
-                                    placeholder="name@example.com" required>
+                                    placeholder="name@example.com">
                                 <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}"
                                     class="text-danger small mt-1"></div>
                             </div>
@@ -84,7 +84,7 @@
                             <div class="mb-3">
                                 <label class="form-label small fw-bold text-muted">Mật khẩu</label>
                                 <input type="password" class="form-control" th:field="*{password}"
-                                    placeholder="••••••••" required>
+                                    placeholder="••••••••">
                                 <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}"
                                     class="text-danger small mt-1"></div>
                             </div>
@@ -92,19 +92,21 @@
                             <div class="mb-3">
                                 <label class="form-label small fw-bold text-muted">Nhập lại mật khẩu</label>
                                 <input type="password" class="form-control" th:field="*{confirmPassword}"
-                                    placeholder="••••••••" required>
+                                    placeholder="••••••••">
                                 <div th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"
                                     class="text-danger small mt-1"></div>
                             </div>
 
                             <div class="mb-3 form-check">
-                                <input type="checkbox" class="form-check-input" id="terms" required>
+                                <input type="checkbox" class="form-check-input" id="terms" th:field="*{terms}">
                                 <label class="form-check-label small text-muted" for="terms">
                                     Tôi đồng ý với <a href="#" class="text-decoration-none"
                                         style="color: var(--primary-color);">Điều khoản sử dụng</a> và <a href="#"
                                         class="text-decoration-none" style="color: var(--primary-color);">Chính sách bảo
                                         mật</a>
                                 </label>
+                                <div th:if="${#fields.hasErrors('terms')}" th:errors="*{terms}"
+                                    class="text-danger small mt-1"></div>
                             </div>
 
                             <div class="d-grid mb-4">

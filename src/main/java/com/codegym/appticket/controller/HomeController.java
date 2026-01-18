@@ -14,8 +14,13 @@ public class HomeController {
     private IEventRepository eventRepository;
 
     @GetMapping
-    public String showHomePage(){
+    public String showHomePage() {
         return "home/index";
+    }
+
+    @GetMapping("/403")
+    public String showAccessDenied() {
+        return "error/403";
     }
 
 }
