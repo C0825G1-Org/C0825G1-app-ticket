@@ -3,6 +3,9 @@
 
 <head th:replace="~{common/layout :: head('Chỉnh sửa sự kiện')}">
 </head>
+<link rel="stylesheet" href="/css/wizard-custom.css">
+<script th:src="@{'https://cdn.tiny.cloud/1/' + ${tinyMceApiKey} + '/tinymce/6/tinymce.min.js'}"
+    referrerpolicy="origin"></script>
 
 <body>
     <div th:replace="~{common/layout :: admin-layout(~{::content})}">
@@ -29,217 +32,274 @@
 
 
 
+                    <div class="step-indicator">
+                        <div class="step-item active" id="step-indicator-1">
+                            <div class="step-circle">1</div>
+                            <div class="text-start ms-2">
+                                <div class="small text-uppercase text-muted" style="font-size: 0.7rem;">Bước 1</div>
+                                <div class="step-label">Thông tin</div>
+                            </div>
+                        </div>
+                        <div class="step-line"></div>
+                        <div class="step-item" id="step-indicator-2">
+                            <div class="step-circle">2</div>
+                            <div class="text-start ms-2">
+                                <div class="small text-uppercase text-muted" style="font-size: 0.7rem;">Bước 2</div>
+                                <div class="step-label">Hình ảnh</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <form id="editEventForm" th:data-event-id="${eventId}" th:object="${eventUpdateDTO}"
                         enctype="multipart/form-data">
 
-                        <!-- Basic Info -->
-                        <div class="card border-0 shadow-sm rounded-4 mb-4">
-                            <div class="card-header bg-white border-bottom py-3">
-                                <h5 class="fw-bold mb-0"><i class="bi bi-info-circle text-primary me-2"></i>Thông tin cơ
-                                    bản</h5>
-                            </div>
-                            <div class="card-body p-4">
-                                <div class="mb-3">
-                                    <label class="form-label fw-medium">Tên sự kiện <span
-                                            class="text-danger">*</span></label>
-                                    <input type="text" class="form-control form-control-lg" th:field="*{title}"
-                                        required>
-                                    <div class="text-danger small error-message" id="error-title"></div>
+                        <!-- STEP 1: INFO -->
+                        <div id="step-info">
+                            <!-- Basic Info -->
+                            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                                <div class="card-header bg-white border-bottom py-3">
+                                    <h5 class="fw-bold mb-0"><i class="bi bi-info-circle text-primary me-2"></i>Thông
+                                        tin cơ bản</h5>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-medium">Danh mục <span
-                                            class="text-danger">*</span></label>
-                                    <select class="form-select form-select-lg" th:field="*{categoryId}" required>
-                                        <option th:each="cat : ${categories}" th:value="${cat.id}"
-                                            th:text="${cat.name}">Category</option>
-                                    </select>
-                                    <div class="text-danger small error-message" id="error-categoryId"></div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-medium">Mô tả sự kiện <span
-                                            class="text-danger">*</span></label>
-                                    <textarea class="form-control" rows="5" th:field="*{description}"
-                                        required></textarea>
-                                    <div class="text-danger small error-message" id="error-description"></div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-medium">Địa điểm <span
-                                            class="text-danger">*</span></label>
-                                    <input type="text" class="form-control form-control-lg" th:field="*{location}"
-                                        required>
-                                    <div class="text-danger small error-message" id="error-location"></div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-medium">Trạng thái</label>
-                                    <select class="form-select" th:field="*{status}">
-                                        <option value="PENDING">Chờ duyệt (PENDING)</option>
-                                        <option value="APPROVED">Đã duyệt (APPROVED)</option>
-                                        <option value="REJECTED">Từ chối (REJECTED)</option>
-                                        <option value="CANCELLED">Đã hủy (CANCELLED)</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Event Times -->
-                        <div class="card border-0 shadow-sm rounded-4 mb-4">
-                            <div
-                                class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                                <h5 class="fw-bold mb-0"><i class="bi bi-clock text-primary me-2"></i>Thời gian diễn ra
-                                </h5>
-                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addEventTime()">
-                                    <i class="bi bi-plus-lg"></i> Thêm khung giờ
-                                </button>
-                            </div>
-                            <div class="card-body p-4" id="eventTimesContainer">
-                                <div class="row g-3 mb-3 event-time-row" th:each="time, stat : *{eventTimes}">
-                                    <div class="col-md-5">
-                                        <label class="form-label fw-medium">Bắt đầu <span
+                                <div class="card-body p-4">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-medium">Tên sự kiện <span
                                                 class="text-danger">*</span></label>
-                                        <input type="datetime-local" class="form-control"
-                                            th:name="|eventTimes[${stat.index}].startTime|"
-                                            th:value="${#temporals.format(time.startTime, 'yyyy-MM-dd''T''HH:mm')}"
+                                        <input type="text" class="form-control form-control-lg" th:field="*{title}"
                                             required>
+                                        <div class="text-danger small error-message" id="error-title"></div>
                                     </div>
-                                    <div class="col-md-5">
-                                        <label class="form-label fw-medium">Kết thúc <span
+                                    <div class="mb-3">
+                                        <label class="form-label fw-medium">Danh mục <span
                                                 class="text-danger">*</span></label>
-                                        <input type="datetime-local" class="form-control"
-                                            th:name="|eventTimes[${stat.index}].endTime|"
-                                            th:value="${#temporals.format(time.endTime, 'yyyy-MM-dd''T''HH:mm')}"
+                                        <select class="form-select form-select-lg" th:field="*{categoryId}" required>
+                                            <option th:each="cat : ${categories}" th:value="${cat.id}"
+                                                th:text="${cat.name}">Category</option>
+                                        </select>
+                                        <div class="text-danger small error-message" id="error-categoryId"></div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-medium">Mô tả sự kiện <span
+                                                class="text-danger">*</span></label>
+                                        <textarea class="form-control" rows="5" th:field="*{description}"
+                                            id="description" placeholder="Mô tả chi tiết..."></textarea>
+                                        <div class="text-danger small error-message" id="error-description"></div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-medium">Địa điểm <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control form-control-lg" th:field="*{location}"
                                             required>
+                                        <div class="text-danger small error-message" id="error-location"></div>
                                     </div>
-                                    <div class="col-md-2 d-flex align-items-end">
-                                        <button type="button" class="btn btn-outline-danger w-100"
-                                            onclick="this.closest('.event-time-row').remove()">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Ticket Types -->
-                        <div class="card border-0 shadow-sm rounded-4 mb-4">
-                            <div
-                                class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                                <h5 class="fw-bold mb-0"><i class="bi bi-ticket-perforated text-primary me-2"></i>Loại
-                                    vé</h5>
-                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addTicketType()">
-                                    <i class="bi bi-plus-lg"></i> Thêm loại vé
-                                </button>
-                            </div>
-                            <div class="card-body p-4" id="ticketTypesContainer">
-                                <div class="row g-3 mb-3 ticket-type-row" th:each="ticket, stat : *{ticketTypes}">
-                                    <div class="col-md-4">
-                                        <input type="hidden" th:field="*{ticketTypes[__${stat.index}__].id}">
-                                        <label class="form-label fw-medium">Tên vé <span
-                                                class="text-danger">*</span></label>
-                                        <input type="text" class="form-control"
-                                            th:field="*{ticketTypes[__${stat.index}__].name}" required>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label fw-medium">Giá vé (VNĐ) <span
-                                                class="text-danger">*</span></label>
-                                        <input type="number" class="form-control"
-                                            th:field="*{ticketTypes[__${stat.index}__].price}" min="0" required>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label fw-medium">Số lượng <span
-                                                class="text-danger">*</span></label>
-                                        <input type="number" class="form-control"
-                                            th:field="*{ticketTypes[__${stat.index}__].quantity}" min="1" required>
-                                    </div>
-                                    <div class="col-md-2 d-flex align-items-end">
-                                        <button type="button" class="btn btn-outline-danger w-100"
-                                            onclick="this.closest('.ticket-type-row').remove(); reindexTicketTypes();">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-medium">Trạng thái</label>
+                                        <select class="form-select" th:field="*{status}">
+                                            <option value="PENDING">Chờ duyệt (PENDING)</option>
+                                            <option value="APPROVED">Đã duyệt (APPROVED)</option>
+                                            <option value="REJECTED">Từ chối (REJECTED)</option>
+                                            <option value="CANCELLED">Đã hủy (CANCELLED)</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Media Files -->
-                        <div class="card border-0 shadow-sm rounded-4 mb-4">
-                            <div class="card-header bg-white border-bottom py-3">
-                                <h5 class="fw-bold mb-0"><i class="bi bi-images text-primary me-2"></i>Hình ảnh & Truyền
-                                    thông</h5>
-                            </div>
-                            <div class="card-body p-4">
-                                <!-- Hidden Inputs for URLs (Bound to DTO) -->
-                                <input type="hidden" th:field="*{bannerUrl}" id="bannerUrl">
-                                <input type="hidden" th:field="*{logoUrl}" id="logoUrl">
-                                <input type="hidden" th:field="*{ticketMapUrl}" id="ticketMapUrl">
-
-                                <!-- Gallery Container for Hidden Inputs (Now used for NEW uploads mainly) -->
-                                <div id="galleryUrlsContainer">
-                                    <!-- Existing gallery URLs are now inside the visual wrapper below -->
+                            <!-- Event Times -->
+                            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                                <div
+                                    class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                    <h5 class="fw-bold mb-0"><i class="bi bi-clock text-primary me-2"></i>Thời gian diễn
+                                        ra</h5>
+                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                        onclick="addEventTime()">
+                                        <i class="bi bi-plus-lg"></i> Thêm khung giờ
+                                    </button>
                                 </div>
-
-                                <!-- Banner -->
-                                <div class="mb-4">
-                                    <label class="form-label fw-medium">Banner Sự kiện (Thay đổi nếu chọn file
-                                        mới)</label>
-                                    <div th:if="*{bannerUrl}" class="mb-2">
-                                        <img th:src="*{bannerUrl}" class="img-thumbnail" style="max-height: 150px;">
-                                    </div>
-                                    <input type="file" class="form-control" id="bannerFile" accept="image/*">
-                                </div>
-                                <!-- Logo & Ticket Map -->
-                                <div class="row mb-4">
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-medium">Logo Sự kiện</label>
-                                        <div th:if="*{logoUrl}" class="mb-2">
-                                            <img th:src="*{logoUrl}" class="img-thumbnail" style="max-height: 100px;">
+                                <div class="card-body p-4" id="eventTimesContainer">
+                                    <div class="row g-3 mb-3 event-time-row" th:each="time, stat : *{eventTimes}">
+                                        <div class="col-md-5">
+                                            <label class="form-label fw-medium">Bắt đầu <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="datetime-local" class="form-control"
+                                                th:name="|eventTimes[${stat.index}].startTime|"
+                                                th:value="${#temporals.format(time.startTime, 'yyyy-MM-dd''T''HH:mm')}"
+                                                required>
                                         </div>
-                                        <input type="file" class="form-control" id="logoFile" accept="image/*">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-medium">Sơ đồ vị trí</label>
-                                        <div th:if="*{ticketMapUrl}" class="mb-2">
-                                            <img th:src="*{ticketMapUrl}" class="img-thumbnail"
-                                                style="max-height: 100px;">
+                                        <div class="col-md-5">
+                                            <label class="form-label fw-medium">Kết thúc <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="datetime-local" class="form-control"
+                                                th:name="|eventTimes[${stat.index}].endTime|"
+                                                th:value="${#temporals.format(time.endTime, 'yyyy-MM-dd''T''HH:mm')}"
+                                                required>
                                         </div>
-                                        <input type="file" class="form-control" id="ticketMapFile" accept="image/*">
-                                    </div>
-                                </div>
-                                <!-- Gallery -->
-                                <div class="mb-3">
-                                    <label class="form-label fw-medium">Thư viện ảnh/video (Thêm mới)</label>
-
-                                    <!-- Display Existing Gallery -->
-                                    <div class="d-flex flex-wrap gap-2 mb-2">
-                                        <!-- Iterate over galleryUrls to show images and allow removal -->
-                                        <!-- Note: logic depends on index matching the hidden input list above -->
-                                        <div th:each="url, stat : *{galleryUrls}"
-                                            class="gallery-item-wrapper position-relative">
-                                            <input type="hidden" name="galleryUrls" th:value="${url}">
-                                            <img th:src="${url}" class="img-thumbnail"
-                                                style="width: 80px; height: 80px; object-fit: cover;">
-                                            <button type="button"
-                                                class="btn btn-sm btn-danger position-absolute top-0 start-100 translate-middle badge rounded-pill"
-                                                onclick="this.closest('.gallery-item-wrapper').remove()">
-                                                <i class="bi bi-x"></i>
+                                        <div class="col-md-2 d-flex align-items-end">
+                                            <button type="button" class="btn btn-outline-danger w-100"
+                                                onclick="this.closest('.event-time-row').remove()">
+                                                <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
                                     </div>
-
-                                    <input type="file" class="form-control" id="galleryFiles" multiple
-                                        accept="image/*,video/*">
-                                    <div class="form-text text-muted">Có thể chọn nhiều file. Tối đa 10 files.</div>
                                 </div>
+                            </div>
+
+                            <!-- Ticket Types -->
+                            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                                <div
+                                    class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                    <h5 class="fw-bold mb-0"><i
+                                            class="bi bi-ticket-perforated text-primary me-2"></i>Loại vé</h5>
+                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                        onclick="addTicketType()">
+                                        <i class="bi bi-plus-lg"></i> Thêm loại vé
+                                    </button>
+                                </div>
+                                <div class="card-body p-4" id="ticketTypesContainer">
+                                    <div class="row g-3 mb-3 ticket-type-row" th:each="ticket, stat : *{ticketTypes}">
+                                        <div class="col-md-4">
+                                            <input type="hidden" th:field="*{ticketTypes[__${stat.index}__].id}">
+                                            <label class="form-label fw-medium">Tên vé <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control"
+                                                th:field="*{ticketTypes[__${stat.index}__].name}" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-medium">Giá vé (VNĐ) <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="number" class="form-control"
+                                                th:field="*{ticketTypes[__${stat.index}__].price}" min="0" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-medium">Số lượng <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="number" class="form-control"
+                                                th:field="*{ticketTypes[__${stat.index}__].quantity}" min="1" required>
+                                        </div>
+                                        <div class="col-md-2 d-flex align-items-end">
+                                            <button type="button" class="btn btn-outline-danger w-100"
+                                                onclick="this.closest('.ticket-type-row').remove(); reindexTicketTypes();">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Next Button for Step 1 -->
+                            <div class="d-flex justify-content-end mb-5">
+                                <button type="button" class="btn btn-primary btn-lg rounded-3 px-5 fw-bold"
+                                    onclick="nextStep()">
+                                    Tiếp tục <i class="bi bi-arrow-right ms-2"></i>
+                                </button>
                             </div>
                         </div>
 
-                        <!-- Submit -->
-                        <div class="d-flex gap-3 justify-content-end mb-5">
-                            <a th:href="@{/admin/events}"
-                                class="btn btn-outline-secondary btn-lg rounded-3 px-5">Hủy</a>
-                            <button type="submit" class="btn btn-gradient btn-lg rounded-3 px-5 fw-bold"
-                                style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); border: none; color: white;">
-                                <i class="bi bi-check-lg me-2"></i> Lưu thay đổi
-                            </button>
+                        <!-- STEP 2: MEDIA -->
+                        <div id="step-media" class="d-none">
+                            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                                <div class="card-header bg-white border-bottom py-3">
+                                    <h5 class="fw-bold mb-0"><i class="bi bi-images text-primary me-2"></i>Hình ảnh &
+                                        Truyền thông</h5>
+                                </div>
+                                <div class="card-body p-4">
+                                    <input type="hidden" th:field="*{bannerUrl}" id="bannerUrl">
+                                    <input type="hidden" th:field="*{logoUrl}" id="logoUrl">
+                                    <input type="hidden" th:field="*{ticketMapUrl}" id="ticketMapUrl">
+                                    <div id="galleryUrlsContainer"></div>
+
+                                    <div class="mb-5">
+                                        <label class="form-label fw-medium mb-3">Banner Sự kiện (Bắt buộc) <span
+                                                class="text-danger">*</span></label>
+                                        <div class="preview-container mb-2"
+                                            onclick="document.getElementById('bannerFile').click()">
+                                            <img id="preview-banner" class="preview-image" th:src="*{bannerUrl}"
+                                                th:style="*{bannerUrl} ? 'display:block' : 'display:none'">
+                                            <div class="preview-placeholder" id="placeholder-banner"
+                                                th:style="*{bannerUrl} ? 'display:none' : 'display:block'">
+                                                <i class="bi bi-card-image fs-1 d-block mb-2"></i>
+                                                <div class="small">Nhấn để thay đổi ảnh bìa</div>
+                                            </div>
+                                        </div>
+                                        <input type="file" class="form-control d-none" id="bannerFile" accept="image/*"
+                                            onchange="previewFile(this, 'preview-banner', 'placeholder-banner')">
+                                    </div>
+
+                                    <div class="row mb-5">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-medium mb-3">Logo Sự kiện</label>
+                                            <div class="preview-container mb-2"
+                                                onclick="document.getElementById('logoFile').click()"
+                                                style="height: 150px;">
+                                                <img id="preview-logo" class="preview-image" th:src="*{logoUrl}"
+                                                    style="object-fit: contain;"
+                                                    th:style="*{logoUrl} ? 'display:block; object-fit: contain' : 'display:none; object-fit: contain'">
+                                                <div class="preview-placeholder" id="placeholder-logo"
+                                                    th:style="*{logoUrl} ? 'display:none' : 'display:block'">
+                                                    <i class="bi bi-box-seam fs-2 d-block mb-2"></i>
+                                                    <div class="small">Nhấn tải logo</div>
+                                                </div>
+                                            </div>
+                                            <input type="file" class="form-control d-none" id="logoFile"
+                                                accept="image/*"
+                                                onchange="previewFile(this, 'preview-logo', 'placeholder-logo')">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-medium mb-3">Sơ đồ vị trí</label>
+                                            <div class="preview-container mb-2"
+                                                onclick="document.getElementById('ticketMapFile').click()"
+                                                style="height: 150px;">
+                                                <img id="preview-map" class="preview-image" th:src="*{ticketMapUrl}"
+                                                    style="object-fit: contain;"
+                                                    th:style="*{ticketMapUrl} ? 'display:block; object-fit: contain' : 'display:none; object-fit: contain'">
+                                                <div class="preview-placeholder" id="placeholder-map"
+                                                    th:style="*{ticketMapUrl} ? 'display:none' : 'display:block'">
+                                                    <i class="bi bi-map fs-2 d-block mb-2"></i>
+                                                    <div class="small">Nhấn tải sơ đồ</div>
+                                                </div>
+                                            </div>
+                                            <input type="file" class="form-control d-none" id="ticketMapFile"
+                                                accept="image/*"
+                                                onchange="previewFile(this, 'preview-map', 'placeholder-map')">
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-medium">Thư viện ảnh/video</label>
+                                        <!-- Old Gallery Display -->
+                                        <div class="d-flex flex-wrap gap-2 mb-3">
+                                            <div th:each="url, stat : *{galleryUrls}"
+                                                class="gallery-item-wrapper position-relative">
+                                                <input type="hidden" name="galleryUrls" th:value="${url}">
+                                                <img th:src="${url}" class="img-thumbnail"
+                                                    style="width: 80px; height: 80px; object-fit: cover;">
+                                                <button type="button"
+                                                    class="btn btn-sm btn-danger position-absolute top-0 start-100 translate-middle badge rounded-pill"
+                                                    onclick="this.closest('.gallery-item-wrapper').remove()">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <input type="file" class="form-control mb-3" id="galleryFiles" multiple
+                                            accept="image/*,video/*"
+                                            onchange="previewGallery(this, 'gallery-preview-grid')">
+                                        <div id="gallery-preview-grid" class="gallery-grid"></div>
+                                        <div class="form-text text-muted">Có thể chọn nhiều file. Tối đa 10 files.</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Buttons for Step 2 -->
+                            <div class="d-flex gap-3 justify-content-end mb-5">
+                                <button type="button" class="btn btn-outline-secondary btn-lg rounded-3 px-5"
+                                    onclick="prevStep()">
+                                    <i class="bi bi-arrow-left me-2"></i> Quay lại
+                                </button>
+                                <button type="submit" class="btn btn-gradient btn-lg rounded-3 px-5 fw-bold"
+                                    style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); border: none; color: white;">
+                                    <i class="bi bi-check-lg me-2"></i> Lưu thay đổi
+                                </button>
+                            </div>
                         </div>
                     </form>
 
@@ -262,8 +322,26 @@
                             });
 
 
+                            // Shared Cloudinary Logic
+                            // Initialize TinyMCE
+                            tinymce.init({
+                                selector: '#description',
+                                height: 300,
+                                plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help wordcount',
+                                toolbar: 'undo redo | formatselect | ' +
+                                    'bold italic backcolor | alignleft aligncenter ' +
+                                    'alignright alignjustify | bullist numlist outdent indent | ' +
+                                    'removeformat | help',
+                                content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+                            });
+
                             document.getElementById('editEventForm').addEventListener('submit', async function (e) {
                                 e.preventDefault();
+
+                                // Sync TinyMCE before submit
+                                if (tinymce.get('description')) {
+                                    tinymce.get('description').save();
+                                }
 
                                 // 1. Client-side Validation
                                 const galleryInput = document.getElementById('galleryFiles');
@@ -325,8 +403,17 @@
 
                                     const eventId = this.dataset.eventId;
 
+                                    // Get CSRF Token
+                                    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+                                    const headers = {
+                                        [csrfHeader]: csrfToken
+                                    };
+
                                     const response = await fetch(`/admin/events/edit/${eventId}`, {
                                         method: 'POST',
+                                        headers: headers,
                                         body: searchParams
                                     });
                                     const data = await response.json();
@@ -367,43 +454,118 @@
                                 }
                             });
 
-                            // Make global functions available
-                            window.deleteEvent = function (id, title) {
-                                Swal.fire({
-                                    title: `Xóa sự kiện "${title}"?`,
-                                    text: "Hành động này không thể hoàn tác!",
-                                    icon: 'warning',
-                                    showCancelButton: true,
-                                    confirmButtonColor: '#d33',
-                                    cancelButtonColor: '#3085d6',
-                                    confirmButtonText: 'Đồng ý xóa',
-                                    cancelButtonText: 'Hủy'
-                                }).then((result) => {
-                                    if (result.isConfirmed) {
-                                        fetch('/api/events/' + id, {
-                                            method: 'DELETE',
-                                            headers: { 'Content-Type': 'application/json' }
-                                        })
-                                            .then(response => {
-                                                if (response.ok) {
-                                                    Swal.fire(
-                                                        'Đã xóa!',
-                                                        'Sự kiện đã được xóa thành công.',
-                                                        'success'
-                                                    ).then(() => {
-                                                        window.location.href = '/admin/events';
-                                                    });
-                                                } else {
-                                                    Swal.fire('Lỗi!', 'Xóa sự kiện thất bại.', 'error');
-                                                }
-                                            })
-                                            .catch(error => {
-                                                console.error('Error:', error);
-                                                Swal.fire('Lỗi!', 'Đã xảy ra lỗi khi xóa sự kiện.', 'error');
-                                            });
+                            // Wizard Navigation Functions
+                            window.showStep = function (step) {
+                                document.getElementById('step-info').classList.toggle('d-none', step !== 1);
+                                document.getElementById('step-media').classList.toggle('d-none', step !== 2);
+
+                                const step1 = document.getElementById('step-indicator-1');
+                                const step2 = document.getElementById('step-indicator-2');
+
+                                if (step === 1) {
+                                    step1.classList.add('active');
+                                    step2.classList.remove('active');
+                                } else {
+                                    step1.classList.remove('active'); // Optional
+                                    step1.classList.add('active'); // keep 1 completed
+                                    step2.classList.add('active');
+                                }
+
+                                window.scrollTo(0, 0);
+                            };
+
+                            window.nextStep = function () {
+                                // Sync TinyMCE code to textarea
+                                if (tinymce.get('description')) {
+                                    tinymce.get('description').save();
+                                }
+
+                                const infoContainer = document.getElementById('step-info');
+                                const inputs = infoContainer.querySelectorAll('input, select, textarea');
+                                let valid = true;
+                                inputs.forEach(input => {
+                                    if (!input.checkValidity()) {
+                                        input.reportValidity();
+                                        valid = false;
+                                        return;
                                     }
                                 });
+
+                                // Check description manually
+                                const descContent = tinymce.get('description') ? tinymce.get('description').getContent() : document.getElementById('description').value;
+                                if (!descContent.trim()) {
+                                    document.getElementById('error-description').innerText = 'Vui lòng nhập mô tả sự kiện';
+                                    valid = false;
+                                } else {
+                                    document.getElementById('error-description').innerText = '';
+                                }
+
+                                if (valid) {
+                                    showStep(2);
+                                }
                             };
+
+                            window.prevStep = function () {
+                                showStep(1);
+                            };
+
+                            // Preview Functions
+                            window.previewFile = function (input, imgId, placeholderId) {
+                                const file = input.files[0];
+                                const img = document.getElementById(imgId);
+                                const placeholder = document.getElementById(placeholderId);
+
+                                if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = function (e) {
+                                        img.src = e.target.result;
+                                        img.style.display = 'block';
+                                        placeholder.style.display = 'none';
+                                    }
+                                    reader.readAsDataURL(file);
+                                } else {
+                                    // Don't reset to placeholder if there is an existing backend URL (complex in JS to know without hidden field or check)
+                                    // But here we set src to ''. If user clears input, we might want to revert to backend URL?
+                                    // For simplicity: if clear, show placeholder or handle manually.
+                                    // Actually, if we just hide 'display', we need to check if there is an original one?
+                                    // In this edit form, the <img> has th:src. If JS clears it, it goes blank.
+                                    // Let's just keep it simple.
+                                    img.style.display = 'none';
+                                    placeholder.style.display = 'block';
+                                }
+                            };
+
+                            window.previewGallery = function (input, gridId) {
+                                const grid = document.getElementById(gridId);
+                                grid.innerHTML = '';
+
+                                if (input.files) {
+                                    Array.from(input.files).forEach(file => {
+                                        const item = document.createElement('div');
+                                        item.className = 'gallery-item';
+
+                                        const reader = new FileReader();
+                                        reader.onload = function (e) {
+                                            if (file.type.startsWith('video/')) {
+                                                const video = document.createElement('video');
+                                                video.src = e.target.result;
+                                                video.controls = false;
+                                                item.appendChild(video);
+                                            } else {
+                                                const img = document.createElement('img');
+                                                img.src = e.target.result;
+                                                item.appendChild(img);
+                                            }
+                                        }
+                                        reader.readAsDataURL(file);
+
+                                        grid.appendChild(item);
+                                    });
+                                }
+                            };
+
+                            // Initialize Wizard
+                            showStep(1);
                         });
 
                         function removeGalleryItem(button) {

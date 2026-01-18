@@ -23,6 +23,9 @@ public class AdminEventController {
     private final IEventService eventService;
     private final IEventCategoryService eventCategoryService;
 
+    @org.springframework.beans.factory.annotation.Value("${tinymce.api-key}")
+    private String tinyMceApiKey;
+
     @GetMapping
     public String listEvents(@ModelAttribute("eventSearchDTO") com.codegym.appticket.dto.event.EventSearchDTO searchDTO,
             @RequestParam(required = false) com.codegym.appticket.entity.EventStatus status,
@@ -61,6 +64,7 @@ public class AdminEventController {
 
         model.addAttribute("eventCreateDTO", dto);
         model.addAttribute("categories", eventCategoryService.findAll());
+        model.addAttribute("tinyMceApiKey", tinyMceApiKey);
         return "admin/event/create";
     }
 
@@ -143,6 +147,7 @@ public class AdminEventController {
             model.addAttribute("eventUpdateDTO", updateDTO);
             model.addAttribute("eventId", id);
             model.addAttribute("categories", eventCategoryService.findAll());
+            model.addAttribute("tinyMceApiKey", tinyMceApiKey);
             return "admin/event/edit";
         } catch (RuntimeException e) {
             model.addAttribute("errorMessage", e.getMessage());
