@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <!-- Admin Sidebar Fragment -->
 <aside th:fragment="admin-sidebar" class="sidebar d-flex flex-column">
@@ -29,7 +29,7 @@
                     <span>Quản lý sự kiện</span>
                 </a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" sec:authorize="hasAuthority('ADMIN')">
                 <a th:href="@{/admin/users}" class="nav-link"
                     th:classappend="${#strings.equals(currentPage, 'users')} ? 'active' : ''">
                     <i class="bi bi-people"></i>
@@ -43,7 +43,7 @@
                     <span>Danh mục</span>
                 </a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" sec:authorize="hasAuthority('ADMIN')">
                 <a th:href="@{/admin/reports}" class="nav-link"
                     th:classappend="${#strings.equals(currentPage, 'reports')} ? 'active' : ''">
                     <i class="bi bi-bar-chart"></i>
@@ -54,7 +54,9 @@
     </nav>
 
     <div class="p-3 border-top border-secondary border-opacity-25">
-        <a th:href="@{/logout}" class="nav-link text-danger">
+        <form th:action="@{/logout}" method="post" id="adminLogoutForm" class="d-none"></form>
+        <a href="#" onclick="event.preventDefault(); document.getElementById('adminLogoutForm').submit();"
+            class="nav-link text-danger">
             <i class="bi bi-box-arrow-right"></i>
             <span>Đăng xuất</span>
         </a>
@@ -70,25 +72,164 @@
                 <i class="bi bi-list fs-4"></i>
             </button>
             <div class="ms-auto d-flex align-items-center gap-3">
-                <button class="btn btn-link text-muted position-relative p-2">
-                    <i class="bi bi-bell fs-5"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                        style="font-size: 0.6rem;">
-                        3
-                    </span>
-                </button>
+                <div class="dropdown">
+                    <button class="btn btn-link text-muted position-relative p-2" type="button"
+                        data-bs-toggle="dropdown" aria-expanded="false" id="notificationDropdown">
+                        <i class="bi bi-bell fs-5"></i>
+                        <span id="notificationBadge" th:if="${pendingEventCount != null and pendingEventCount > 0}"
+                            th:text="${pendingEventCount}"
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                            style="font-size: 0.6rem;">
+                            0
+                        </span>
+                        <span id="notificationBadge" th:unless="${pendingEventCount != null and pendingEventCount > 0}"
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none"
+                            style="font-size: 0.6rem;">
+                            0
+                        </span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-0 border-0 shadow-lg mt-2"
+                        aria-labelledby="notificationDropdown" style="width: 320px;">
+                        <div
+                            class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light rounded-top">
+                            <h6 class="fw-bold mb-0">Thông báo</h6>
+                            <small class="text-muted cursor-pointer" onclick="markAllRead()"
+                                style="font-size: 0.75rem; cursor: pointer;">Đánh dấu đã đọc</small>
+                        </div>
+                        <div id="notificationList" class="list-group list-group-flush"
+                            style="max-height: 300px; overflow-y: auto;">
+                            <!-- Items will be loaded via AJAX -->
+                            <div class="text-center py-4 text-muted">
+                                <small>Đang tải...</small>
+                            </div>
+                        </div>
+                        <div class="p-2 text-center border-top">
+                            <a th:href="@{/admin/events(status='PENDING')}"
+                                class="text-decoration-none small fw-bold text-primary">
+                                Xem tất cả
+                            </a>
+                        </div>
+                    </div>
+                </div>
                 <div class="d-flex align-items-center gap-2">
-                    <img th:src="${session.user != null} ? 'https://ui-avatars.com/api/?name=' + ${session.user.fullName} + '&background=0f172a&color=fff' : 'https://ui-avatars.com/api/?name=Admin&background=0f172a&color=fff'"
+                    <img th:src="${#authentication.principal != 'anonymousUser'} ? 'https://ui-avatars.com/api/?name=' + ${#authentication.principal.user.fullName} + '&background=0f172a&color=fff' : 'https://ui-avatars.com/api/?name=Admin&background=0f172a&color=fff'"
                         class="rounded-circle" width="40" height="40">
                     <div class="d-none d-md-block">
-                        <div class="fw-bold small"
-                            th:text="${session.user != null} ? ${session.user.fullName} : 'Admin'">Admin</div>
+                        <div class="fw-bold small" sec:authorize="isAuthenticated()"
+                            sec:authentication="principal.user.fullName">Admin</div>
                         <div class="text-muted" style="font-size: 0.75rem;">Quản trị viên</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const dropdownBtn = document.getElementById('notificationDropdown');
+            const listContainer = document.getElementById('notificationList');
+            const badge = document.getElementById('notificationBadge');
+
+            // Initial Count Load
+            updateNotificationCount();
+
+            // Load notifications when dropdown is opened
+            dropdownBtn.addEventListener('show.bs.dropdown', function () {
+                fetchNotifications();
+            });
+
+            // SSE Connection
+            const eventSource = new EventSource('/api/admin/notifications/stream');
+
+            eventSource.addEventListener('NEW_EVENT_REQUEST', function (event) {
+                const data = JSON.parse(event.data);
+
+                // 1. Update Badge
+                let currentCount = parseInt(badge.innerText) || 0;
+                badge.innerText = currentCount + 1;
+                badge.classList.remove('d-none');
+
+                // 2. If dropdown is open, prepend item
+                if (dropdownBtn.classList.contains('show')) {
+                    const newItemHtml = createNotificationItemHtml(data);
+                    // Remove "No notifications" or "Loading" message if present
+                    const emptyMsg = listContainer.querySelector('.text-center');
+                    if (emptyMsg) {
+                        emptyMsg.remove();
+                    }
+                    listContainer.insertAdjacentHTML('afterbegin', newItemHtml);
+                }
+            });
+
+            eventSource.onerror = function (err) {
+                console.error("EventSource failed:", err);
+                eventSource.close();
+            };
+
+            function fetchNotifications() {
+                listContainer.innerHTML = '<div class="text-center py-4 text-muted"><small>Đang tải...</small></div>';
+
+                fetch('/api/admin/notifications/pending-events')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length === 0) {
+                            listContainer.innerHTML = '<div class="text-center py-4 text-muted"><small>Không có thông báo mới</small></div>';
+                            return;
+                        }
+
+                        let html = '';
+                        data.forEach(item => {
+                            html += createNotificationItemHtml(item);
+                        });
+                        listContainer.innerHTML = html;
+                    })
+                    .catch(err => {
+                        console.error('Error fetching notifications:', err);
+                        listContainer.innerHTML = '<div class="text-center py-4 text-danger"><small>Lỗi tải thông báo</small></div>';
+                    });
+            }
+
+            function updateNotificationCount() {
+                fetch('/api/admin/notifications/count')
+                    .then(response => response.json())
+                    .then(count => {
+                        if (count > 0) {
+                            badge.innerText = count;
+                            badge.classList.remove('d-none');
+                        } else {
+                            badge.classList.add('d-none');
+                        }
+                    })
+                    .catch(console.error);
+            }
+
+            function createNotificationItemHtml(item) {
+                return `
+                    <a href="/admin/events/${item.id}" class="list-group-item list-group-item-action py-3 px-3 border-bottom-0">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
+                                <i class="bi bi-calendar-plus"></i>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <div class="d-flex justify-content-between align-items-baseline mb-1">
+                                    <h6 class="mb-0 text-truncate text-dark fw-bold" style="font-size: 0.9rem;">${item.title}</h6>
+                                    <small class="text-muted ms-2" style="font-size: 0.7rem; white-space: nowrap;">${item.timeAgo}</small>
+                                </div>
+                                <p class="mb-0 text-muted small text-truncate">
+                                    <span class="fw-medium text-dark">${item.createdBy}</span> yêu cầu tạo sự kiện mới
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                `;
+            }
+        });
+
+        function markAllRead() {
+            // Placeholder for mark all read logic
+        }
+
+    </script>
 </header>
 
 </html>

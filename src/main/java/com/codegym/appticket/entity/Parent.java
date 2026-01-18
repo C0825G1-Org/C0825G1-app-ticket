@@ -22,9 +22,12 @@ public class Parent {
 
     @CreatedDate
     @Column(name = "created_at", updatable = false)
-    private java.time.LocalDateTime createdAt;
+    private java.time.LocalDateTime createdDate;
 
-    // Các trường khác như createdByUser, lastModifiedByUser, isDeleted 
-    // không có trong SQL schema nên sẽ được loại bỏ hoặc tạm thời comment lại
-    // để tránh lỗi Mapping nếu người dùng không muốn thay đổi cấu trúc DB.
+    @LastModifiedDate
+    @Column(name = "last_modified_at")
+    private java.time.LocalDateTime lastModifiedDate;
+    
+    @Column(name = "is_deleted")
+    private Boolean isDeleted = false;
 }

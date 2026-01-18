@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang chủ</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <th:block th:replace="~{common/styles :: styles}"></th:block>
+</head>
+
+<body>
+
+    <!-- Sidebar -->
+    <div th:replace="~{common/header :: public-navbar}"></div>
+
+    <!-- Hero Section -->
+    <section class="hero-section text-center">
+        <div class="container">
+            <span class="badge bg-light text-primary border border-primary-subtle rounded-pill px-3 py-2 mb-4">
+                🚀 Nền tảng đặt vé số 1 Việt Nam
+            </span>
+            <h1 class="display-3 fw-bold mb-4">
+                Khám phá & Đặt vé <br>
+                <span class="gradient-text">Sự kiện Đẳng cấp</span>
+            </h1>
+            <p class="lead text-muted mb-5 mx-auto" style="max-width: 700px;">
+                Hàng ngàn sự kiện âm nhạc, hội thảo, thể thao đang chờ đón bạn. Trải nghiệm đặt vé dễ dàng, check-in
+                nhanh chóng.
+            </p>
+
+            <!-- Search Widget -->
+            <div class="search-widget mx-auto text-start" style="max-width: 900px;">
+                <form class="row g-3">
+                    <div class="col-lg-5">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 rounded-start-4 ps-3">
+                                <i class="bi bi-search text-muted"></i>
+                            </span>
+                            <input type="text" class="form-control form-control-lg border-start-0 ps-0"
+                                placeholder="Tìm kiếm sự kiện...">
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 rounded-start-4 ps-3">
+                                <i class="bi bi-geo-alt text-muted"></i>
+                            </span>
+                            <select class="form-select form-select-lg border-start-0 ps-0 bg-transparent">
+                                <option>Toàn quốc</option>
+                                <option>Hà Nội</option>
+                                <option>TP. HCM</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-2">
+                        <div class="input-group">
+                            <input type="date" class="form-control form-control-lg rounded-4 text-muted">
+                        </div>
+                    </div>
+                    <div class="col-lg-2">
+                        <button type="button" onclick="window.location.href='events.html'"
+                            class="btn btn-gradient btn-lg w-100 rounded-4 fw-bold h-100">
+                            Tìm
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="mt-4 text-muted small fw-medium">
+                Phổ biến: <a href="#" class="text-decoration-underline text-dark mx-1">Sơn Tùng M-TP</a> <a href="#"
+                    class="text-decoration-underline text-dark mx-1">Ed Sheeran</a>
+            </div>
+        </div>
+    </section>
+
+    </section>
+
+    <!-- Trending Events (Bảng xếp hạng) -->
+    <section class="py-5 bg-white">
+        <div class="container">
+            <div class="text-center mb-5">
+                <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-2 mb-2">HOT TRENDING</span>
+                <h2 class="fw-bold">Bảng Xếp Hạng Sự Kiện</h2>
+                <p class="text-muted">Top những sự kiện được săn đón nhiều nhất tuần qua</p>
+            </div>
+
+            <!-- Carousel Slider cho Trending Events -->
+            <div th:if="${trendingEvents != null and !trendingEvents.isEmpty()}">
+                <div id="trendingEventsCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+
+                    <!-- Indicators -->
+                    <div class="carousel-indicators">
+                        <button th:each="event, iterStat : ${trendingEvents}" type="button"
+                            th:data-bs-target="'#trendingEventsCarousel'" th:data-bs-slide-to="${iterStat.index}"
+                            th:class="${iterStat.index == 0} ? 'active' : ''"
+                            th:aria-current="${iterStat.index == 0} ? 'true' : 'false'"
+                            th:aria-label="'Slide ' + ${iterStat.index + 1}">
+                        </button>
+                    </div>
+
+                    <!-- Carousel Inner (Slides) -->
+                    <div class="carousel-inner rounded-4 shadow-lg overflow-hidden">
+                        <div th:each="event, iterStat : ${trendingEvents}"
+                            th:class="${iterStat.index == 0} ? 'carousel-item active' : 'carousel-item'">
+
+                            <!-- Event Card -->
+                            <!-- Chưa fix -->
+                            <div class="position-relative text-white" style="min-height: 500px; cursor: pointer;"
+                                th:onclick="'window.location.href=\'/events/' + ${event.id} + '\''">
+
+                                <!-- Background Image -->
+                                <img th:src="${event.image != null and !event.image.isEmpty()} ? ${event.image} : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200'"
+                                    class="d-block w-100 h-100 object-fit-cover position-absolute top-0 start-0"
+                                    th:alt="${event.title}" style="filter: brightness(0.5);">
+
+                                <!-- Overlay Content -->
+                                <div class="position-relative h-100 d-flex align-items-end p-5"
+                                    style="min-height: 500px;">
+                                    <div class="container">
+                                        <div class="row">
+                                            <div class="col-lg-8">
+                                                <!-- Ranking Badge -->
+                                                <span class="badge mb-3"
+                                                    th:class="${iterStat.index == 0} ? 'bg-warning text-dark fs-5 px-4 py-2' : 'bg-secondary fs-6 px-3 py-2'"
+                                                    th:text="'#' + ${iterStat.index + 1} + ${iterStat.index == 0 ? ' Nổi bật nhất' : ' Trending'}">
+                                                    #1 Nổi bật nhất
+                                                </span>
+
+                                                <!-- Title -->
+                                                <h1 class="display-4 fw-bold mb-3" th:text="${event.title}">
+                                                    Đại nhạc hội EDM Summer Splash
+                                                </h1>
+
+                                                <!-- Description -->
+                                                <p class="fs-5 mb-4 text-light d-none d-md-block"
+                                                    th:text="${event.description}"
+                                                    style="max-width: 600px; opacity: 0.9;">
+                                                    Trải nghiệm không khí sôi động cùng dàn DJ Top 100 thế giới.
+                                                </p>
+
+                                                <!-- Event Info -->
+                                                <div class="d-flex flex-wrap gap-4 mb-3">
+                                                    <!-- Location -->
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="bi bi-geo-alt-fill text-warning fs-5 me-2"></i>
+                                                        <span class="fs-5" th:text="${event.location ?: 'TBA'}">Đà
+                                                            Nẵng</span>
+                                                    </div>
+
+                                                    <!-- Date -->
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="bi bi-calendar-event text-warning fs-5 me-2"></i>
+                                                        <span class="fs-5"
+                                                            th:text="${event.eventDate != null ? #temporals.format(event.eventDate, 'dd/MM/yyyy') : 'TBA'}">
+                                                            15/07/2026
+                                                        </span>
+                                                    </div>
+
+                                                    <!-- Category -->
+                                                    <div th:if="${event.categoryName != null}"
+                                                        class="d-flex align-items-center">
+                                                        <i class="bi bi-tag-fill text-warning fs-5 me-2"></i>
+                                                        <span class="fs-5" th:text="${event.categoryName}">Âm
+                                                            nhạc</span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Action Button -->
+                                                <!--Chưa fix-->
+                                                <button
+                                                    class="btn btn-warning btn-lg px-5 py-3 rounded-pill fw-bold mt-3"
+                                                    th:onclick="'event.stopPropagation(); window.location.href=\'/events/' + ${event.id} + '\''">
+                                                    <i class="bi bi-ticket-perforated me-2"></i>
+                                                    Đặt vé ngay
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Controls (Prev/Next) -->
+                    <button class="carousel-control-prev" type="button" data-bs-target="#trendingEventsCarousel"
+                        data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon bg-dark bg-opacity-50 rounded-circle p-3"
+                            aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#trendingEventsCarousel"
+                        data-bs-slide="next">
+                        <span class="carousel-control-next-icon bg-dark bg-opacity-50 rounded-circle p-3"
+                            aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Fallback: Không có data -->
+            <div th:if="${trendingEvents == null or trendingEvents.isEmpty()}" class="alert alert-info text-center">
+                <i class="bi bi-info-circle"></i> Chưa có sự kiện trending
+            </div>
+        </div>
+    </section>
+
+    <!-- Upcoming Events -->
+    <section class="py-5 bg-light-subtle">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <div>
+                    <h2 class="fw-bold mb-2">Sự kiện Sắp tới</h2>
+                    <p class="text-muted mb-0">Đừng bỏ lỡ những sự kiện hot nhất tuần này</p>
+                </div>
+                <a th:href="@{/events}" class="text-decoration-none fw-bold text-primary">Xem tất cả <i
+                        class="bi bi-arrow-right"></i></a>
+            </div>
+
+            <!-- Dynamic Upcoming Events Cards -->
+            <div th:if="${upcomingEvents != null and !upcomingEvents.isEmpty()}" class="row g-4">
+                <div th:each="event : ${upcomingEvents}" class="col-md-6 col-lg-3">
+                    <div class="card card-event h-100 border-0 shadow-sm"
+                        style="cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease;"
+                        th:onclick="'window.location.href=\'/events/' + ${event.id} + '\''">
+
+                        <!-- Event Image -->
+                        <div class="position-relative overflow-hidden">
+                            <img th:src="${event.image != null and !event.image.isEmpty()} ? ${event.image} : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800'"
+                                class="card-img-top" th:alt="${event.title}"
+                                style="height: 200px; object-fit: cover; transition: transform 0.3s ease;">
+
+                            <!-- Category Badge -->
+                            <span th:if="${event.categoryName != null}"
+                                class="position-absolute top-0 start-0 m-3 badge bg-primary"
+                                th:text="${event.categoryName}">
+                                Music
+                            </span>
+
+                            <!-- Date Badge -->
+                            <div class="position-absolute bottom-0 end-0 m-3 bg-white rounded-3 px-3 py-2 shadow-sm">
+                                <div class="text-center">
+                                    <div class="fw-bold text-primary fs-4"
+                                        th:text="${event.startTime != null ? #temporals.day(event.startTime) : '00'}">
+                                        15
+                                    </div>
+                                    <div class="small text-muted"
+                                        th:text="${event.startTime != null ? #temporals.format(event.startTime, 'MMM', new java.util.Locale('vi')) : 'TBD'}">
+                                        Th7
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Event Info -->
+                        <div class="card-body p-4 d-flex flex-column">
+                            <!-- Title -->
+                            <h5 class="card-title fw-bold mb-3"
+                                style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;"
+                                th:text="${event.title}">
+                                EDM Symphony Night
+                            </h5>
+
+                            <!-- Location -->
+                            <div class="text-muted small mb-3">
+                                <i class="bi bi-geo-alt-fill text-primary me-1"></i>
+                                <span th:text="${event.location ?: 'TBA'}">TP. Hồ Chí Minh</span>
+                            </div>
+
+                            <!-- Price -->
+                            <div
+                                class="mt-auto d-flex justify-content-between align-items-center pt-3 border-top border-light">
+                                <small class="text-muted">Từ</small>
+                                <span class="fw-bold text-danger" th:text="${event.minPrice != null and event.minPrice > 0} ? 
+                                               (#numbers.formatInteger(event.minPrice, 0, 'COMMA') + 'đ') : 
+                                               'Miễn phí'">
+                                    500.000đ
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fallback: No upcoming events -->
+            <div th:if="${upcomingEvents == null or upcomingEvents.isEmpty()}" class="alert alert-info text-center">
+                <i class="bi bi-info-circle"></i> Chưa có sự kiện sắp tới
+            </div>
+
+        </div>
+    </section>
+
+    <footer th:replace="~{common/footer :: footer}"></footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
