@@ -1,6 +1,6 @@
 package com.codegym.appticket.controller;
 
-import com.codegym.appticket.dto.event.EventDTO;
+
 import com.codegym.appticket.dto.event.EventSearchDTO;
 import com.codegym.appticket.dto.home.HomeEventDTO;
 import com.codegym.appticket.dto.home.TrendingEventDTO;
@@ -52,10 +52,8 @@ public class HomeController {
             Model model) {
         
         // Show all approved events without filters
-        Pageable pageable = PageRequest.of(page, size);
-        Page<HomeEventDTO> events = eventService.findAllEvent(pageable);
-        
-        // Load all categories for filter sidebar
+        Page<HomeEventDTO> events = eventService.findAllEvent(page, size);
+
         model.addAttribute("categories", eventCategoryService.findAll());
         model.addAttribute("events", events);
         
@@ -72,25 +70,39 @@ public class HomeController {
             @RequestParam(defaultValue = "6") int size,
             Model model) {
         
-        // Create search DTO with filters
-        EventSearchDTO searchDTO = new EventSearchDTO();
-        searchDTO.setTitle(search);
-        searchDTO.setCategoryId(category);
+        // Normalize empty strings to null
+        if (search != null && search.trim().isEmpty()) {
+            search = null;
+        }
+        if (location != null && location.trim().isEmpty()) {
+            location = null;
+        }
         
-        // TODO: Add location filtering when EventSearchDTO supports it
-        // For now, location is received but not used in search
+        // Check if there are any actual filters
+        boolean hasFilters = (search != null && !search.isEmpty()) || 
+                           category != null || 
+                           (location != null && !location.isEmpty());
         
-        // Create pageable with sorting
-        // TODO: Implement sorting logic based on sort parameter
-        Pageable pageable = PageRequest.of(page, size);
+        Page<?> events;
         
-        // Search events with filters
-        Page<EventDTO> events;
-        if (search != null || category != null || location != null) {
+        if (hasFilters) {
+            // Create search DTO with filters
+            EventSearchDTO searchDTO = new EventSearchDTO();
+            searchDTO.setTitle(search);
+            searchDTO.setCategoryId(category);
+            
+            // TODO: Add location filtering when EventSearchDTO supports it
+            // For now, location is received but not used in search
+            
+            // Create pageable with sorting
+            // TODO: Implement sorting logic based on sort parameter
+            Pageable pageable = PageRequest.of(page, size);
+            
+            // Search events with filters
             events = eventService.search(searchDTO, pageable);
         } else {
-            // If no filters, redirect to /events
-            return "redirect:/events";
+            // If no filters, show all events (same as /events)
+            events = eventService.findAllEvent(page, size);
         }
         
         // Load all categories for filter sidebar

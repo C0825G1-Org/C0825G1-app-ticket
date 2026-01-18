@@ -22,7 +22,9 @@ import com.codegym.appticket.service.IEventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,8 +49,9 @@ public class EventService implements IEventService {
         }
 
     @Override
-    public Page<HomeEventDTO> findAllEvent(Pageable pageable) {
-        return eventRepository.findAllEvent(pageable);
+    public Page<HomeEventDTO> findAllEvent(int size, int page) {
+        Sort sort = Sort.by(Sort.Direction.ASC, "startTime");
+        return eventRepository.findAllEvent(PageRequest.of(size, page, sort));
     }
 
     @Override

@@ -16,7 +16,7 @@ import java.util.List;
 public interface IEventService {
     Page<EventDTO> findAll(Pageable pageable);
 
-    Page<HomeEventDTO> findAllEvent(Pageable pageable);
+    Page<HomeEventDTO> findAllEvent(int size, int page);
 
     Page<EventDTO> search(EventSearchDTO dto, Pageable pageable);
 

@@ -74,21 +74,6 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
              ORDER BY totalTickets DESC
              LIMIT 3
          """, nativeQuery = true)
-//    @Query(value = """
-//    SELECT
-//        e.id AS id,
-//        e.title AS title,
-//        SUM(bd.quantity) AS totalTickets
-//    FROM events e
-//    JOIN ticket_types tt ON tt.event_id = e.id
-//    JOIN booking_details bd ON bd.ticket_type_id = tt.id
-//    JOIN bookings b ON b.id = bd.booking_id
-//    WHERE b.status = 'SUCCESS'
-//      AND e.status = 'APPROVED'
-//    GROUP BY e.id
-//    ORDER BY totalTickets DESC
-//    LIMIT 3
-//""", nativeQuery = true)
     List<TrendingEventDTO> findTopTrendingEvents();
 
    @Query(value = """
