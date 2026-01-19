@@ -24,19 +24,64 @@ import java.time.temporal.ChronoUnit;
 public class AdminReportController {
 
     private final IReportService reportService;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
     @GetMapping
     public String index(
+            @RequestParam(required = false) String preset,
+            @RequestParam(required = false) String compareType,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             Model model) {
 
-        // Default to current month if not specified
-        if (startDate == null) {
-            startDate = LocalDate.now().withDayOfMonth(1);
-        }
-        if (endDate == null) {
-            endDate = LocalDate.now();
+        // Handle Presets
+        if (preset != null && !preset.isEmpty()) {
+            LocalDate today = LocalDate.now();
+            switch (preset) {
+                case "today":
+                    startDate = today;
+                    endDate = today;
+                    break;
+                case "yesterday":
+                    startDate = today.minusDays(1);
+                    endDate = today.minusDays(1);
+                    break;
+                case "last_7_days":
+                    startDate = today.minusDays(6);
+                    endDate = today;
+                    break;
+                case "last_30_days":
+                    startDate = today.minusDays(29);
+                    endDate = today;
+                    break;
+                case "this_month":
+                    startDate = today.withDayOfMonth(1);
+                    endDate = today;
+                    break;
+                case "last_month":
+                    startDate = today.minusMonths(1).withDayOfMonth(1);
+                    endDate = today.minusMonths(1).withDayOfMonth(today.minusMonths(1).lengthOfMonth());
+                    break;
+                case "this_year":
+                    startDate = today.withDayOfYear(1);
+                    endDate = today;
+                    break;
+                case "custom":
+                    // Use provided startDate/endDate
+                    break;
+                default:
+                    // Default to This Month if unknown preset
+                    startDate = today.withDayOfMonth(1);
+                    endDate = today;
+            }
+        } else {
+             // Fallback default: This Month
+            if (startDate == null) {
+                startDate = LocalDate.now().withDayOfMonth(1);
+            }
+            if (endDate == null) {
+                endDate = LocalDate.now();
+            }
         }
 
         // Validate date range
@@ -46,20 +91,35 @@ public class AdminReportController {
             endDate = temp;
         }
 
+        // Handle Comparison Type
+        IReportService.ComparisonType comparison = IReportService.ComparisonType.PREVIOUS_PERIOD;
+        if ("same_period_last_year".equals(compareType)) {
+            comparison = IReportService.ComparisonType.SAME_PERIOD_LAST_YEAR;
+        }
+
         IReportService.PeriodType periodType;
         long daysDiff = ChronoUnit.DAYS.between(startDate, endDate);
         if (daysDiff <= 7) periodType = IReportService.PeriodType.DAY;
-        else if (daysDiff <= 60) periodType = IReportService.PeriodType.WEEK; // or day?
+        else if (daysDiff <= 60) periodType = IReportService.PeriodType.WEEK; 
         else periodType = IReportService.PeriodType.MONTH;
 
         // Fetch Data
-        model.addAttribute("summary", reportService.getSummary(startDate, endDate));
+        model.addAttribute("summary", reportService.getSummary(startDate, endDate, comparison));
         
         // Charts Data
-        model.addAttribute("revenueChart", reportService.getRevenueChart(startDate, endDate, periodType));
-        model.addAttribute("bookingChart", reportService.getBookingChart(startDate, endDate, periodType));
-        model.addAttribute("categoryChart", reportService.getEventCategoryChart());
-        model.addAttribute("userChart", reportService.getUserGrowthChart(startDate, endDate, periodType));
+        // Charts Data
+        try {
+            model.addAttribute("revenueChart", objectMapper.writeValueAsString(reportService.getRevenueChart(startDate, endDate, periodType)));
+            model.addAttribute("bookingChart", objectMapper.writeValueAsString(reportService.getBookingChart(startDate, endDate, periodType)));
+            model.addAttribute("categoryChart", objectMapper.writeValueAsString(reportService.getEventCategoryChart()));
+            model.addAttribute("userChart", objectMapper.writeValueAsString(reportService.getUserGrowthChart(startDate, endDate, periodType)));
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("revenueChart", "{}");
+            model.addAttribute("bookingChart", "{}");
+            model.addAttribute("categoryChart", "{}");
+            model.addAttribute("userChart", "{}");
+        }
 
         // Top Lists
         model.addAttribute("topEvents", reportService.getTopEvents(startDate, endDate, 10));
@@ -67,6 +127,8 @@ public class AdminReportController {
 
         model.addAttribute("startDate", startDate);
         model.addAttribute("endDate", endDate);
+        model.addAttribute("preset", preset != null ? preset : "custom");
+        model.addAttribute("compareType", compareType != null ? compareType : "previous_period");
         model.addAttribute("currentPage", "reports");
 
         return "admin/report/index";

@@ -23,49 +23,41 @@ public class GlobalModelAdvice {
     @Autowired
     private com.codegym.appticket.service.IBookingService bookingService;
 
+    private long cachedCount = 0;
+    private long lastCacheTime = 0;
+    private static final long CACHE_DURATION = 10000; // 10 seconds
+
     @ModelAttribute("pendingEventCount")
     public long getPendingEventCount() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated() && 
-            !(authentication instanceof AnonymousAuthenticationToken)) {
-            // Check if user has admin/staff authority to avoid unnecessary DB calls for normal users
-            boolean isStaffOrAdmin = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ADMIN") || a.getAuthority().equals("STAFF"));
-            
-            if (isStaffOrAdmin) {
-                 return eventRepository.countByStatus(EventStatus.PENDING);
+        String uri = request.getRequestURI();
+        if (uri.matches(".*\\.(css|js|png|jpg|jpeg|gif|ico|woff|woff2|ttf|svg)$")) {
+            return 0;
+        }
+
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.isAuthenticated() && 
+                !(authentication instanceof AnonymousAuthenticationToken)) {
+                
+                boolean isStaffOrAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ADMIN") || a.getAuthority().equals("STAFF"));
+                
+                if (isStaffOrAdmin) {
+                     long now = System.currentTimeMillis();
+                     if (now - lastCacheTime > CACHE_DURATION) {
+                         cachedCount = eventRepository.countByStatus(EventStatus.PENDING);
+                         lastCacheTime = now;
+                     }
+                     return cachedCount;
+                }
             }
+        } catch (Exception e) {
+            System.err.println("Error fetching pending event count: " + e.getMessage());
+            return 0;
         }
         return 0;
     }
 
 
-    @ModelAttribute("currentUser")
-    public com.codegym.appticket.entity.User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated() && 
-            !(authentication instanceof AnonymousAuthenticationToken)) {
-            
-            Object principal = authentication.getPrincipal();
-            String email = null;
-            if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
-                email = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
-            } else if (principal instanceof com.codegym.appticket.config.CustomOAuth2User) {
-                email = ((com.codegym.appticket.config.CustomOAuth2User) principal).getEmail();
-            } else if (principal instanceof org.springframework.security.oauth2.core.user.OAuth2User) {
-                email = ((org.springframework.security.oauth2.core.user.OAuth2User) principal).getAttribute("email");
-            } else {
-                email = authentication.getName();
-            }
 
-            if (email != null) {
-                try {
-                    return bookingService.getUserByEmail(email);
-                } catch (Exception e) {
-                    return null;
-                }
-            }
-        }
-        return null;
-    }
 }

@@ -15,7 +15,11 @@ public interface IReportService {
         DAY, WEEK, MONTH, YEAR, CUSTOM
     }
 
-    ReportSummaryDTO getSummary(LocalDate start, LocalDate end);
+    enum ComparisonType {
+        PREVIOUS_PERIOD, SAME_PERIOD_LAST_YEAR
+    }
+
+    ReportSummaryDTO getSummary(LocalDate start, LocalDate end, ComparisonType compareType);
 
     ChartDataDTO getRevenueChart(LocalDate start, LocalDate end, PeriodType type);
 

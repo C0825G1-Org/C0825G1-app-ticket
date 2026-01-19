@@ -624,10 +624,13 @@
                             };
 
                             window.removeRow = function (btn, type) {
-                                btn.closest('.row').remove();
                                 if (type === 'lịch trình') {
+                                    const item = btn.closest('.event-occurrence-item');
+                                    if (item) item.remove();
                                     window.reindexEventOccurrences();
                                 } else if (type === 'loại vé') {
+                                    const item = btn.closest('.ticket-type-row');
+                                    if (item) item.remove();
                                     window.reindexTicketTypes();
                                 }
                             };

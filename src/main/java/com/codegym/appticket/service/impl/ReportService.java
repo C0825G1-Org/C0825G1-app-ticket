@@ -31,14 +31,24 @@ public class ReportService implements IReportService {
     private final IUserRepository userRepository;
 
     @Override
-    public ReportSummaryDTO getSummary(LocalDate start, LocalDate end) {
+    public ReportSummaryDTO getSummary(LocalDate start, LocalDate end, ComparisonType compareType) {
         // Current Period
         var currentData = getPeriodData(start, end);
 
-        // Previous Period (Same duration)
-        long days = ChronoUnit.DAYS.between(start, end) + 1;
-        LocalDate prevStart = start.minusDays(days);
-        LocalDate prevEnd = end.minusDays(days);
+        // Calculate Previous Period based on ComparisonType
+        LocalDate prevStart;
+        LocalDate prevEnd;
+
+        if (compareType == ComparisonType.SAME_PERIOD_LAST_YEAR) {
+            prevStart = start.minusYears(1);
+            prevEnd = end.minusYears(1);
+        } else {
+            // Default: Previous Period (Classic)
+            long days = ChronoUnit.DAYS.between(start, end) + 1;
+            prevStart = start.minusDays(days);
+            prevEnd = end.minusDays(days);
+        }
+
         var prevData = getPeriodData(prevStart, prevEnd);
 
         return ReportSummaryDTO.builder()
@@ -242,7 +252,7 @@ public class ReportService implements IReportService {
         header.createCell(0).setCellValue("Metric");
         header.createCell(1).setCellValue("Value");
         
-        ReportSummaryDTO summary = getSummary(start, end);
+        ReportSummaryDTO summary = getSummary(start, end, ComparisonType.PREVIOUS_PERIOD);
         
         String[][] rows = {
             {"Report Period", start + " to " + end},
