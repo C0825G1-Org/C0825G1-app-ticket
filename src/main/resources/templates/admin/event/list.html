@@ -13,10 +13,7 @@
                     <h4 class="fw-bold mb-0">Quản lý Sự kiện</h4>
                     <p class="text-muted small mb-0">Quản lý, phê duyệt và chỉnh sửa sự kiện</p>
                 </div>
-                <a th:href="@{/admin/events/create}" class="btn btn-primary rounded-3 fw-bold shadow-sm"
-                    style="background-color: var(--primary-color); border: none;">
-                    <i class="bi bi-plus-lg me-2"></i> Tạo sự kiện
-                </a>
+                <!-- Old button removed -->
             </div>
 
             <!-- Stats Cards (Static Mockup for now) -->
@@ -172,42 +169,77 @@
                 </nav>
             </div>
 
+            <!-- Floating Action Button for Create -->
+            <a th:href="@{/admin/events/create}"
+                class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center"
+                title="Tạo sự kiện mới"
+                style="position: fixed; bottom: 40px; right: 40px; width: 60px; height: 60px; z-index: 1000; background-color: #6f42c1; border: none; transition: transform 0.2s;">
+                <i class="bi bi-plus-lg fs-2"></i>
+            </a>
+
             <script>
-                function deleteEvent(id, title) {
-                    Swal.fire({
-                        title: `Xóa sự kiện "${title}"?`,
-                        text: "Hành động này không thể hoàn tác!",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#d33',
-                        cancelButtonColor: '#3085d6',
-                        confirmButtonText: 'Đồng ý xóa',
-                        cancelButtonText: 'Hủy'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            fetch('/api/events/' + id, {
-                                method: 'DELETE',
-                                headers: { 'Content-Type': 'application/json' }
-                            })
-                                .then(response => {
-                                    if (response.ok) {
-                                        Swal.fire(
-                                            'Đã xóa!',
-                                            'Sự kiện đã được xóa thành công.',
-                                            'success'
-                                        );
-                                        document.getElementById('event-row-' + id).remove();
-                                    } else {
-                                        Swal.fire('Lỗi!', 'Xóa sự kiện thất bại.', 'error');
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error('Error:', error);
-                                    Swal.fire('Lỗi!', 'Đã xảy ra lỗi khi xóa sự kiện.', 'error');
-                                });
+                document.addEventListener('DOMContentLoaded', function () {
+                    // SweetAlert2 Toast Mixin
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                        didOpen: (toast) => {
+                            toast.onmouseenter = Swal.stopTimer;
+                            toast.onmouseleave = Swal.resumeTimer;
                         }
                     });
-                }
+
+                    window.deleteEvent = function (id, title) {
+                        Swal.fire({
+                            title: `Xóa sự kiện "${title}"?`,
+                            text: "Hành động này không thể hoàn tác!",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#d33',
+                            cancelButtonColor: '#3085d6',
+                            confirmButtonText: 'Đồng ý xóa',
+                            cancelButtonText: 'Hủy'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // Get CSRF Token
+                                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+                                fetch('/api/events/' + id, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        [csrfHeader]: csrfToken
+                                    }
+                                })
+                                    .then(response => {
+                                        if (response.ok) {
+                                            Toast.fire({
+                                                icon: 'success',
+                                                title: 'Đã xóa sự kiện thành công!'
+                                            });
+                                            document.getElementById('event-row-' + id).remove();
+                                        } else {
+                                            Toast.fire({
+                                                icon: 'error',
+                                                title: 'Xóa sự kiện thất bại.'
+                                            });
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        Toast.fire({
+                                            icon: 'error',
+                                            title: 'Đã xảy ra lỗi khi xóa sự kiện.'
+                                        });
+                                    });
+                            }
+                        });
+                    }
+                });
             </script>
 
         </div>
