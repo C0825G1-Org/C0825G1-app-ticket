@@ -18,7 +18,7 @@
                     <p class="text-muted small mb-0">Cập nhật thông tin sự kiện</p>
                 </div>
                 <div class="d-flex gap-2">
-                    <a th:href="@{/admin/events}" class="btn btn-outline-secondary rounded-3">
+                    <a th:href="@{/user/events}" class="btn btn-outline-secondary rounded-3">
                         <i class="bi bi-arrow-left me-2"></i> Quay lại
                     </a>
                 </div>
@@ -29,8 +29,6 @@
 
                     <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
                     <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
-
-
 
                     <div class="step-indicator">
                         <div class="step-item active" id="step-indicator-1">
@@ -70,15 +68,9 @@
                                         <div class="text-danger small error-message" id="error-title"></div>
                                     </div>
 
-                                    <div class="mb-3">
-                                        <label class="form-label fw-medium">Nhà tổ chức</label>
-                                        <select class="form-select form-select-lg" th:field="*{organizerId}">
-                                            <option value="">-- Chọn Nhà tổ chức --</option>
-                                            <option th:each="org : ${organizers}" th:value="${org.id}"
-                                                th:text="${org.fullName + ' (' + org.email + ')'}">Organizer</option>
-                                        </select>
-                                        <div class="text-danger small error-message" id="error-organizerId"></div>
-                                    </div>
+                                    <!-- Organizer: Hidden/ReadOnly or Removed. User is Organizer. -->
+                                    <input type="hidden" th:field="*{organizerId}">
+
                                     <div class="mb-3">
                                         <label class="form-label fw-medium">Danh mục <span
                                                 class="text-danger">*</span></label>
@@ -102,14 +94,17 @@
                                             required>
                                         <div class="text-danger small error-message" id="error-location"></div>
                                     </div>
+
+                                    <!-- Status: Users cannot change status directly here, backend handles logic (e.g. keep or reset to pending) -->
+                                    <!-- Only show current status -->
                                     <div class="mb-3">
-                                        <label class="form-label fw-medium">Trạng thái</label>
-                                        <select class="form-select" th:field="*{status}">
-                                            <option value="PENDING">Chờ duyệt (PENDING)</option>
-                                            <option value="APPROVED">Đã duyệt (APPROVED)</option>
-                                            <option value="REJECTED">Từ chối (REJECTED)</option>
-                                            <option value="CANCELLED">Đã hủy (CANCELLED)</option>
-                                        </select>
+                                        <label class="form-label fw-medium">Trạng thái hiện tại: </label>
+                                        <span class="badge"
+                                            th:classappend="${eventUpdateDTO.status.name() == 'PENDING' ? 'bg-warning' : (eventUpdateDTO.status.name() == 'APPROVED' ? 'bg-success' : 'bg-danger')}"
+                                            th:text="${eventUpdateDTO.status}">PENDING</span>
+                                        <input type="hidden" th:field="*{status}">
+                                        <div class="form-text text-muted">Việc chỉnh sửa có thể sẽ thay đổi trạng thái
+                                            của sự kiện (nếu đã được duyệt).</div>
                                     </div>
                                 </div>
                             </div>
@@ -405,15 +400,10 @@
                                     reader.onload = function (e) {
                                         img.src = e.target.result;
                                         img.style.display = 'block';
-                                        img.style.objectFit = 'contain'; // Ensure fit
+                                        img.style.objectFit = 'contain';
                                         if (placeholder) placeholder.style.display = 'none';
                                     }
                                     reader.readAsDataURL(file);
-                                } else {
-                                    // If cleared, logic depends. For now, hide img if source is empty.
-                                    // But since we use th:src, we might not want to hide if user cancels?
-                                    // Usually cancel doesn't trigger onchange.
-                                    // If user selects nothing (rare in file input behavior), do nothing.
                                 }
                             };
 
@@ -508,7 +498,7 @@
                                     const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
                                     const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
-                                    const response = await fetch(`/admin/events/edit/${eventId}`, {
+                                    const response = await fetch(`/user/events/edit/${eventId}`, {
                                         method: 'POST',
                                         headers: { [csrfHeader]: csrfToken },
                                         body: searchParams
@@ -576,9 +566,6 @@
                             // INIT
                             showStep(1);
                         });
-
-                        // Helper Functions outside DOMContentLoaded (or inside if assigned to window)
-                        // ... (addTicketType, reindex, removeGalleryItem unchanged) ...
 
                         // Location Logic
                         const API_BASE = 'https://provinces.open-api.vn/api/v2';
@@ -699,7 +686,6 @@
                         };
 
                         window.reindexEventOccurrences = function () {
-                            // ... (existing reindex logic, add district logic)
                             const items = document.querySelectorAll('.event-occurrence-item');
                             items.forEach((item, idx) => {
                                 item.querySelector('.fw-bold.text-muted').innerText = `Lịch trình #${idx + 1}`;
@@ -721,67 +707,105 @@
                             });
                         };
 
-                        function addTicketType() { /* ... existing ... */ }
-                        function reindexTicketTypes() { /* ... existing ... */ }
-                        function removeGalleryItem(btn) { /* ... existing ... */ }
+                        // Define globals for HTML inline calls
+                        window.addTicketType = function () {
+                            // Copied from Admin template if needed, or rely on similar logic
+                            // But create.html text has the logic. I should make sure it is here.
+                            const ticketContainer = document.getElementById('ticketTypesContainer');
+                            const index = document.querySelectorAll('.ticket-type-row').length;
+                            const newRow = document.createElement('div');
+                            newRow.className = 'row g-3 mb-3 ticket-type-row';
+                            newRow.innerHTML = `
+                                <div class="col-md-4">
+                                    <label class="form-label fw-medium">Tên vé <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="ticketTypes[${index}].name" placeholder="VD: VIP" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-medium">Giá vé (VNĐ) <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" name="ticketTypes[${index}].price" min="0" placeholder="0" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-medium">Số lượng <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" name="ticketTypes[${index}].quantity" min="1" placeholder="100" required>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="button" class="btn btn-outline-danger w-100" onclick="this.closest('.ticket-type-row').remove(); reindexTicketTypes();">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            `;
+                            ticketContainer.appendChild(newRow);
+                        }
 
-                        // RESTORATION LOGIC
-                        (async function initLocations() {
-                            const provinces = await fetchProvinces();
-                            const items = document.querySelectorAll('.event-occurrence-item');
+                        window.reindexTicketTypes = function () {
+                            const rows = Array.from(document.querySelectorAll('.ticket-type-row'));
+                            rows.forEach((row, idx) => {
+                                row.querySelector('input[name$=".name"]').name = `ticketTypes[${idx}].name`;
+                                row.querySelector('input[name$=".price"]').name = `ticketTypes[${idx}].price`;
+                                row.querySelector('input[name$=".quantity"]').name = `ticketTypes[${idx}].quantity`;
+                            });
+                        }
 
-                            for (let i = 0; i < items.length; i++) {
-                                const item = items[i];
-                                const pSel = item.querySelector('.province-select');
-                                const wSel = item.querySelector('.ward-select');
+                            // RESTORATION LOGIC
+                            (async function initLocations() {
+                                const provinces = await fetchProvinces();
+                                const items = document.querySelectorAll('.event-occurrence-item');
 
-                                // Fill Provinces
-                                provinces.forEach(p => {
-                                    const o = document.createElement('option');
-                                    o.value = p.code;
-                                    o.textContent = p.name;
-                                    pSel.appendChild(o);
-                                });
+                                for (let i = 0; i < items.length; i++) {
+                                    const item = items[i];
+                                    const pSel = item.querySelector('.province-select');
+                                    const wSel = item.querySelector('.ward-select');
 
-                                const savedProvCode = pSel.getAttribute('data-selected-code');
-                                const savedWardCode = wSel.getAttribute('data-selected-code');
+                                    // Fill Provinces
+                                    provinces.forEach(p => {
+                                        const o = document.createElement('option');
+                                        o.value = p.code;
+                                        o.textContent = p.name;
+                                        pSel.appendChild(o);
+                                    });
 
-                                if (savedProvCode) {
-                                    pSel.value = savedProvCode;
-                                    if (!pSel.value) pSel.value = parseInt(savedProvCode).toString(); // Try int parse
+                                    const savedProvCode = pSel.getAttribute('data-selected-code');
+                                    const savedWardCode = wSel.getAttribute('data-selected-code');
 
-                                    item.querySelector('.province-name').value = pSel.options[pSel.selectedIndex]?.text || '';
+                                    if (savedProvCode) {
+                                        pSel.value = savedProvCode;
+                                        if (!pSel.value) pSel.value = parseInt(savedProvCode).toString(); // Try int parse
 
-                                    // Fetch wards for this province
-                                    try {
-                                        const response = await fetch(`${API_BASE}/p/${pSel.value}?depth=2`); // Use selected value
-                                        const data = await response.json();
-                                        const wards = data.wards || [];
+                                        // Update hidden name
+                                        const opt = pSel.options[pSel.selectedIndex];
+                                        if (opt) item.querySelector('.province-name').value = opt.text;
 
-                                        wards.forEach(w => {
-                                            const option = document.createElement('option');
-                                            option.value = w.code;
-                                            option.textContent = w.name;
-                                            wSel.appendChild(option);
-                                        });
+                                        // Fetch wards for this province
+                                        try {
+                                            const response = await fetch(`${API_BASE}/p/${pSel.value}?depth=2`); // Use selected value
+                                            const data = await response.json();
+                                            const wards = data.wards || [];
 
-                                        if (wards.length > 0) {
-                                            wSel.disabled = false;
-                                            if (savedWardCode) {
-                                                wSel.value = savedWardCode;
-                                                if (!wSel.value) {
-                                                    wSel.value = parseInt(savedWardCode).toString();
+                                            wards.forEach(w => {
+                                                const option = document.createElement('option');
+                                                option.value = w.code;
+                                                option.textContent = w.name;
+                                                wSel.appendChild(option);
+                                            });
+
+                                            if (wards.length > 0) {
+                                                wSel.disabled = false;
+                                                if (savedWardCode) {
+                                                    wSel.value = savedWardCode;
+                                                    if (!wSel.value) {
+                                                        wSel.value = parseInt(savedWardCode).toString();
+                                                    }
+                                                    const wOpt = wSel.options[wSel.selectedIndex];
+                                                    if (wOpt) item.querySelector('.ward-name').value = wOpt.text;
                                                 }
-                                                item.querySelector('.ward-name').value = wSel.options[wSel.selectedIndex]?.text || '';
                                             }
-                                        }
 
-                                    } catch (e) {
-                                        console.error('Error fetching wards for restoration:', e);
+                                        } catch (e) {
+                                            console.error('Error fetching wards for restoration:', e);
+                                        }
                                     }
                                 }
-                            }
-                        })();
+                            })();
 
                     </script>
 

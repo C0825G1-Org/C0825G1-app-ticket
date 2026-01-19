@@ -15,8 +15,8 @@ import lombok.Setter;
 public class Ward {
 
     @Id
-    @Column(length = 20)
-    private String code;
+    @Column(name = "code")
+    private Integer code;
 
     @Column(nullable = false, length = 100)
     private String name;

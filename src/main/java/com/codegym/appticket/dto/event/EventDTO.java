@@ -23,6 +23,8 @@ public class EventDTO {
     private String createdByName;
     private EventStatus status;
     private LocalDateTime createdAt;
+    private Long organizerId;
+    private String organizerName;
 
     @Builder.Default
     private List<EventOccurrenceDTO> eventOccurrences = new ArrayList<>();
