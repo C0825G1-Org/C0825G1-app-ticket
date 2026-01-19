@@ -25,7 +25,7 @@ public class EventDTO {
     private LocalDateTime createdAt;
 
     @Builder.Default
-    private List<EventTimeDTO> eventTimes = new ArrayList<>();
+    private List<EventOccurrenceDTO> eventOccurrences = new ArrayList<>();
 
     @Builder.Default
     private List<EventMediaDTO> eventMedias = new ArrayList<>();

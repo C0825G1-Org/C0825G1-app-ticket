@@ -24,21 +24,20 @@ public interface IUserRepository extends JpaRepository<User, Long> {
      * Status: ACTIVE = không bị khóa, BLOCKED = bị khóa
      */
     @Query("SELECT u FROM User u LEFT JOIN u.roles r WHERE " +
-           "(u.isDeleted = false OR u.isDeleted IS NULL) AND " +
-           "(:keyword IS NULL OR :keyword = '' OR " +
-           "   LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "   LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "   u.phoneNumber LIKE CONCAT('%', :keyword, '%')) AND " +
-           "(:roleId IS NULL OR r.id = :roleId) AND " +
-           "(:status IS NULL OR :status = '' OR " +
-           "   (:status = 'ACTIVE' AND (u.isBlocked = false OR u.isBlocked IS NULL)) OR " +
-           "   (:status = 'LOCKED' AND u.isBlocked = true))")
+            "(u.isDeleted = false OR u.isDeleted IS NULL) AND " +
+            "(:keyword IS NULL OR :keyword = '' OR " +
+            "   LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "   LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+            "   u.phoneNumber LIKE CONCAT('%', :keyword, '%')) AND " +
+            "(:roleId IS NULL OR r.id = :roleId) AND " +
+            "(:status IS NULL OR :status = '' OR " +
+            "   (:status = 'ACTIVE' AND (u.isBlocked = false OR u.isBlocked IS NULL)) OR " +
+            "   (:status = 'LOCKED' AND u.isBlocked = true))")
     Page<User> searchUsers(
             @Param("keyword") String keyword,
             @Param("roleId") Long roleId,
             @Param("status") String status,
-            Pageable pageable
-    );
+            Pageable pageable);
 
     /**
      * Đếm tổng số user chưa bị xóa

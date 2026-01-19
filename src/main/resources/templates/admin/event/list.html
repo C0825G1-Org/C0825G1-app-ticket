@@ -109,8 +109,9 @@
                                     <td class="px-4 py-3"><span class="badge bg-primary-subtle text-primary"
                                             th:text="${event.categoryName}">Cat</span></td>
                                     <td class="px-4 py-3 text-muted">
-                                        <span th:if="${event.eventTimes != null && !event.eventTimes.isEmpty()}"
-                                            th:text="${#temporals.format(event.eventTimes[0].startTime, 'dd/MM/yyyy')}">Date</span>
+                                        <span
+                                            th:if="${event.eventOccurrences != null && !event.eventOccurrences.isEmpty()}"
+                                            th:text="${#temporals.format(event.eventOccurrences[0].startTime, 'dd/MM/yyyy')}">Date</span>
                                     </td>
                                     <td class="px-4 py-3">
                                         <span class="badge rounded-pill px-3"

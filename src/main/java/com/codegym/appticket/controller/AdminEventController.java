@@ -3,7 +3,7 @@ package com.codegym.appticket.controller;
 import com.codegym.appticket.dto.event.EventCreateDTO;
 import com.codegym.appticket.dto.event.EventDTO;
 
-import com.codegym.appticket.dto.event.EventTimeDTO;
+import com.codegym.appticket.dto.event.EventOccurrenceDTO;
 import com.codegym.appticket.dto.event.EventUpdateDTO;
 import com.codegym.appticket.dto.event.TicketTypeDTO;
 import com.codegym.appticket.service.IEventCategoryService;
@@ -59,7 +59,7 @@ public class AdminEventController {
     public String showCreateForm(Model model) {
         EventCreateDTO dto = new EventCreateDTO();
         // Init lists to ensure Thymeleaf binding availability
-        dto.getEventTimes().add(new EventTimeDTO());
+        dto.getEventOccurrences().add(new EventOccurrenceDTO());
         // dto.getTicketTypes().add(new TicketTypeDTO()); // Optional init if needed
 
         model.addAttribute("eventCreateDTO", dto);
@@ -112,10 +112,10 @@ public class AdminEventController {
             updateDTO.setCategoryId(eventDTO.getCategoryId());
             updateDTO.setStatus(eventDTO.getStatus());
 
-            if (eventDTO.getEventTimes() != null) {
-                updateDTO.setEventTimes(new java.util.ArrayList<>(eventDTO.getEventTimes()));
+            if (eventDTO.getEventOccurrences() != null) {
+                updateDTO.setEventOccurrences(new java.util.ArrayList<>(eventDTO.getEventOccurrences()));
             } else {
-                updateDTO.getEventTimes().add(new EventTimeDTO());
+                updateDTO.getEventOccurrences().add(new EventOccurrenceDTO());
             }
 
             // Load Ticket Types

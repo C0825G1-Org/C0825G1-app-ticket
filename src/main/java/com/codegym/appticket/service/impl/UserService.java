@@ -115,15 +115,13 @@ public class UserService implements IUserService {
         Pageable pageable = PageRequest.of(
                 searchDTO.getPage() != null ? searchDTO.getPage() : 0,
                 searchDTO.getSize() != null ? searchDTO.getSize() : 10,
-                Sort.by(Sort.Direction.DESC, "createdDate")
-        );
+                Sort.by(Sort.Direction.DESC, "createdDate"));
 
         Page<User> userPage = IUserRepository.searchUsers(
                 searchDTO.getKeyword(),
                 searchDTO.getRoleId(),
                 searchDTO.getStatus(),
-                pageable
-        );
+                pageable);
 
         return userPage.map(this::toUserDTO);
     }
@@ -139,8 +137,7 @@ public class UserService implements IUserService {
                 IUserRepository.countTotalUsers(),
                 IUserRepository.countActiveUsers(),
                 IUserRepository.countBlockedUsers(),
-                IUserRepository.countNewUsersThisMonth(startOfMonth)
-        );
+                IUserRepository.countNewUsersThisMonth(startOfMonth));
     }
 
     @Override
@@ -166,7 +163,7 @@ public class UserService implements IUserService {
         // Populate stats using repositories
         dto.setTicketCount(IBookingDetailRepository.countTicketsByUserId(id));
         dto.setEventCount(IEventRepository.countByCreatedBy(user));
-        
+
         BigDecimal totalSpent = IBookingDetailRepository.sumTotalSpentByUserId(id);
         if (totalSpent != null) {
             dto.setTotalSpent(String.format("%,.0fđ", totalSpent));
@@ -176,7 +173,7 @@ public class UserService implements IUserService {
 
         // Populate activities
         List<UserDetailDTO.ActivityDTO> activities = new ArrayList<>();
-        
+
         // 1. Get recent bookings (limit 10)
         Pageable limit10 = PageRequest.of(0, 10);
         java.util.List<Booking> recentBookings = IBookingRepository.findByUserOrderByCreatedDateDesc(user, limit10);
@@ -184,7 +181,8 @@ public class UserService implements IUserService {
             for (Booking booking : recentBookings) {
                 String description;
                 try {
-                    java.util.List<com.codegym.appticket.entity.BookingDetail> details = IBookingDetailRepository.findByBooking(booking);
+                    java.util.List<com.codegym.appticket.entity.BookingDetail> details = IBookingDetailRepository
+                            .findByBooking(booking);
                     if (details.isEmpty()) {
                         description = "Đặt vé #" + booking.getId();
                     } else {
@@ -199,37 +197,37 @@ public class UserService implements IUserService {
                 }
 
                 activities.add(new UserDetailDTO.ActivityDTO(
-                    "BOOKING",
-                    description + " - " + (booking.getStatus() == BookingStatus.SUCCESS ? "Thành công" : "Đang xử lý"),
-                    booking.getCreatedDate()
-                ));
+                        "BOOKING",
+                        description + " - "
+                                + (booking.getStatus() == BookingStatus.SUCCESS ? "Thành công" : "Đang xử lý"),
+                        booking.getCreatedDate()));
             }
         }
-        
+
         // 2. Get recent events created (limit 5)
         Pageable limit5 = PageRequest.of(0, 5);
         java.util.List<Event> recentEvents = IEventRepository.findByCreatedByOrderByCreatedDateDesc(user, limit5);
         if (recentEvents != null) {
             for (Event event : recentEvents) {
                 activities.add(new UserDetailDTO.ActivityDTO(
-                    "EVENT_CREATED",
-                    "Tạo sự kiện: " + event.getTitle(),
-                    event.getCreatedDate()
-                ));
+                        "EVENT_CREATED",
+                        "Tạo sự kiện: " + event.getTitle(),
+                        event.getCreatedDate()));
             }
         }
-        
+
         // 3. Sort by date desc
         activities.sort((a, b) -> {
-            if (b.getTimestamp() == null || a.getTimestamp() == null) return 0;
+            if (b.getTimestamp() == null || a.getTimestamp() == null)
+                return 0;
             return b.getTimestamp().compareTo(a.getTimestamp());
         });
-        
+
         // 4. Limit total activities to 10
         if (activities.size() > 10) {
             activities = activities.subList(0, 10);
         }
-        
+
         dto.setActivities(activities);
 
         return dto;
@@ -286,9 +284,9 @@ public class UserService implements IUserService {
             }
             user.setEmail(dto.getEmail());
         }
-        
+
         // Removed password update logic per requirements
-        
+
         if (dto.getEnabled() != null) {
             user.setEnabled(dto.getEnabled());
         }
@@ -310,7 +308,7 @@ public class UserService implements IUserService {
     public void toggleLock(Long id) {
         User user = IUserRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user với ID: " + id));
-        
+
         // Toggle isBlocked (khóa/mở khóa tài khoản)
         Boolean currentBlocked = user.getIsBlocked();
         user.setIsBlocked(currentBlocked == null || !currentBlocked);
@@ -321,7 +319,7 @@ public class UserService implements IUserService {
     public void resetPassword(Long id, String newPassword) {
         User user = IUserRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user với ID: " + id));
-        
+
         user.setPassword(passwordEncoder.encode(newPassword));
         IUserRepository.save(user);
     }
@@ -338,7 +336,7 @@ public class UserService implements IUserService {
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setEnabled(user.getEnabled());
         dto.setCreatedDate(user.getCreatedDate());
-        
+
         // Lấy role đầu tiên để hiển thị trên form update (vì UI dùng single select)
         if (user.getRoles() != null && !user.getRoles().isEmpty()) {
             dto.setRoleId(user.getRoles().iterator().next().getId());
@@ -370,7 +368,7 @@ public class UserService implements IUserService {
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setAuthProvider(AuthenticationProvider.LOCAL);
         user.setCreatedDate(LocalDateTime.now());
-        
+
         // OTP Logic
         String otp = String.format("%06d", new Random().nextInt(999999));
         user.setOtpCode(otp);
@@ -390,8 +388,9 @@ public class UserService implements IUserService {
     }
 
     public boolean verifyOtp(String email, String otp) {
-        User user = IUserRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
-        
+        User user = IUserRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+
         if (user.getEnabled()) {
             return true; // Already verified
         }
@@ -470,13 +469,14 @@ public class UserService implements IUserService {
     public void updatePassword(String email, String newPassword) {
         User user = IUserRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Email không tồn tại"));
-        
+
         user.setPassword(passwordEncoder.encode(newPassword));
         // Clear OTP after successful reset
         user.setOtpCode(null);
         user.setOtpExpiry(null);
         IUserRepository.save(user);
     }
+
     @Override
     public void updateProfile(Long userId, UserProfileDTO dto) {
         User user = IUserRepository.findById(userId)
@@ -493,9 +493,10 @@ public class UserService implements IUserService {
             user.setEmail(dto.getEmail());
             // TODO: Có thể yêu cầu verify lại email nếu cần
         }
-        
+
         IUserRepository.save(user);
     }
+
     @Override
     public UserDTO getUserByEmail(String email) {
         User user = IUserRepository.findByEmail(email)

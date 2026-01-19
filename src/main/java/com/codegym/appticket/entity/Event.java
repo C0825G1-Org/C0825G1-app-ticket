@@ -44,4 +44,7 @@ public class Event extends Parent {
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventMedia> eventMedias = new ArrayList<>();
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventOccurrence> eventOccurrences = new ArrayList<>();
 }

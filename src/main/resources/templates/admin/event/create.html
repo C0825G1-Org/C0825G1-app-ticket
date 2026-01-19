@@ -99,40 +99,21 @@
                                 </div>
                             </div>
 
-                            <!-- Event Times -->
+                            <!-- Event Occurrences (New) -->
                             <div class="card border-0 shadow-sm rounded-4 mb-4">
                                 <div
                                     class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
                                     <h5 class="fw-bold mb-0">
-                                        <i class="bi bi-clock text-primary me-2"></i>
-                                        Thời gian diễn ra
+                                        <i class="bi bi-geo-alt text-primary me-2"></i>
+                                        Thời gian & Địa điểm
                                     </h5>
                                     <button type="button" class="btn btn-sm btn-outline-primary"
-                                        onclick="addEventTime()">
-                                        <i class="bi bi-plus-lg"></i> Thêm khung giờ
+                                        onclick="addEventOccurrence()">
+                                        <i class="bi bi-plus-lg"></i> Thêm lịch trình
                                     </button>
                                 </div>
-                                <div class="card-body p-4" id="eventTimesContainer">
-                                    <div class="row g-3 mb-3 event-time-row">
-                                        <div class="col-md-5">
-                                            <label class="form-label fw-medium">Bắt đầu <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="datetime-local" class="form-control"
-                                                name="eventTimes[0].startTime" required>
-                                        </div>
-                                        <div class="col-md-5">
-                                            <label class="form-label fw-medium">Kết thúc <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="datetime-local" class="form-control"
-                                                name="eventTimes[0].endTime" required>
-                                        </div>
-                                        <div class="col-md-2 d-flex align-items-end">
-                                            <button type="button" class="btn btn-outline-danger w-100"
-                                                onclick="if(document.querySelectorAll('.event-time-row').length > 1) this.closest('.event-time-row').remove()">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
+                                <div class="card-body p-4" id="eventOccurrencesContainer">
+                                    <!-- Populated by JS -->
                                 </div>
                             </div>
 
@@ -451,29 +432,55 @@
                                 });
                             };
 
-                            // Event Time Logic 
-                            window.addEventTime = function () {
-                                const container = document.getElementById('eventTimesContainer');
-                                const idx = document.querySelectorAll('.event-time-row').length;
-                                const newRow = document.createElement('div');
-                                newRow.className = 'row g-3 mb-3 event-time-row';
-                                newRow.innerHTML = `
-                                    <div class="col-md-5">
-                                        <label class="form-label fw-medium">Bắt đầu <span class="text-danger">*</span></label>
-                                        <input type="datetime-local" class="form-control" name="eventTimes[${idx}].startTime" required>
-                                    </div>
-                                    <div class="col-md-5">
-                                        <label class="form-label fw-medium">Kết thúc <span class="text-danger">*</span></label>
-                                        <input type="datetime-local" class="form-control" name="eventTimes[${idx}].endTime" required>
-                                    </div>
-                                    <div class="col-md-2 d-flex align-items-end">
-                                        <button type="button" class="btn btn-outline-danger w-100" onclick="removeRow(this, 'khung giờ')">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
+                            // Event Occurrence Logic
+                            window.addEventOccurrence = function () {
+                                const container = document.getElementById('eventOccurrencesContainer');
+                                const idx = document.querySelectorAll('.event-occurrence-item').length;
+
+                                const item = document.createElement('div');
+                                item.className = 'card mb-3 border bg-light event-occurrence-item';
+                                item.innerHTML = `
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <h6 class="fw-bold text-muted">Lịch trình #${idx + 1}</h6>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this, 'lịch trình')">
+                                                <i class="bi bi-trash"></i> Xóa
+                                            </button>
+                                        </div>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-medium">Bắt đầu <span class="text-danger">*</span></label>
+                                                <input type="datetime-local" class="form-control" name="eventOccurrences[${idx}].startTime" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-medium">Kết thúc <span class="text-danger">*</span></label>
+                                                <input type="datetime-local" class="form-control" name="eventOccurrences[${idx}].endTime" required>
+                                            </div>
+                                            <div class="col-12"><hr class="my-1"></div>
+                                            <div class="col-md-4">
+                                                <label class="form-label small fw-medium">Tỉnh/Thành <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" name="eventOccurrences[${idx}].provinceCity" placeholder="Hà Nội" required>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label small fw-medium">Quận/Huyện <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" name="eventOccurrences[${idx}].wardCommune" placeholder="Cầu Giấy" required>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label small fw-medium">Địa chỉ chi tiết <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" name="eventOccurrences[${idx}].addressDetail" placeholder="Số 1 Đại Cồ Việt" required>
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label small fw-medium">Link Bản đồ (Tùy chọn)</label>
+                                                <input type="text" class="form-control" name="eventOccurrences[${idx}].mapLink" placeholder="https://maps.google.com/...">
+                                            </div>
+                                        </div>
                                     </div>
                                 `;
-                                container.appendChild(newRow);
+                                container.appendChild(item);
                             };
+
+                            // Init one occurrence
+                            addEventOccurrence();
 
                             // Generic Row Removal with SweetAlert
                             window.removeRow = function (button, itemName) {
@@ -498,8 +505,8 @@
                                         // Re-index based on container ID
                                         if (container.id === 'ticketTypesContainer') {
                                             reindexTicketTypes();
-                                        } else if (container.id === 'eventTimesContainer') {
-                                            reindexEventTimes();
+                                        } else if (container.id === 'eventOccurrencesContainer') {
+                                            reindexEventOccurrences();
                                         }
                                     }
                                 });
@@ -611,12 +618,17 @@
                                 }
                             };
 
-                            // Event Time Logic 
-                            window.reindexEventTimes = function () {
-                                const rows = document.querySelectorAll('.event-time-row');
-                                rows.forEach((row, idx) => {
-                                    row.querySelector('input[name$=".startTime"]').name = `eventTimes[${idx}].startTime`;
-                                    row.querySelector('input[name$=".endTime"]').name = `eventTimes[${idx}].endTime`;
+                            // Event Occurrence Logic 
+                            window.reindexEventOccurrences = function () {
+                                const items = document.querySelectorAll('.event-occurrence-item');
+                                items.forEach((item, idx) => {
+                                    item.querySelector('.fw-bold.text-muted').innerText = `Lịch trình #${idx + 1}`;
+                                    item.querySelector('input[name$=".startTime"]').name = `eventOccurrences[${idx}].startTime`;
+                                    item.querySelector('input[name$=".endTime"]').name = `eventOccurrences[${idx}].endTime`;
+                                    item.querySelector('input[name$=".provinceCity"]').name = `eventOccurrences[${idx}].provinceCity`;
+                                    item.querySelector('input[name$=".wardCommune"]').name = `eventOccurrences[${idx}].wardCommune`;
+                                    item.querySelector('input[name$=".addressDetail"]').name = `eventOccurrences[${idx}].addressDetail`;
+                                    item.querySelector('input[name$=".mapLink"]').name = `eventOccurrences[${idx}].mapLink`;
                                 });
                             }
                         });

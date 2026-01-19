@@ -36,7 +36,7 @@ public class EventUpdateDTO {
 
     @Valid
     @Builder.Default
-    private List<EventTimeDTO> eventTimes = new ArrayList<>();
+    private List<EventOccurrenceDTO> eventOccurrences = new ArrayList<>();
 
     @Valid
     @Builder.Default

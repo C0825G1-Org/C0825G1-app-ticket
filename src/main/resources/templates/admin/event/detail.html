@@ -116,17 +116,28 @@
                             <h6 class="fw-bold mb-0">Thời gian & Địa điểm</h6>
                         </div>
                         <div class="card-body p-4">
-                            <!-- Loop times if multiple, just showing first 3 for brevity if needed -->
-                            <div th:each="time : ${event.eventTimes}">
+                            <!-- Loop occurrences -->
+                            <div th:each="occ : ${event.eventOccurrences}">
                                 <div class="mb-3 border-bottom pb-3 last-no-border">
                                     <div class="text-muted small mb-1">Thời gian</div>
-                                    <div class="fw-medium text-dark">
+                                    <div class="fw-medium text-dark mb-2">
                                         <i class="bi bi-calendar-event me-2 text-primary"></i>
                                         <span
-                                            th:text="${#temporals.format(time.startTime, 'HH:mm dd/MM/yyyy')}">Start</span>
+                                            th:text="${#temporals.format(occ.startTime, 'HH:mm dd/MM/yyyy')}">Start</span>
                                         -
+                                        <span th:text="${#temporals.format(occ.endTime, 'HH:mm dd/MM/yyyy')}">End</span>
+                                    </div>
+                                    <div class="text-muted small mb-1">Địa điểm chi tiết</div>
+                                    <div class="fw-medium text-dark">
+                                        <i class="bi bi-geo-alt me-2 text-primary"></i>
                                         <span
-                                            th:text="${#temporals.format(time.endTime, 'HH:mm dd/MM/yyyy')}">End</span>
+                                            th:text="${occ.addressDetail} + ', ' + ${occ.wardCommune} + ', ' + ${occ.provinceCity}">Full
+                                            Address</span>
+                                    </div>
+                                    <div th:if="${occ.mapLink}" class="mt-1">
+                                        <a th:href="${occ.mapLink}" target="_blank"
+                                            class="small text-decoration-none"><i class="bi bi-map-fill"></i> Xem bản
+                                            đồ</a>
                                     </div>
                                 </div>
                             </div>

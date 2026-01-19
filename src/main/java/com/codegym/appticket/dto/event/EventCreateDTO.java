@@ -31,10 +31,10 @@ public class EventCreateDTO {
     @NotNull(message = "Danh mục sự kiện không được để trống")
     private Long categoryId;
 
-    @NotEmpty(message = "Sự kiện phải có ít nhất một thời gian diễn ra")
+    @NotEmpty(message = "Sự kiện phải có ít nhất một xuất tổ chức")
     @Valid
     @Builder.Default
-    private List<EventTimeDTO> eventTimes = new ArrayList<>();
+    private List<EventOccurrenceDTO> eventOccurrences = new ArrayList<>();
 
     @Valid
     @Builder.Default

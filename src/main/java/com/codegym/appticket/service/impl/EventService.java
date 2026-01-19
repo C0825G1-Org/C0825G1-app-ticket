@@ -3,18 +3,18 @@ package com.codegym.appticket.service.impl;
 import com.codegym.appticket.dto.event.EventCreateDTO;
 import com.codegym.appticket.dto.event.EventDTO;
 import com.codegym.appticket.dto.event.EventMediaDTO;
-import com.codegym.appticket.dto.event.EventTimeDTO;
+
 import com.codegym.appticket.dto.event.EventUpdateDTO;
 import com.codegym.appticket.dto.event.TicketTypeDTO;
 import com.codegym.appticket.entity.Event;
 import com.codegym.appticket.entity.EventCategory;
 import com.codegym.appticket.entity.EventMedia;
 import com.codegym.appticket.entity.EventStatus;
-import com.codegym.appticket.entity.EventTime;
+
 import com.codegym.appticket.repository.IEventCategoryRepository;
 import com.codegym.appticket.repository.IEventMediaRepository;
 import com.codegym.appticket.repository.IEventRepository;
-import com.codegym.appticket.repository.IEventTimeRepository;
+
 import com.codegym.appticket.service.IEventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ public class EventService implements IEventService {
 
         private final IEventRepository eventRepository;
         private final IEventCategoryRepository eventCategoryRepository;
-        private final IEventTimeRepository eventTimeRepository;
+        private final com.codegym.appticket.repository.ILocationRepository locationRepository;
         private final IEventMediaRepository eventMediaRepository;
         private final com.codegym.appticket.repository.ITicketTypeRepository ticketTypeRepository;
         private final AdminNotificationService adminNotificationService;
@@ -64,7 +64,9 @@ public class EventService implements IEventService {
         }
 
         @Override
-        public org.springframework.data.domain.Page<EventDTO> findByStatus(com.codegym.appticket.entity.EventStatus status, org.springframework.data.domain.Pageable pageable) {
+        public org.springframework.data.domain.Page<EventDTO> findByStatus(
+                        com.codegym.appticket.entity.EventStatus status,
+                        org.springframework.data.domain.Pageable pageable) {
                 return eventRepository.findByStatus(status, pageable).map(this::convertToDTO);
         }
 
@@ -84,19 +86,37 @@ public class EventService implements IEventService {
 
                 Event savedEvent = eventRepository.save(event);
 
-                // Tạo EventTimes
-                if (dto.getEventTimes() != null && !dto.getEventTimes().isEmpty()) {
-                        List<EventTime> eventTimes = dto.getEventTimes().stream()
-                                        .map(timeDTO -> {
-                                                EventTime eventTime = new EventTime();
-                                                eventTime.setEvent(savedEvent);
-                                                eventTime.setStartTime(timeDTO.getStartTime());
-                                                eventTime.setEndTime(timeDTO.getEndTime());
-                                                return eventTime;
+                // Tạo EventOccurrences (New Logic)
+                if (dto.getEventOccurrences() != null && !dto.getEventOccurrences().isEmpty()) {
+                        List<com.codegym.appticket.entity.EventOccurrence> occurrences = dto.getEventOccurrences()
+                                        .stream()
+                                        .map(occDTO -> {
+                                                // Create or Reuse Location
+                                                com.codegym.appticket.entity.Location location = locationRepository
+                                                                .findByProvinceCityAndWardCommuneAndAddressDetail(
+                                                                                occDTO.getProvinceCity(),
+                                                                                occDTO.getWardCommune(),
+                                                                                occDTO.getAddressDetail())
+                                                                .orElseGet(() -> {
+                                                                        com.codegym.appticket.entity.Location newLoc = new com.codegym.appticket.entity.Location();
+                                                                        newLoc.setProvinceCity(
+                                                                                        occDTO.getProvinceCity());
+                                                                        newLoc.setWardCommune(occDTO.getWardCommune());
+                                                                        newLoc.setAddressDetail(
+                                                                                        occDTO.getAddressDetail());
+                                                                        newLoc.setMapLink(occDTO.getMapLink());
+                                                                        return locationRepository.save(newLoc);
+                                                                });
+
+                                                com.codegym.appticket.entity.EventOccurrence occurrence = new com.codegym.appticket.entity.EventOccurrence();
+                                                occurrence.setEvent(savedEvent);
+                                                occurrence.setLocation(location);
+                                                occurrence.setStartTime(occDTO.getStartTime());
+                                                occurrence.setEndTime(occDTO.getEndTime());
+                                                return occurrence;
                                         })
                                         .collect(Collectors.toList());
-                        eventTimeRepository.saveAll(eventTimes); // Batch save
-                        savedEvent.setEventTimes(eventTimes);
+                        savedEvent.setEventOccurrences(occurrences); // Cascaded save
                 }
 
                 // Tạo TicketTypes
@@ -160,9 +180,9 @@ public class EventService implements IEventService {
 
                 // Notify Admins
                 try {
-                    adminNotificationService.sendNotification(finalEvent);
+                        adminNotificationService.sendNotification(finalEvent);
                 } catch (Exception e) {
-                    System.err.println("Error sending notification: " + e.getMessage());
+                        System.err.println("Error sending notification: " + e.getMessage());
                 }
 
                 return convertToDTO(finalEvent);
@@ -195,19 +215,38 @@ public class EventService implements IEventService {
                 event.setCategory(category);
                 event.setStatus(dto.getStatus());
 
-                // Cập nhật EventTimes: xóa cũ và tạo mới
-                event.getEventTimes().clear();
-                if (dto.getEventTimes() != null && !dto.getEventTimes().isEmpty()) {
-                        List<EventTime> newEventTimes = dto.getEventTimes().stream()
-                                        .map(timeDTO -> {
-                                                EventTime eventTime = new EventTime();
-                                                eventTime.setEvent(event);
-                                                eventTime.setStartTime(timeDTO.getStartTime());
-                                                eventTime.setEndTime(timeDTO.getEndTime());
-                                                return eventTime;
+                // Cập nhật EventOccurrences: xóa cũ và tạo mới (Simplest strategy for now)
+                event.getEventOccurrences().clear();
+                if (dto.getEventOccurrences() != null && !dto.getEventOccurrences().isEmpty()) {
+                        List<com.codegym.appticket.entity.EventOccurrence> newOccurrences = dto.getEventOccurrences()
+                                        .stream()
+                                        .map(occDTO -> {
+                                                // Create or Reuse Location
+                                                com.codegym.appticket.entity.Location location = locationRepository
+                                                                .findByProvinceCityAndWardCommuneAndAddressDetail(
+                                                                                occDTO.getProvinceCity(),
+                                                                                occDTO.getWardCommune(),
+                                                                                occDTO.getAddressDetail())
+                                                                .orElseGet(() -> {
+                                                                        com.codegym.appticket.entity.Location newLoc = new com.codegym.appticket.entity.Location();
+                                                                        newLoc.setProvinceCity(
+                                                                                        occDTO.getProvinceCity());
+                                                                        newLoc.setWardCommune(occDTO.getWardCommune());
+                                                                        newLoc.setAddressDetail(
+                                                                                        occDTO.getAddressDetail());
+                                                                        newLoc.setMapLink(occDTO.getMapLink());
+                                                                        return locationRepository.save(newLoc);
+                                                                });
+
+                                                com.codegym.appticket.entity.EventOccurrence occurrence = new com.codegym.appticket.entity.EventOccurrence();
+                                                occurrence.setEvent(event);
+                                                occurrence.setLocation(location);
+                                                occurrence.setStartTime(occDTO.getStartTime());
+                                                occurrence.setEndTime(occDTO.getEndTime());
+                                                return occurrence;
                                         })
                                         .collect(Collectors.toList());
-                        event.getEventTimes().addAll(newEventTimes);
+                        event.getEventOccurrences().addAll(newOccurrences);
                 }
 
                 // Cập nhật TicketTypes: Smart Update (Update existing, Create new, Delete
@@ -325,12 +364,17 @@ public class EventService implements IEventService {
         }
 
         private EventDTO convertToDTO(Event event) {
-                // Convert EventTimes
-                List<EventTimeDTO> eventTimeDTOs = event.getEventTimes().stream()
-                                .map(eventTime -> EventTimeDTO.builder()
-                                                .id(eventTime.getId())
-                                                .startTime(eventTime.getStartTime())
-                                                .endTime(eventTime.getEndTime())
+                // Convert EventOccurrences
+                List<com.codegym.appticket.dto.event.EventOccurrenceDTO> occurrenceDTOs = event.getEventOccurrences()
+                                .stream()
+                                .map(occ -> com.codegym.appticket.dto.event.EventOccurrenceDTO.builder()
+                                                .id(occ.getId())
+                                                .startTime(occ.getStartTime())
+                                                .endTime(occ.getEndTime())
+                                                .provinceCity(occ.getLocation().getProvinceCity())
+                                                .wardCommune(occ.getLocation().getWardCommune())
+                                                .addressDetail(occ.getLocation().getAddressDetail())
+                                                .mapLink(occ.getLocation().getMapLink())
                                                 .build())
                                 .collect(Collectors.toList());
 
@@ -356,7 +400,8 @@ public class EventService implements IEventService {
                                 .createdByName(event.getCreatedBy() != null ? event.getCreatedBy().getFullName() : null)
                                 .status(event.getStatus())
                                 .createdAt(event.getCreatedDate())
-                                .eventTimes(eventTimeDTOs)
+                                .createdAt(event.getCreatedDate())
+                                .eventOccurrences(occurrenceDTOs)
                                 .eventMedias(eventMediaDTOs)
                                 .ticketTypes(ticketTypeRepository.findByEventId(event.getId()).stream()
                                                 .map(tt -> TicketTypeDTO.builder()
