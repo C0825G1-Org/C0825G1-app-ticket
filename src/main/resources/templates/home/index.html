@@ -241,7 +241,7 @@
                 <div th:each="event : ${upcomingEvents}" class="col-md-6 col-lg-3">
                     <div class="card card-event h-100 border-0 shadow-sm"
                         style="cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease;"
-                        th:onclick="'window.location.href=\'/events/' + ${event.id} + '\''">
+                        th:onclick="'window.location.href=\'/event/' + ${event.id} + '\''">
 
                         <!-- Event Image -->
                         <div class="position-relative overflow-hidden">

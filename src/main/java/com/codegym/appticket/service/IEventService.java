@@ -40,7 +40,7 @@ public interface IEventService {
     
     Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location,int page, int size, String sort);
 
-    List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, int limit);
+    List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, String excludeLocation, int limit);
 
     // User/Organizer methods
     org.springframework.data.domain.Page<Event> findEventsByOrganizer(com.codegym.appticket.entity.User organizer,

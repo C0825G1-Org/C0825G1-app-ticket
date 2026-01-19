@@ -551,7 +551,6 @@ public class EventService implements IEventService {
                                 .description(event.getDescription())
                                 .categoryId(event.getCategory() != null ? event.getCategory().getId() : null)
                                 .categoryName(event.getCategory() != null ? event.getCategory().getName() : null)
-                                .categoryName(event.getCategory() != null ? event.getCategory().getName() : null)
                                 .createdById(event.getCreatedBy() != null ? event.getCreatedBy().getId() : null)
                                 .createdByName(event.getCreatedBy() != null ? event.getCreatedBy().getFullName() : null)
                                 .status(event.getStatus())
@@ -653,8 +652,8 @@ public class EventService implements IEventService {
         }
 
     @Override
-    public List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, int limit) {
-        return eventRepository.findNearbyEvents(userLatitude, userLongitude, limit);
+    public List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, String excludeLocation, int limit) {
+        return eventRepository.findNearbyEvents(userLatitude, userLongitude, excludeLocation, limit);
     }
 
         @Override
