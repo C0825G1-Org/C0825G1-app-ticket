@@ -10,11 +10,13 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
-@ControllerAdvice
+@ControllerAdvice(annotations = org.springframework.stereotype.Controller.class)
 @RequiredArgsConstructor
 public class GlobalModelAdvice {
 
-    private final IEventRepository eventRepository;
+    // Use Service instead of Repository for better Transaction management
+    private final com.codegym.appticket.service.IEventService eventService; // Assuming count method exists or added
+    private final com.codegym.appticket.repository.IEventRepository eventRepository; // Keep for now if service logic missing
 
     private final jakarta.servlet.http.HttpServletRequest request;
 
@@ -26,10 +28,17 @@ public class GlobalModelAdvice {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated() && 
             !(authentication instanceof AnonymousAuthenticationToken)) {
-            return eventRepository.countByStatus(EventStatus.PENDING);
+            // Check if user has admin/staff authority to avoid unnecessary DB calls for normal users
+            boolean isStaffOrAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ADMIN") || a.getAuthority().equals("STAFF"));
+            
+            if (isStaffOrAdmin) {
+                 return eventRepository.countByStatus(EventStatus.PENDING);
+            }
         }
         return 0;
     }
+
 
     @ModelAttribute("currentUser")
     public com.codegym.appticket.entity.User getCurrentUser() {
