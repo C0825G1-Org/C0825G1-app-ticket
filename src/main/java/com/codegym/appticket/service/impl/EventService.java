@@ -75,13 +75,13 @@ public class EventService implements IEventService {
                 return eventRepository.findByStatusNot(EventStatus.DELETED, pageable).map(this::convertToDTO);
         }
 
-    @Override
-    public Page<HomeEventDTO> findAllEvent(int size, int page) {
-        Sort sort = Sort.by(Sort.Direction.ASC, "startTime");
-        return eventRepository.findAllEvent(PageRequest.of(size, page, sort));
-    }
+        @Override
+        public Page<HomeEventDTO> findAllEvent(int size, int page) {
+                Sort sort = Sort.by(Sort.Direction.ASC, "startTime");
+                return eventRepository.findAllEvent(PageRequest.of(size, page, sort));
+        }
 
-    @Override
+        @Override
         public org.springframework.data.domain.Page<EventDTO> search(com.codegym.appticket.dto.event.EventSearchDTO dto,
                         org.springframework.data.domain.Pageable pageable) {
                 java.time.LocalDateTime start = dto.getStartDate() != null ? dto.getStartDate().atStartOfDay() : null;
@@ -650,10 +650,11 @@ public class EventService implements IEventService {
                 eventRepository.save(event);
         }
 
-    @Override
-    public List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, String excludeLocation, int limit) {
-        return eventRepository.findNearbyEvents(userLatitude, userLongitude, excludeLocation, limit);
-    }
+        @Override
+        public List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, String excludeLocation,
+                        int limit) {
+                return eventRepository.findNearbyEvents(userLatitude, userLongitude, excludeLocation, limit);
+        }
 
         @Override
         public long countByStatus(EventStatus status) {

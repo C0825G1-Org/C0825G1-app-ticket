@@ -643,16 +643,34 @@
                                     wardSelect.disabled = true;
 
                                     if (provinceCode) {
-                                        // Use depth=2 to get wards directly
+                                        // Fix: Fetch Districts first, then flatten Wards
                                         try {
+                                            // Get Districts of Province
                                             const response = await fetch(`${API_BASE}/p/${provinceCode}?depth=2`);
                                             const data = await response.json();
-                                            const wards = data.wards || [];
+                                            const districts = data.districts || [];
 
-                                            wards.forEach(w => {
+                                            // Async fetch all wards for all districts
+                                            // Ideally we should use a different API or caching, but strictly following available API:
+                                            // Check if we can get all Wards in one go? No.
+                                            // Optimization: Use `?depth=3` on Province to get Districts WITH Wards nested.
+
+                                            const responseDepth3 = await fetch(`${API_BASE}/p/${provinceCode}?depth=3`);
+                                            const dataDepth3 = await responseDepth3.json();
+                                            const districtsWithWards = dataDepth3.districts || [];
+
+                                            let allWards = [];
+                                            districtsWithWards.forEach(d => {
+                                                if (d.wards) allWards = allWards.concat(d.wards);
+                                            });
+
+                                            // Sort wards by name if needed, or leave as is
+                                            // allWards.sort((a, b) => a.name.localeCompare(b.name));
+
+                                            allWards.forEach(w => {
                                                 const option = document.createElement('option');
                                                 option.value = w.code;
-                                                option.textContent = w.name;
+                                                option.textContent = w.name; // Can add District name: `${w.name} - ${d.name}` if we had reference
                                                 wardSelect.appendChild(option);
                                             });
                                             wardSelect.disabled = false;

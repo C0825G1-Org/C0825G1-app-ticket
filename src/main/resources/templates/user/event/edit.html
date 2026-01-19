@@ -513,10 +513,35 @@
                                             Toast.fire({ icon: 'success', title: 'Cập nhật thành công!' });
                                             setTimeout(() => window.location.href = data.redirectUrl, 1500);
                                         } else if (data.status === 'validation_error') {
-                                            // Handle errors...
+                                            // Clear old errors
+                                            document.querySelectorAll('.error-message').forEach(el => {
+                                                if (!el.id.includes('error-')) el.remove();
+                                                else el.textContent = '';
+                                            });
+                                            document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+
                                             for (const [field, message] of Object.entries(data.errors)) {
                                                 const errorDiv = document.getElementById('error-' + field);
-                                                if (errorDiv) errorDiv.textContent = message;
+                                                if (errorDiv) {
+                                                    errorDiv.textContent = message;
+                                                    const input = document.querySelector(`[name="${field}"]`);
+                                                    if (input) input.classList.add('is-invalid');
+                                                } else {
+                                                    // Dynamic fields handling
+                                                    // Escape special characters in field name for querySelector if needed, 
+                                                    // but simply using attribute selector [name="..."] handles brackets fine.
+                                                    const input = document.querySelector(`[name="${field}"]`);
+                                                    if (input) {
+                                                        input.classList.add('is-invalid');
+                                                        let dynamicError = input.nextElementSibling;
+                                                        if (!dynamicError || !dynamicError.classList.contains('error-message')) {
+                                                            dynamicError = document.createElement('div');
+                                                            dynamicError.className = 'text-danger small error-message';
+                                                            input.parentNode.insertBefore(dynamicError, input.nextSibling);
+                                                        }
+                                                        dynamicError.textContent = message;
+                                                    }
+                                                }
                                             }
                                             Toast.fire({ icon: 'error', title: 'Kiểm tra lại thông tin.' });
                                         } else {
@@ -669,18 +694,31 @@
                                 wardSelect.disabled = true;
 
                                 if (provinceCode) {
-                                    // Use depth=2 to get wards directly
-                                    const response = await fetch(`${API_BASE}/p/${provinceCode}?depth=2`);
-                                    const data = await response.json();
-                                    const wards = data.wards || [];
+                                    // Fix: Fetch Districts first, then flatten Wards
+                                    try {
+                                        const response = await fetch(`${API_BASE}/p/${provinceCode}?depth=2`);
+                                        const data = await response.json();
+                                        const districts = data.districts || [];
 
-                                    wards.forEach(w => {
-                                        const option = document.createElement('option');
-                                        option.value = w.code;
-                                        option.textContent = w.name;
-                                        wardSelect.appendChild(option);
-                                    });
-                                    wardSelect.disabled = false;
+                                        const responseDepth3 = await fetch(`${API_BASE}/p/${provinceCode}?depth=3`);
+                                        const dataDepth3 = await responseDepth3.json();
+                                        const districtsWithWards = dataDepth3.districts || [];
+
+                                        let allWards = [];
+                                        districtsWithWards.forEach(d => {
+                                            if (d.wards) allWards = allWards.concat(d.wards);
+                                        });
+
+                                        allWards.forEach(w => {
+                                            const option = document.createElement('option');
+                                            option.value = w.code;
+                                            option.textContent = w.name;
+                                            wardSelect.appendChild(option);
+                                        });
+                                        wardSelect.disabled = false;
+                                    } catch (e) {
+                                        console.error('Error fetching wards:', e);
+                                    }
                                 }
                             };
 
@@ -775,24 +813,29 @@
                                             pSel.value = savedProvCode;
                                             if (!pSel.value) pSel.value = parseInt(savedProvCode).toString(); // Try int parse
 
-                                            // Update hidden name
+                                            // Update hidden province name
                                             const opt = pSel.options[pSel.selectedIndex];
                                             if (opt) item.querySelector('.province-name').value = opt.text;
 
-                                            // Fetch wards for this province
+                                            // Load Wards correctly
                                             try {
-                                                const response = await fetch(`${API_BASE}/p/${pSel.value}?depth=2`); // Use selected value
-                                                const data = await response.json();
-                                                const wards = data.wards || [];
+                                                const responseDepth3 = await fetch(`${API_BASE}/p/${savedProvCode}?depth=3`);
+                                                const dataDepth3 = await responseDepth3.json();
+                                                const districtsWithWards = dataDepth3.districts || [];
 
-                                                wards.forEach(w => {
+                                                let allWards = [];
+                                                districtsWithWards.forEach(d => {
+                                                    if (d.wards) allWards = allWards.concat(d.wards);
+                                                });
+
+                                                allWards.forEach(w => {
                                                     const option = document.createElement('option');
                                                     option.value = w.code;
                                                     option.textContent = w.name;
                                                     wSel.appendChild(option);
                                                 });
 
-                                                if (wards.length > 0) {
+                                                if (allWards.length > 0) {
                                                     wSel.disabled = false;
                                                     if (savedWardCode) {
                                                         wSel.value = savedWardCode;
@@ -803,7 +846,6 @@
                                                         if (wOpt) item.querySelector('.ward-name').value = wOpt.text;
                                                     }
                                                 }
-
                                             } catch (e) {
                                                 console.error('Error fetching wards for restoration:', e);
                                             }

@@ -24,12 +24,12 @@ public class BookingController {
 
     // 1. Trang Form đặt vé
     @GetMapping("/book/{eventId}")
-    public String showForm(@PathVariable Long eventId, 
-                          @RequestParam Map<String, String> params,
-                          Model model) {
+    public String showForm(@PathVariable Long eventId,
+            @RequestParam Map<String, String> params,
+            Model model) {
         Event event = bookingService.getEventById(eventId);
         List<TicketType> ticketTypes = bookingService.getTicketTypesByEventId(eventId);
-        
+
         // Extract pre-selected ticket quantities from URL parameters
         Map<Long, Integer> preSelectedQuantities = new HashMap<>();
         for (Map.Entry<String, String> entry : params.entrySet()) {
@@ -45,8 +45,19 @@ public class BookingController {
                 }
             }
         }
-        
+
         model.addAttribute("event", event);
+
+        // Fix location display
+        String location = "Chưa cập nhật";
+        if (event.getEventOccurrences() != null && !event.getEventOccurrences().isEmpty()) {
+            com.codegym.appticket.entity.Location loc = event.getEventOccurrences().get(0).getLocation();
+            if (loc != null && loc.getWard() != null && loc.getWard().getProvince() != null) {
+                location = loc.getWard().getProvince().getName();
+            }
+        }
+        model.addAttribute("location", location);
+
         model.addAttribute("ticketTypes", ticketTypes);
         model.addAttribute("preSelectedQuantities", preSelectedQuantities);
         return "booking/form";
@@ -55,12 +66,12 @@ public class BookingController {
     // 2. Trang Xác nhận đặt vé
     @PostMapping("/confirm")
     public String confirm(@RequestParam Long eventId,
-                          @RequestParam Map<String, String> params,
-                          Model model,
-                          RedirectAttributes redirectAttributes) {
+            @RequestParam Map<String, String> params,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         Event event = bookingService.getEventById(eventId);
         Map<TicketType, Integer> selectedTickets = new HashMap<>();
-        
+
         for (Map.Entry<String, String> entry : params.entrySet()) {
             if (entry.getKey().startsWith("ticket_")) {
                 Long ticketTypeId = Long.parseLong(entry.getKey().replace("ticket_", ""));
@@ -69,7 +80,8 @@ public class BookingController {
                     TicketType tt = bookingService.getTicketTypesByEventId(eventId).stream()
                             .filter(t -> t.getId().equals(ticketTypeId))
                             .findFirst().orElse(null);
-                    if (tt != null) selectedTickets.put(tt, quantity);
+                    if (tt != null)
+                        selectedTickets.put(tt, quantity);
                 }
             }
         }
@@ -80,6 +92,17 @@ public class BookingController {
         }
 
         model.addAttribute("event", event);
+
+        // Fix location display
+        String location = "Chưa cập nhật";
+        if (event.getEventOccurrences() != null && !event.getEventOccurrences().isEmpty()) {
+            com.codegym.appticket.entity.Location loc = event.getEventOccurrences().get(0).getLocation();
+            if (loc != null && loc.getWard() != null && loc.getWard().getProvince() != null) {
+                location = loc.getWard().getProvince().getName();
+            }
+        }
+        model.addAttribute("location", location);
+
         model.addAttribute("selectedTickets", selectedTickets);
         return "booking/confirm";
     }
@@ -87,12 +110,12 @@ public class BookingController {
     // 3. Xử lý Lưu đặt vé
     @PostMapping("/save")
     public String save(@RequestParam Long eventId,
-                       @RequestParam Map<String, String> params,
-                       RedirectAttributes redirectAttributes,
-                       jakarta.servlet.http.HttpServletRequest request) {
+            @RequestParam Map<String, String> params,
+            RedirectAttributes redirectAttributes,
+            jakarta.servlet.http.HttpServletRequest request) {
         // Giả lập lấy user theo email
         String mockEmail = "nguyenns6802@gmail.com";
-        
+
         Map<Long, Integer> ticketQuantities = new HashMap<>();
         for (Map.Entry<String, String> entry : params.entrySet()) {
             if (entry.getKey().startsWith("ticket_")) {
@@ -105,12 +128,12 @@ public class BookingController {
         try {
             com.codegym.appticket.entity.User mockUser = bookingService.getUserByEmail(mockEmail);
             Long userId = mockUser.getId();
-            
+
             Booking booking = bookingService.createBooking(eventId, userId, ticketQuantities);
-            
+
             long totalAmount = bookingService.calculateTotalAmount(booking.getId());
             String paymentUrl = vnPayService.createPaymentUrl(request, booking.getId(), totalAmount);
-            
+
             return "redirect:" + paymentUrl;
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -123,7 +146,7 @@ public class BookingController {
     public String success(@PathVariable Long id, Model model) {
         Booking booking = bookingService.getBookingById(id);
         java.util.List<com.codegym.appticket.entity.Ticket> tickets = bookingService.getTicketsByBookingId(id);
-        
+
         model.addAttribute("booking", booking);
         model.addAttribute("tickets", tickets);
         return "booking/success";
