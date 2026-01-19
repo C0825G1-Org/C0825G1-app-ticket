@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="~{common/layout :: head('Quản lý sự kiện')}">
+<head th:replace="~{common/layout :: head('Sự kiện của tôi')}">
 </head>
 
 <body>
@@ -10,64 +10,8 @@
             <!-- Header for Page -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h4 class="fw-bold mb-0">Quản lý Sự kiện</h4>
-                    <p class="text-muted small mb-0">Quản lý, phê duyệt và chỉnh sửa sự kiện</p>
-                </div>
-                <!-- Old button removed -->
-            </div>
-
-            <!-- Stats Cards (Static Mockup for now) -->
-            <div class="row g-4 mb-4">
-                <div class="col-md-3">
-                    <div class="card border-0 shadow-sm rounded-4">
-                        <div class="card-body p-4">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="text-muted small mb-1">Tổng sự kiện</div>
-                                    <h3 class="fw-bold mb-0" th:text="${events != null ? events.totalElements : 0}">0
-                                    </h3>
-                                </div>
-                                <div class="bg-primary-subtle text-primary rounded-circle p-3">
-                                    <i class="bi bi-calendar-event fs-4"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filters & Search -->
-            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                <div class="card-body p-4">
-                    <form th:action="@{/admin/events}" method="get" th:object="${eventSearchDTO}" class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">Tiêu đề</label>
-                            <input type="text" class="form-control" th:field="*{title}"
-                                placeholder="Nhập tên sự kiện...">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">Danh mục</label>
-                            <select class="form-select" th:field="*{categoryId}">
-                                <option value="">-- Tất cả --</option>
-                                <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}">
-                                    Category</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold">Từ ngày</label>
-                            <input type="date" class="form-control" th:field="*{startDate}">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold">Đến ngày</label>
-                            <input type="date" class="form-control" th:field="*{endDate}">
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary w-100"
-                                style="background-color: var(--primary-color); border: none;">
-                                <i class="bi bi-search me-1"></i> Tìm kiếm
-                            </button>
-                        </div>
-                    </form>
+                    <h4 class="fw-bold mb-0">Sự kiện của tôi</h4>
+                    <p class="text-muted small mb-0">Quản lý các sự kiện mà bạn tổ chức</p>
                 </div>
             </div>
 
@@ -79,7 +23,6 @@
                             <thead class="bg-light">
                                 <tr class="text-muted small text-uppercase">
                                     <th class="px-4 py-3 fw-bold">Sự kiện</th>
-                                    <th class="px-4 py-3 fw-bold">Nhà tổ chức</th>
                                     <th class="px-4 py-3 fw-bold">Danh mục</th>
                                     <th class="px-4 py-3 fw-bold">Thời gian</th>
                                     <th class="px-4 py-3 fw-bold">Trạng thái</th>
@@ -90,7 +33,6 @@
                                 <tr th:each="event : ${events}" th:id="'event-row-' + ${event.id}">
                                     <td class="px-4 py-3">
                                         <div class="d-flex align-items-center gap-3">
-                                            <!-- Attempt to show Banner, fallback to Logo, fallback to first, fallback to placeholder -->
                                             <div
                                                 th:with="banner=${event.eventMedias.^[mediaPurpose.name() == 'BANNER']}, logo=${event.eventMedias.^[mediaPurpose.name() == 'LOGO']}">
                                                 <img th:src="${banner != null ? banner.mediaUrl : (logo != null ? logo.mediaUrl : (event.eventMedias.isEmpty() ? 'https://via.placeholder.com/60' : event.eventMedias[0].mediaUrl))}"
@@ -103,11 +45,8 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3"
-                                        th:text="${event.organizerName != null} ? ${event.organizerName} : '-'">
-                                        Organizer</td>
                                     <td class="px-4 py-3"><span class="badge bg-primary-subtle text-primary"
-                                            th:text="${event.categoryName}">Cat</span></td>
+                                            th:text="${event.category.name}">Cat</span></td>
                                     <td class="px-4 py-3 text-muted">
                                         <span
                                             th:if="${event.eventOccurrences != null && !event.eventOccurrences.isEmpty()}"
@@ -119,36 +58,20 @@
                                             th:text="${event.status}">Status</span>
                                     </td>
                                     <td class="px-4 py-3 text-end">
-                                    <td class="px-4 py-3 text-end">
-                                        <div class="d-flex justify-content-end gap-1">
-                                            <!-- Edit: Show if NOT Pending (or allow Admin to force edit approved ones) -->
-                                            <a th:if="${event.status.name() != 'PENDING'}"
-                                                th:href="@{/admin/events/edit/{id}(id=${event.id})}"
-                                                class="btn btn-sm btn-light border rounded-3" title="Sửa">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-
-                                            <!-- Detail: Always Show, Highlight if Pending -->
-                                            <a th:href="@{/admin/events/{id}(id=${event.id})}"
-                                                class="btn btn-sm btn-light border rounded-3"
-                                                th:classappend="${event.status.name() == 'PENDING' ? 'btn-warning-subtle text-warning fw-bold' : ''}"
-                                                title="Chi tiết / Duyệt">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-
-                                            <!-- Delete: Always Show -->
-                                            <button type="button"
-                                                class="btn btn-sm btn-light border text-danger rounded-3"
-                                                th:data-id="${event.id}" th:data-title="${event.title}"
-                                                onclick="deleteEvent(this.getAttribute('data-id'), this.getAttribute('data-title'))"
-                                                title="Xóa">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
+                                        <a th:href="@{/user/events/edit/{id}(id=${event.id})}"
+                                            class="btn btn-sm btn-light border me-1 rounded-3" title="Sửa">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-light border text-danger rounded-3"
+                                            th:data-id="${event.id}" th:data-title="${event.title}"
+                                            onclick="deleteEvent(this.getAttribute('data-id'), this.getAttribute('data-title'))"
+                                            title="Xóa">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
                                     </td>
                                 </tr>
                                 <tr th:if="${events.empty}">
-                                    <td colspan="6" class="text-center py-4 text-muted">Không có sự kiện nào.</td>
+                                    <td colspan="5" class="text-center py-4 text-muted">Bạn chưa có sự kiện nào.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -162,19 +85,18 @@
                     <ul class="pagination">
                         <li class="page-item" th:classappend="${events.first ? 'disabled' : ''}">
                             <a class="page-link"
-                                th:href="@{/admin/events(page=${events.number - 1}, size=${events.size}, title=${eventSearchDTO.title}, categoryId=${eventSearchDTO.categoryId}, startDate=${eventSearchDTO.startDate}, endDate=${eventSearchDTO.endDate})}">
+                                th:href="@{/user/events(page=${events.number - 1}, size=${events.size})}">
                                 <i class="bi bi-chevron-left"></i>
                             </a>
                         </li>
                         <li class="page-item" th:each="i : ${#numbers.sequence(0, events.totalPages - 1)}"
                             th:classappend="${events.number == i ? 'active' : ''}">
-                            <a class="page-link"
-                                th:href="@{/admin/events(page=${i}, size=${events.size}, title=${eventSearchDTO.title}, categoryId=${eventSearchDTO.categoryId}, startDate=${eventSearchDTO.startDate}, endDate=${eventSearchDTO.endDate})}"
+                            <a class="page-link" th:href="@{/user/events(page=${i}, size=${events.size})}"
                                 th:text="${i + 1}">1</a>
                         </li>
                         <li class="page-item" th:classappend="${events.last ? 'disabled' : ''}">
                             <a class="page-link"
-                                th:href="@{/admin/events(page=${events.number + 1}, size=${events.size}, title=${eventSearchDTO.title}, categoryId=${eventSearchDTO.categoryId}, startDate=${eventSearchDTO.startDate}, endDate=${eventSearchDTO.endDate})}">
+                                th:href="@{/user/events(page=${events.number + 1}, size=${events.size})}">
                                 <i class="bi bi-chevron-right"></i>
                             </a>
                         </li>
@@ -183,7 +105,7 @@
             </div>
 
             <!-- Floating Action Button for Create -->
-            <a th:href="@{/admin/events/create}"
+            <a th:href="@{/user/events/create}"
                 class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center"
                 title="Tạo sự kiện mới"
                 style="position: fixed; bottom: 40px; right: 40px; width: 60px; height: 60px; z-index: 1000; background-color: #6f42c1; border: none; transition: transform 0.2s;">
@@ -205,8 +127,6 @@
                         }
                     });
 
-
-
                     window.deleteEvent = function (id, title) {
                         Swal.fire({
                             title: `Xóa sự kiện "${title}"?`,
@@ -223,7 +143,7 @@
                                 const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
                                 const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
-                                fetch('/api/events/' + id, {
+                                fetch('/user/events/delete/' + id, {
                                     method: 'DELETE',
                                     headers: {
                                         'Content-Type': 'application/json',
@@ -257,7 +177,6 @@
                     }
                 });
             </script>
-
         </div>
     </div>
 </body>

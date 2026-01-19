@@ -3,22 +3,41 @@ package com.codegym.appticket.service.impl;
 import com.codegym.appticket.dto.event.EventCreateDTO;
 import com.codegym.appticket.dto.event.EventDTO;
 import com.codegym.appticket.dto.event.EventMediaDTO;
-import com.codegym.appticket.dto.event.EventTimeDTO;
+
 import com.codegym.appticket.dto.event.EventUpdateDTO;
 import com.codegym.appticket.dto.event.TicketTypeDTO;
 import com.codegym.appticket.dto.home.HomeEventDTO;
 import com.codegym.appticket.dto.home.NearByEventDTO;
 import com.codegym.appticket.dto.home.TrendingEventDTO;
 import com.codegym.appticket.dto.home.UpComingEventDTO;
+import com.codegym.appticket.dto.event.EventOccurrenceDTO;
+import com.codegym.appticket.dto.event.EventSearchDTO;
+
 import com.codegym.appticket.entity.Event;
 import com.codegym.appticket.entity.EventCategory;
 import com.codegym.appticket.entity.EventMedia;
+import com.codegym.appticket.entity.EventOccurrence;
 import com.codegym.appticket.entity.EventStatus;
-import com.codegym.appticket.entity.EventTime;
+import com.codegym.appticket.entity.Location;
+import com.codegym.appticket.entity.MediaPurpose;
+import com.codegym.appticket.entity.MediaType;
+import com.codegym.appticket.entity.Province;
+import com.codegym.appticket.entity.User;
+import com.codegym.appticket.entity.TicketType;
+import com.codegym.appticket.entity.Ward;
 import com.codegym.appticket.repository.IEventCategoryRepository;
 import com.codegym.appticket.repository.IEventMediaRepository;
 import com.codegym.appticket.repository.IEventRepository;
-import com.codegym.appticket.repository.IEventTimeRepository;
+import com.codegym.appticket.repository.ILocationRepository;
+import com.codegym.appticket.repository.IProvinceRepository;
+import com.codegym.appticket.repository.ITicketTypeRepository;
+
+import com.codegym.appticket.repository.IWardRepository;
+import com.codegym.appticket.repository.IEventOccurrenceRepository;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import com.codegym.appticket.service.IEventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +48,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,15 +59,20 @@ public class EventService implements IEventService {
 
         private final IEventRepository eventRepository;
         private final IEventCategoryRepository eventCategoryRepository;
-        private final IEventTimeRepository eventTimeRepository;
+        private final ILocationRepository locationRepository;
+        private final IProvinceRepository provinceRepository;
+        private final IWardRepository wardRepository;
         private final IEventMediaRepository eventMediaRepository;
-        private final com.codegym.appticket.repository.ITicketTypeRepository ticketTypeRepository;
+        private final ITicketTypeRepository ticketTypeRepository;
+        private final IEventOccurrenceRepository eventOccurrenceRepository;
         private final AdminNotificationService adminNotificationService;
+        private final com.codegym.appticket.repository.IUserRepository userRepository;
 
         @Override
+        @Transactional(readOnly = true)
         public org.springframework.data.domain.Page<EventDTO> findAll(
                         org.springframework.data.domain.Pageable pageable) {
-                return eventRepository.findAll(pageable).map(this::convertToDTO);
+                return eventRepository.findByStatusNot(EventStatus.DELETED, pageable).map(this::convertToDTO);
         }
 
     @Override
@@ -71,7 +97,54 @@ public class EventService implements IEventService {
                                 pageable).map(this::convertToDTO);
         }
 
+        private void validateBusinessRules(List<EventOccurrenceDTO> occurrences, List<TicketTypeDTO> tickets,
+                        Long currentEventId) {
+                // 1. Validate Location & Time
+                for (EventOccurrenceDTO occ : occurrences) {
+                        Ward ward = wardRepository.findById(occ.getWardCode())
+                                        .orElseThrow(() -> new RuntimeException("Không tìm thấy Phường/Xã"));
+                        if (!ward.getProvince().getCode().equals(occ.getProvinceCode())) {
+                                throw new RuntimeException("Phường/Xã không thuộc Tỉnh/Thành phố đã chọn");
+                        }
+
+                        if (occ.getStartTime().isBefore(LocalDateTime.now().plusDays(3))) {
+                                throw new RuntimeException("Thời gian bắt đầu phải sau ít nhất 3 ngày từ hiện tại");
+                        }
+                        if (occ.getEndTime().isBefore(occ.getStartTime().plusMinutes(30))) {
+                                throw new RuntimeException(
+                                                "Thời gian kết thúc phải sau thời gian bắt đầu ít nhất 30 phút");
+                        }
+
+                        // Conflict Check
+                        locationRepository.findByWardCodeAndAddressDetail(occ.getWardCode(), occ.getAddressDetail())
+                                        .ifPresent(loc -> {
+                                                List<EventOccurrence> conflicts = eventOccurrenceRepository
+                                                                .findConflicts(loc.getId(), occ.getStartTime(),
+                                                                                occ.getEndTime());
+                                                if (conflicts.stream().anyMatch(c -> currentEventId == null
+                                                                || !c.getEvent().getId().equals(currentEventId))) {
+                                                        throw new RuntimeException(
+                                                                        "Xung đột lịch trình: Đã có sự kiện diễn ra tại địa điểm này trong khoảng thời gian đã chọn");
+                                                }
+                                        });
+                }
+
+                // 2. Validate Tickets
+                Set<String> ticketNames = new HashSet<>();
+                for (TicketTypeDTO t : tickets) {
+                        if (!ticketNames.add(t.getName().toLowerCase().trim())) {
+                                throw new RuntimeException("Tên loại vé '" + t.getName() + "' bị trùng lặp");
+                        }
+                        if (t.getPrice().compareTo(BigDecimal.ZERO) > 0
+                                        && t.getPrice().compareTo(new BigDecimal("10000")) < 0) {
+                                throw new RuntimeException("Giá vé phải bằng 0 hoặc tối thiểu 10.000 VNĐ");
+                        }
+                        // Manual 'Not Blank' check if needed, but DTO @NotBlank handles it.
+                }
+        }
+
         @Override
+        @Transactional(readOnly = true)
         public EventDTO findById(Long id) {
                 Event event = eventRepository.findById(id)
                                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sự kiện với ID: " + id));
@@ -79,7 +152,10 @@ public class EventService implements IEventService {
         }
 
         @Override
-        public org.springframework.data.domain.Page<EventDTO> findByStatus(com.codegym.appticket.entity.EventStatus status, org.springframework.data.domain.Pageable pageable) {
+        @Transactional(readOnly = true)
+        public Page<EventDTO> findByStatus(
+                        EventStatus status,
+                        Pageable pageable) {
                 return eventRepository.findByStatus(status, pageable).map(this::convertToDTO);
         }
 
@@ -95,31 +171,66 @@ public class EventService implements IEventService {
                 event.setDescription(dto.getDescription());
                 event.setLocation(dto.getLocation());
                 event.setCategory(category);
-                event.setStatus(dto.getStatus() != null ? dto.getStatus() : EventStatus.PENDING);
-                // Note: createdBy sẽ được set thông qua Security Context hoặc từ controller
+                event.setLocation(dto.getLocation());
+                event.setCategory(category);
+
+                // --- LOGIC: Auto-Approve & Organizer Assignment ---
+                // Get current user (Creator)
+                org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
+                                .getContext().getAuthentication();
+                String currentEmail = auth.getName();
+                com.codegym.appticket.entity.User currentUser = userRepository.findByEmailAndNotDeleted(currentEmail);
+                event.setCreatedBy(currentUser);
+
+                // Determine Organizer
+                if (dto.getOrganizerId() != null) {
+                        // Admin assigning specific organizer
+                        com.codegym.appticket.entity.User organizer = userRepository.findById(dto.getOrganizerId())
+                                        .orElseThrow(() -> new RuntimeException(
+                                                        "Không tìm thấy Organizer với ID: " + dto.getOrganizerId()));
+                        event.setOrganizer(organizer);
+                } else {
+                        // Default: Creator is Organizer
+                        event.setOrganizer(currentUser);
+                }
+
+                // Determine Status
+                boolean isAdminOrStaff = auth.getAuthorities().stream()
+                                .anyMatch(a -> a.getAuthority().equals("ADMIN") || a.getAuthority().equals("STAFF"));
+
+                if (isAdminOrStaff) {
+                        event.setStatus(EventStatus.APPROVED);
+                } else {
+                        event.setStatus(EventStatus.PENDING);
+                }
+                // --------------------------------------------------
+
+                // Validate Business Rules
+                validateBusinessRules(dto.getEventOccurrences(), dto.getTicketTypes(), null);
 
                 Event savedEvent = eventRepository.save(event);
 
-                // Tạo EventTimes
-                if (dto.getEventTimes() != null && !dto.getEventTimes().isEmpty()) {
-                        List<EventTime> eventTimes = dto.getEventTimes().stream()
-                                        .map(timeDTO -> {
-                                                EventTime eventTime = new EventTime();
-                                                eventTime.setEvent(savedEvent);
-                                                eventTime.setStartTime(timeDTO.getStartTime());
-                                                eventTime.setEndTime(timeDTO.getEndTime());
-                                                return eventTime;
+                // Tạo các lần diễn ra sự kiện
+                if (dto.getEventOccurrences() != null && !dto.getEventOccurrences().isEmpty()) {
+                        List<EventOccurrence> occurrences = dto.getEventOccurrences()
+                                        .stream()
+                                        .map(occDTO -> {
+                                                EventOccurrence occurrence = new EventOccurrence();
+                                                occurrence.setEvent(savedEvent);
+                                                occurrence.setStartTime(occDTO.getStartTime());
+                                                occurrence.setEndTime(occDTO.getEndTime());
+                                                occurrence.setLocation(getOrCreateLocation(occDTO));
+                                                return occurrence;
                                         })
                                         .collect(Collectors.toList());
-                        eventTimeRepository.saveAll(eventTimes); // Batch save
-                        savedEvent.setEventTimes(eventTimes);
+                        savedEvent.getEventOccurrences().addAll(occurrences); // Lưu cascade
                 }
 
                 // Tạo TicketTypes
                 if (dto.getTicketTypes() != null && !dto.getTicketTypes().isEmpty()) {
-                        List<com.codegym.appticket.entity.TicketType> ticketTypes = dto.getTicketTypes().stream()
+                        List<TicketType> ticketTypes = dto.getTicketTypes().stream()
                                         .map(ticketTypeDTO -> {
-                                                com.codegym.appticket.entity.TicketType ticketType = new com.codegym.appticket.entity.TicketType();
+                                                TicketType ticketType = new TicketType();
                                                 ticketType.setEvent(savedEvent);
                                                 ticketType.setName(ticketTypeDTO.getName());
                                                 ticketType.setPrice(ticketTypeDTO.getPrice());
@@ -130,66 +241,62 @@ public class EventService implements IEventService {
                         ticketTypeRepository.saveAll(ticketTypes);
                 }
 
-                // Handle Media Files (Cloudinary)
+                // Xử lý file media (Cloudinary)
                 List<EventMedia> eventMedias = new java.util.ArrayList<>();
 
-                // 1. Banner
-                // 1. Banner
+                // 1. Ảnh bìa
                 if (dto.getBannerUrl() != null && !dto.getBannerUrl().isEmpty()) {
                         eventMedias.add(createMedia(savedEvent, dto.getBannerUrl(),
-                                        com.codegym.appticket.entity.MediaType.IMAGE,
-                                        com.codegym.appticket.entity.MediaPurpose.BANNER, true));
+                                        MediaType.IMAGE,
+                                        MediaPurpose.BANNER, true));
                 }
 
                 // 2. Logo
                 if (dto.getLogoUrl() != null && !dto.getLogoUrl().isEmpty()) {
                         eventMedias.add(createMedia(savedEvent, dto.getLogoUrl(),
-                                        com.codegym.appticket.entity.MediaType.IMAGE,
-                                        com.codegym.appticket.entity.MediaPurpose.LOGO, false));
+                                        MediaType.IMAGE,
+                                        MediaPurpose.LOGO, false));
                 }
 
-                // 3. Ticket Map
+                // 3. Sơ đồ vé
                 if (dto.getTicketMapUrl() != null && !dto.getTicketMapUrl().isEmpty()) {
                         eventMedias.add(createMedia(savedEvent, dto.getTicketMapUrl(),
-                                        com.codegym.appticket.entity.MediaType.IMAGE,
-                                        com.codegym.appticket.entity.MediaPurpose.TICKET_MAP, false));
+                                        MediaType.IMAGE,
+                                        MediaPurpose.TICKET_MAP, false));
                 }
 
-                // 4. Gallery
+                // 4. Thư viện ảnh
                 if (dto.getGalleryUrls() != null && !dto.getGalleryUrls().isEmpty()) {
                         for (String url : dto.getGalleryUrls()) {
                                 if (url != null && !url.isEmpty()) {
-                                        // Simple logic: if connection ends with .mp4 then video, else image.
-                                        // Or keep it simple as IMAGE for now as detailed content type check is harder
-                                        // with just URL
-                                        com.codegym.appticket.entity.MediaType type = url.endsWith(".mp4")
+                                        MediaType type = url.endsWith(".mp4")
                                                         || url.endsWith(".webm")
-                                                                        ? com.codegym.appticket.entity.MediaType.VIDEO
-                                                                        : com.codegym.appticket.entity.MediaType.IMAGE;
+                                                                        ? MediaType.VIDEO
+                                                                        : MediaType.IMAGE;
                                         eventMedias.add(createMedia(savedEvent, url, type,
-                                                        com.codegym.appticket.entity.MediaPurpose.GALLERY, false));
+                                                        MediaPurpose.GALLERY, false));
                                 }
                         }
                 }
                 if (!eventMedias.isEmpty()) {
                         eventMediaRepository.saveAll(eventMedias);
-                        savedEvent.setEventMedias(eventMedias);
+                        savedEvent.getEventMedias().addAll(eventMedias);
                 }
 
                 Event finalEvent = eventRepository.save(savedEvent);
 
-                // Notify Admins
+                // Thông báo cho Admin
                 try {
-                    adminNotificationService.sendNotification(finalEvent);
+                        adminNotificationService.sendNotification(finalEvent);
                 } catch (Exception e) {
-                    System.err.println("Error sending notification: " + e.getMessage());
+                        System.err.println("Error sending notification: " + e.getMessage());
                 }
 
                 return convertToDTO(finalEvent);
         }
 
-        private EventMedia createMedia(Event event, String url, com.codegym.appticket.entity.MediaType type,
-                        com.codegym.appticket.entity.MediaPurpose purpose, boolean isThumbnail) {
+        private EventMedia createMedia(Event event, String url, MediaType type,
+                        MediaPurpose purpose, boolean isThumbnail) {
                 EventMedia media = new EventMedia();
                 media.setEvent(event);
                 media.setMediaUrl(url);
@@ -203,7 +310,10 @@ public class EventService implements IEventService {
         @Transactional
         public EventDTO update(Long id, EventUpdateDTO dto) {
                 Event event = eventRepository.findById(id)
-                                .orElseThrow(() -> new RuntimeException("Không tìm thấy sự kiện với ID: " + id));
+                                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+                // Validate Business Rules
+                validateBusinessRules(dto.getEventOccurrences(), dto.getTicketTypes(), id);
 
                 EventCategory category = eventCategoryRepository.findById(dto.getCategoryId())
                                 .orElseThrow(() -> new RuntimeException(
@@ -215,42 +325,91 @@ public class EventService implements IEventService {
                 event.setCategory(category);
                 event.setStatus(dto.getStatus());
 
-                // Cập nhật EventTimes: xóa cũ và tạo mới
-                event.getEventTimes().clear();
-                if (dto.getEventTimes() != null && !dto.getEventTimes().isEmpty()) {
-                        List<EventTime> newEventTimes = dto.getEventTimes().stream()
-                                        .map(timeDTO -> {
-                                                EventTime eventTime = new EventTime();
-                                                eventTime.setEvent(event);
-                                                eventTime.setStartTime(timeDTO.getStartTime());
-                                                eventTime.setEndTime(timeDTO.getEndTime());
-                                                return eventTime;
-                                        })
-                                        .collect(Collectors.toList());
-                        event.getEventTimes().addAll(newEventTimes);
+                // --- LOGIC: Update Rules ---
+                // 1. Organizer Update (Admin only typically, or if allowed)
+                if (dto.getOrganizerId() != null) {
+                        com.codegym.appticket.entity.User organizer = userRepository.findById(dto.getOrganizerId())
+                                        .orElseThrow(() -> new RuntimeException(
+                                                        "Không tìm thấy Organizer với ID: " + dto.getOrganizerId()));
+                        event.setOrganizer(organizer);
                 }
 
-                // Cập nhật TicketTypes: Smart Update (Update existing, Create new, Delete
-                // removed)
-                List<com.codegym.appticket.entity.TicketType> currentTicketTypes = ticketTypeRepository
-                                .findByEventId(id);
-                List<com.codegym.appticket.dto.event.TicketTypeDTO> incomingTicketTypes = dto.getTicketTypes() != null
-                                ? dto.getTicketTypes()
-                                : new java.util.ArrayList<>();
+                // 2. Edit Restriction: If APPROVED, cannot edit critical info < 48 hours before
+                // start
+                if (event.getStatus() == EventStatus.APPROVED) {
+                        // Find earliest start time
+                        LocalDateTime earliestStart = event.getEventOccurrences().stream()
+                                        .map(EventOccurrence::getStartTime)
+                                        .min(LocalDateTime::compareTo)
+                                        .orElse(null);
 
-                // 1. Identify types to delete (present in DB but not in DTO)
-                // Note: We only delete if they truly disappeared from UI.
-                // However, deleting might still fail if booked. Ideally, we catch exception or
-                // just leave them?
-                // For a robust system, we try to delete. If FK fail, we throw exception or
-                // ignore.
-                // Let's try to delete them.
+                        if (earliestStart != null) {
+                                // Check if now is within 48 hours of start (or past it)
+                                // Rule: "trước 2 ngày tổ chức thì mới được sửa" => Cannot edit if time < 48h
+                                long hoursUntilStart = java.time.Duration.between(LocalDateTime.now(), earliestStart)
+                                                .toHours();
+                                if (hoursUntilStart < 48) {
+                                        throw new RuntimeException(
+                                                        "Không thể chỉnh sửa sự kiện đã duyệt trong vòng 48 giờ trước khi bắt đầu.");
+                                }
+                        }
+                }
+                // ---------------------------
+
+                // Cập nhật các lần diễn ra sự kiện: Merge logic (Tránh lỗi Duplicate Entry)
+                List<EventOccurrenceDTO> incomingOccurrences = dto.getEventOccurrences() != null
+                                ? dto.getEventOccurrences()
+                                : new ArrayList<>();
+                List<EventOccurrence> currentOccurrences = event.getEventOccurrences();
+
+                // 1. Xóa các occurrence không còn trong list mới
+                List<Long> incomingOccurrenceIds = incomingOccurrences.stream()
+                                .map(EventOccurrenceDTO::getId)
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toList());
+                currentOccurrences.removeIf(occ -> !incomingOccurrenceIds.contains(occ.getId()));
+
+                // 2. Cập nhật hoặc Thêm mới
+                for (EventOccurrenceDTO occDTO : incomingOccurrences) {
+                        EventOccurrence target = null;
+                        if (occDTO.getId() != null) {
+                                target = currentOccurrences.stream()
+                                                .filter(o -> o.getId().equals(occDTO.getId()))
+                                                .findFirst()
+                                                .orElse(null);
+                        }
+
+                        if (target == null) {
+                                target = new EventOccurrence();
+                                target.setEvent(event);
+                                currentOccurrences.add(target);
+                        }
+
+                        target.setStartTime(occDTO.getStartTime());
+                        target.setEndTime(occDTO.getEndTime());
+                        target.setLocation(getOrCreateLocation(occDTO));
+                }
+
+                // Cập nhật các loại vé: Cập nhật thông minh (Cập nhật hiện có, Tạo mới, Xóa đã
+                // bỏ)
+                List<TicketType> currentTicketTypes = ticketTypeRepository
+                                .findByEventId(id);
+                List<TicketTypeDTO> incomingTicketTypes = dto.getTicketTypes() != null
+                                ? dto.getTicketTypes()
+                                : new ArrayList<>();
+
+                // 1. Xác định các loại vé cần xóa (có trong DB nhưng không có trong DTO)
+                // Lưu ý: Chỉ xóa nếu chúng thực sự biến mất khỏi giao diện.
+                // Tuy nhiên, việc xóa có thể thất bại nếu đã có vé đặt. Lý tưởng nhất là bắt
+                // ngoại lệ hoặc cứ để lại?
+                // Để hệ thống chặt chẽ, thử xóa. Nếu lỗi khóa ngoại, ném ngoại lệ hoặc bỏ qua.
+                // Thử xóa chúng.
                 List<Long> incomingIds = incomingTicketTypes.stream()
-                                .map(com.codegym.appticket.dto.event.TicketTypeDTO::getId)
-                                .filter(java.util.Objects::nonNull)
+                                .map(TicketTypeDTO::getId)
+                                .filter(Objects::nonNull)
                                 .collect(Collectors.toList());
 
-                List<com.codegym.appticket.entity.TicketType> toDelete = currentTicketTypes.stream()
+                List<TicketType> toDelete = currentTicketTypes.stream()
                                 .filter(tt -> !incomingIds.contains(tt.getId()))
                                 .collect(Collectors.toList());
 
@@ -258,21 +417,21 @@ public class EventService implements IEventService {
                         ticketTypeRepository.deleteAll(toDelete);
                 }
 
-                // 2. Update existing & Create new
-                List<com.codegym.appticket.entity.TicketType> toSave = new java.util.ArrayList<>();
-                for (com.codegym.appticket.dto.event.TicketTypeDTO ttDto : incomingTicketTypes) {
-                        com.codegym.appticket.entity.TicketType ticketType;
+                // 2. Cập nhật hiện có & Tạo mới
+                List<TicketType> toSave = new ArrayList<>();
+                for (TicketTypeDTO ttDto : incomingTicketTypes) {
+                        TicketType ticketType;
 
                         if (ttDto.getId() != null) {
-                                // Update existing
+                                // Cập nhật hiện có
                                 ticketType = currentTicketTypes.stream()
                                                 .filter(tt -> tt.getId().equals(ttDto.getId()))
                                                 .findFirst()
                                                 .orElseThrow(() -> new RuntimeException(
                                                                 "Không tìm thấy loại vé với ID: " + ttDto.getId()));
                         } else {
-                                // Create new
-                                ticketType = new com.codegym.appticket.entity.TicketType();
+                                // Tạo mới
+                                ticketType = new TicketType();
                                 ticketType.setEvent(event);
                         }
 
@@ -283,45 +442,45 @@ public class EventService implements IEventService {
                 }
                 ticketTypeRepository.saveAll(toSave);
 
-                // Cập nhật EventMedias: Logic upload đè
-                // 1. Banner
+                // Cập nhật media sự kiện: Logic tải lên ghi đè
+                // 1. Ảnh bìa
                 if (dto.getBannerUrl() != null && !dto.getBannerUrl().isEmpty()) {
-                        removeMediaByPurpose(event, com.codegym.appticket.entity.MediaPurpose.BANNER);
+                        removeMediaByPurpose(event, MediaPurpose.BANNER);
                         event.getEventMedias()
                                         .add(createMedia(event, dto.getBannerUrl(),
-                                                        com.codegym.appticket.entity.MediaType.IMAGE,
-                                                        com.codegym.appticket.entity.MediaPurpose.BANNER, true));
+                                                        MediaType.IMAGE,
+                                                        MediaPurpose.BANNER, true));
                 }
 
                 // 2. Logo
                 if (dto.getLogoUrl() != null && !dto.getLogoUrl().isEmpty()) {
-                        removeMediaByPurpose(event, com.codegym.appticket.entity.MediaPurpose.LOGO);
+                        removeMediaByPurpose(event, MediaPurpose.LOGO);
                         event.getEventMedias()
                                         .add(createMedia(event, dto.getLogoUrl(),
-                                                        com.codegym.appticket.entity.MediaType.IMAGE,
-                                                        com.codegym.appticket.entity.MediaPurpose.LOGO, false));
+                                                        MediaType.IMAGE,
+                                                        MediaPurpose.LOGO, false));
                 }
 
-                // 3. Ticket Map
+                // 3. Sơ đồ vé
                 if (dto.getTicketMapUrl() != null && !dto.getTicketMapUrl().isEmpty()) {
-                        removeMediaByPurpose(event, com.codegym.appticket.entity.MediaPurpose.TICKET_MAP);
+                        removeMediaByPurpose(event, MediaPurpose.TICKET_MAP);
                         event.getEventMedias()
                                         .add(createMedia(event, dto.getTicketMapUrl(),
-                                                        com.codegym.appticket.entity.MediaType.IMAGE,
-                                                        com.codegym.appticket.entity.MediaPurpose.TICKET_MAP, false));
+                                                        MediaType.IMAGE,
+                                                        MediaPurpose.TICKET_MAP, false));
                 }
 
-                // 4. Gallery (Replace mode)
-                removeMediaByPurpose(event, com.codegym.appticket.entity.MediaPurpose.GALLERY);
+                // 4. Thư viện ảnh (Chế độ thay thế)
+                removeMediaByPurpose(event, MediaPurpose.GALLERY);
                 if (dto.getGalleryUrls() != null && !dto.getGalleryUrls().isEmpty()) {
                         for (String url : dto.getGalleryUrls()) {
                                 if (url != null && !url.isEmpty()) {
-                                        com.codegym.appticket.entity.MediaType type = url.endsWith(".mp4")
+                                        MediaType type = url.endsWith(".mp4")
                                                         || url.endsWith(".webm")
-                                                                        ? com.codegym.appticket.entity.MediaType.VIDEO
-                                                                        : com.codegym.appticket.entity.MediaType.IMAGE;
+                                                                        ? MediaType.VIDEO
+                                                                        : MediaType.IMAGE;
                                         event.getEventMedias().add(createMedia(event, url, type,
-                                                        com.codegym.appticket.entity.MediaPurpose.GALLERY, false));
+                                                        MediaPurpose.GALLERY, false));
                                 }
                         }
                 }
@@ -330,7 +489,7 @@ public class EventService implements IEventService {
                 return convertToDTO(updatedEvent);
         }
 
-        private void removeMediaByPurpose(Event event, com.codegym.appticket.entity.MediaPurpose purpose) {
+        private void removeMediaByPurpose(Event event, MediaPurpose purpose) {
                 event.getEventMedias().removeIf(m -> m.getMediaPurpose() == purpose);
         }
 
@@ -339,22 +498,37 @@ public class EventService implements IEventService {
         public void delete(Long id) {
                 Event event = eventRepository.findById(id)
                                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sự kiện với ID: " + id));
-                // Explicitly delete ticket types since they are not cascaded in Entity
-                ticketTypeRepository.deleteByEventId(id);
-                eventRepository.delete(event);
+                // Chuyển sang Soft Delete để tránh lỗi khóa ngoại và giữ lịch sử
+                event.setStatus(EventStatus.DELETED);
+                eventRepository.save(event);
         }
 
         private EventDTO convertToDTO(Event event) {
-                // Convert EventTimes
-                List<EventTimeDTO> eventTimeDTOs = event.getEventTimes().stream()
-                                .map(eventTime -> EventTimeDTO.builder()
-                                                .id(eventTime.getId())
-                                                .startTime(eventTime.getStartTime())
-                                                .endTime(eventTime.getEndTime())
-                                                .build())
+                // Chuyển đổi các lần diễn ra sự kiện
+                List<EventOccurrenceDTO> occurrenceDTOs = event.getEventOccurrences()
+                                .stream()
+                                .map(occ -> {
+                                        String provinceName = occ.getLocation().getWard().getProvince().getName();
+                                        String wardName = occ.getLocation().getWard().getName();
+                                        // Quận/Huyện đã bị xóa theo đặc tả OpenApi v2 (hệ thống phân cấp 2 cấp dơn
+                                        // giản)
+
+                                        return EventOccurrenceDTO.builder()
+                                                        .id(occ.getId())
+                                                        .startTime(occ.getStartTime())
+                                                        .endTime(occ.getEndTime())
+                                                        .provinceCode(occ.getLocation().getWard().getProvince()
+                                                                        .getCode())
+                                                        .provinceName(provinceName)
+                                                        .wardCode(occ.getLocation().getWard().getCode())
+                                                        .wardName(wardName)
+                                                        .addressDetail(occ.getLocation().getAddressDetail())
+                                                        .mapLink(occ.getLocation().getMapLink())
+                                                        .build();
+                                })
                                 .collect(Collectors.toList());
 
-                // Convert EventMedias
+                // Chuyển đổi media sự kiện
                 List<EventMediaDTO> eventMediaDTOs = event.getEventMedias().stream()
                                 .map(eventMedia -> EventMediaDTO.builder()
                                                 .id(eventMedia.getId())
@@ -377,7 +551,11 @@ public class EventService implements IEventService {
                                 .createdByName(event.getCreatedBy() != null ? event.getCreatedBy().getFullName() : null)
                                 .status(event.getStatus())
                                 .createdAt(event.getCreatedDate())
-                                .eventTimes(eventTimeDTOs)
+                                // Map Organizer Info
+                                .organizerId(event.getOrganizer() != null ? event.getOrganizer().getId() : null)
+                                .organizerName(event.getOrganizer() != null ? event.getOrganizer().getFullName() : null)
+
+                                .eventOccurrences(occurrenceDTOs)
                                 .eventMedias(eventMediaDTOs)
                                 .ticketTypes(ticketTypeRepository.findByEventId(event.getId()).stream()
                                                 .map(tt -> TicketTypeDTO.builder()
@@ -390,23 +568,84 @@ public class EventService implements IEventService {
                                 .build();
         }
 
-    @Override
-    public List<UpComingEventDTO> findUpComingEvents() {
-        return eventRepository.findUpComingEvents();
-    }
+        @Override
+        public List<UpComingEventDTO> findUpComingEvents() {
+                return eventRepository.findUpComingEvents();
+        }
 
-    @Override
-    public List<TrendingEventDTO> findTopTrendingEvents() {
-        return eventRepository.findTopTrendingEvents();
-    }
+        @Override
+        public List<TrendingEventDTO> findTopTrendingEvents() {
+                return eventRepository.findTopTrendingEvents();
+        }
 
-    @Override
-    public Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location, int page, int size, String sort) {
-        // Sort in Java using Pageable
-        Sort sortOrder = Sort.by(Sort.Direction.ASC, "startTime");
-        Pageable pageable = PageRequest.of(page, size, sortOrder);
-        return eventRepository.searchHomeEvents(searchText, categoryId, location, pageable);
-    }
+        @Override
+        public Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location, int page,
+                        int size, String sort) {
+                // Sắp xếp trong Java sử dụng Pageable
+                Sort sortOrder = Sort.by(Sort.Direction.ASC, "id");
+                Pageable pageable = PageRequest.of(page, size, sortOrder);
+                return eventRepository.searchHomeEvents(searchText, categoryId, location, pageable);
+        }
+
+        private Location getOrCreateLocation(EventOccurrenceDTO occDTO) {
+                // 1. Xử lý Tỉnh/Thành phố
+                Province province = provinceRepository
+                                .findById(occDTO.getProvinceCode())
+                                .orElseGet(() -> {
+                                        Province newProv = new Province();
+                                        newProv.setCode(occDTO.getProvinceCode());
+                                        newProv.setName(occDTO.getProvinceName());
+                                        return provinceRepository.save(newProv);
+                                });
+
+                // 2. Xử lý Phường/Xã
+                Ward ward = wardRepository
+                                .findById(occDTO.getWardCode())
+                                .orElseGet(() -> {
+                                        Ward newWard = new Ward();
+                                        newWard.setCode(occDTO.getWardCode());
+                                        newWard.setName(occDTO.getWardName());
+                                        newWard.setProvince(province);
+                                        return wardRepository.save(newWard);
+                                });
+
+                return locationRepository
+                                .findByWardCodeAndAddressDetail(
+                                                occDTO.getWardCode(),
+                                                occDTO.getAddressDetail())
+                                .orElseGet(() -> {
+                                        Location newLoc = new Location();
+                                        newLoc.setWard(ward);
+                                        newLoc.setAddressDetail(
+                                                        occDTO.getAddressDetail());
+                                        newLoc.setMapLink(occDTO.getMapLink());
+                                        return locationRepository.saveAndFlush(newLoc);
+                                });
+        }
+
+        @Override
+        public Page<Event> findEventsByOrganizer(User organizer, Pageable pageable) {
+                return eventRepository.findByOrganizerAndStatusNot(organizer, EventStatus.DELETED, pageable);
+        }
+
+        @Override
+        @Transactional
+        public void approve(Long id) {
+                Event event = eventRepository.findById(id)
+                                .orElseThrow(() -> new RuntimeException("Event not found with id " + id));
+                event.setStatus(EventStatus.APPROVED);
+                eventRepository.save(event);
+        }
+
+        @Override
+        @Transactional
+        public void reject(Long id, String reason) {
+                Event event = eventRepository.findById(id)
+                                .orElseThrow(() -> new RuntimeException("Event not found with id " + id));
+                event.setStatus(EventStatus.REJECTED);
+                // We can add logic to save reason later or send notification
+                eventRepository.save(event);
+        }
 
     @Override
     public List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, int limit) {

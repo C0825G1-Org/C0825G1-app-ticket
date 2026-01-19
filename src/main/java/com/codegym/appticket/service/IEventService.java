@@ -8,6 +8,7 @@ import com.codegym.appticket.dto.home.HomeEventDTO;
 import com.codegym.appticket.dto.home.NearByEventDTO;
 import com.codegym.appticket.dto.home.TrendingEventDTO;
 import com.codegym.appticket.dto.home.UpComingEventDTO;
+import com.codegym.appticket.entity.Event;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -32,9 +33,24 @@ public interface IEventService {
     void delete(Long id);
 
     List<TrendingEventDTO> findTopTrendingEvents();
+
     List<UpComingEventDTO> findUpComingEvents();
     
     Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location,int page, int size, String sort);
-    
+
     List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, int limit);
+
+    // Search events for home/public pages (returns HomeEventDTO for display)
+    // Search events for home/public pages (returns HomeEventDTO for display)
+    Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location, int page, int size,
+            String sort);
+
+    // User/Organizer methods
+    org.springframework.data.domain.Page<Event> findEventsByOrganizer(com.codegym.appticket.entity.User organizer,
+            Pageable pageable);
+
+    // Approval Flow
+    void approve(Long id);
+
+    void reject(Long id, String reason);
 }

@@ -35,12 +35,13 @@ public class Event extends Parent {
     @JoinColumn(name = "created_by")
     private User createdBy;
 
+    @ManyToOne
+    @JoinColumn(name = "organizer_id")
+    private User organizer;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private EventStatus status = EventStatus.PENDING;
-
-    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<EventTime> eventTimes = new ArrayList<>();
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventMedia> eventMedias = new ArrayList<>();
@@ -50,4 +51,7 @@ public class Event extends Parent {
 
     @Column(name = "longitude")
     private Double longitude;
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventOccurrence> eventOccurrences = new ArrayList<>();
 }
