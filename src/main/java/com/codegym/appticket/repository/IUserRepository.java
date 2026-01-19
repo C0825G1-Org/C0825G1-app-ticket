@@ -84,4 +84,57 @@ public interface IUserRepository extends JpaRepository<User, Long> {
             "AND (u.isBlocked = false OR u.isBlocked IS NULL) " +
             "ORDER BY u.fullName ASC")
     java.util.List<User> findOrganizers();
+
+    // --- Report Queries ---
+
+    // 1. User Growth Chart (Group by Day)
+    @Query(value = """
+            SELECT DATE(created_at) as date, COUNT(*) as count
+            FROM users
+            WHERE created_at BETWEEN :start AND :end
+              AND (is_deleted IS FALSE OR is_deleted IS NULL)
+            GROUP BY DATE(created_at)
+            ORDER BY DATE(created_at) ASC
+            """, nativeQuery = true)
+    java.util.List<Object[]> getUserGrowthStats(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    // 2. User Growth Chart (Group by Month)
+    @Query(value = """
+            SELECT DATE_FORMAT(created_at, '%Y-%m') as date, COUNT(*) as count
+            FROM users
+            WHERE created_at BETWEEN :start AND :end
+              AND (is_deleted IS FALSE OR is_deleted IS NULL)
+            GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+            ORDER BY DATE_FORMAT(created_at, '%Y-%m') ASC
+            """, nativeQuery = true)
+    java.util.List<Object[]> getUserGrowthStatsByMonth(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    // 3. Top Organizers by Revenue (5% commission)
+    @Query(value = """
+            SELECT
+                u.id AS id,
+                u.full_name AS fullName,
+                u.email AS email,
+                COUNT(DISTINCT e.id) AS eventCount,
+                COALESCE(SUM(bd.quantity * tt.price) * 0.05, 0) AS totalRevenue
+            FROM users u
+            JOIN events e ON e.organizer_id = u.id
+            JOIN ticket_types tt ON tt.event_id = e.id
+            JOIN booking_details bd ON bd.ticket_type_id = tt.id
+            JOIN bookings b ON b.id = bd.booking_id
+            WHERE b.status = 'SUCCESS'
+              AND e.status = 'APPROVED'
+              AND (b.booking_time BETWEEN :start AND :end)
+            GROUP BY u.id, u.full_name, u.email
+            ORDER BY totalRevenue DESC
+            LIMIT :limit
+            """, nativeQuery = true)
+    java.util.List<com.codegym.appticket.dto.report.TopOrganizerDTO> findTopOrganizers(
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end,
+            @Param("limit") int limit);
+
+    // Count Users in period
+    @Query("SELECT COUNT(u) FROM User u WHERE (u.isDeleted = false OR u.isDeleted IS NULL) AND u.createdDate BETWEEN :start AND :end")
+    long countNewUsers(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

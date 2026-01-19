@@ -75,7 +75,7 @@ public class EventService implements IEventService {
 
         @Override
         @Transactional(readOnly = true)
-        public Page<HomeEventDTO> findAllEvent(int size, int page) {
+        public Page<HomeEventDTO> findAllEvent(int page, int size) {
                 Sort sort = Sort.by(Sort.Direction.ASC, "id");
                 return eventRepository.findAllEvent(PageRequest.of(page, size, sort));
         }

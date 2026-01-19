@@ -234,4 +234,39 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
     // Find events by Organizer and Status (Optional, maybe useful later)
     org.springframework.data.domain.Page<Event> findByOrganizerAndStatusNot(User organizer,
             com.codegym.appticket.entity.EventStatus status, Pageable pageable);
+
+    // --- Report Queries ---
+
+    // 1. Top Selling Events (by Ticket Quantity or Revenue)
+    @Query(value = """
+            SELECT
+                e.id AS id,
+                e.title AS title,
+                c.name AS categoryName,
+                SUM(bd.quantity) AS ticketsSold,
+                SUM(bd.quantity * tt.price) * 0.05 AS revenue
+            FROM events e
+            JOIN event_categories c ON c.id = e.category_id
+            JOIN ticket_types tt ON tt.event_id = e.id
+            JOIN booking_details bd ON bd.ticket_type_id = tt.id
+            JOIN bookings b ON b.id = bd.booking_id
+            WHERE b.status = 'SUCCESS'
+              AND e.status = 'APPROVED'
+              AND (b.booking_time BETWEEN :start AND :end)
+            GROUP BY e.id, e.title, c.name
+            ORDER BY revenue DESC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<com.codegym.appticket.dto.report.TopEventDTO> findTopSellingEvents(
+            @Param("start") LocalDateTime start, 
+            @Param("end") LocalDateTime end, 
+            @Param("limit") int limit);
+
+    // 2. Events Count by Category (Pie Chart)
+    @Query("SELECT e.category.name, COUNT(e) FROM Event e WHERE e.status = 'APPROVED' GROUP BY e.category.name")
+    List<Object[]> countEventsByCategory();
+
+    // 3. Count Events Created in Period
+    @Query("SELECT COUNT(e) FROM Event e WHERE e.createdDate BETWEEN :start AND :end AND e.status = 'APPROVED'")
+    long countNewEvents(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }
