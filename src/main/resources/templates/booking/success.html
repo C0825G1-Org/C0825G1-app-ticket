@@ -19,8 +19,13 @@
 
                             <div class="card bg-light border-0 mb-4">
                                 <div class="card-body text-start">
-                                    <p class="mb-1"><strong>Mã đơn hàng:</strong> #<span th:text="${booking.id}"></span>
+                                    <p class="mb-1"><strong>Sự kiện:</strong> <span
+                                            th:text="${event != null ? event.title : 'N/A'}"></span></p>
+                                    <p class="mb-1"><strong>Người mua:</strong> <span
+                                            th:text="${booking.user != null ? booking.user.fullName : 'Hệ thống'}"></span>
                                     </p>
+                                    <p class="mb-1"><strong>Mã đơn hàng:</strong> #<span
+                                            th:text="${booking != null ? booking.id : '---'}"></span></p>
                                     <p class="mb-1"><strong>Trạng thái:</strong> <span class="badge bg-success"
                                             th:text="${booking.status}"></span></p>
                                     <p class="mb-0"><strong>Ngày đặt:</strong> <span

@@ -5,6 +5,9 @@ import com.codegym.appticket.entity.Event;
 import com.codegym.appticket.entity.TicketType;
 import com.codegym.appticket.service.IBookingService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -25,12 +28,51 @@ public class BookingController {
     // 1. Trang Form đặt vé
     @GetMapping("/book/{eventId}")
     public String showForm(@PathVariable Long eventId, Model model) {
+        String email = getCurrentUserEmail();
         Event event = bookingService.getEventById(eventId);
         List<TicketType> ticketTypes = bookingService.getTicketTypesByEventId(eventId);
         
+        if (email != null) {
+            try {
+                com.codegym.appticket.entity.User currentUser = bookingService.getUserByEmail(email);
+                model.addAttribute("currentUser", currentUser);
+            } catch (Exception e) {
+                System.out.println("DEBUG [SHOW FORM]: User not found for email " + email);
+            }
+        }
+
         model.addAttribute("event", event);
         model.addAttribute("ticketTypes", ticketTypes);
         return "booking/form";
+    }
+
+    private String getCurrentUserEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || 
+            authentication instanceof AnonymousAuthenticationToken) {
+            return null;
+        }
+        
+        Object principal = authentication.getPrincipal();
+        System.out.println("DEBUG: Principal object: " + principal);
+        System.out.println("DEBUG: Principal type: " + principal.getClass().getName());
+        
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+            String email = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
+            System.out.println("DEBUG: UserDetails email: " + email);
+            return email;
+        } else if (principal instanceof com.codegym.appticket.config.CustomOAuth2User) {
+            String email = ((com.codegym.appticket.config.CustomOAuth2User) principal).getEmail();
+            System.out.println("DEBUG: CustomOAuth2User email: " + email);
+            return email;
+        } else if (principal instanceof org.springframework.security.oauth2.core.user.OAuth2User) {
+            String email = ((org.springframework.security.oauth2.core.user.OAuth2User) principal).getAttribute("email");
+            System.out.println("DEBUG: OAuth2User attribute email: " + email);
+            return email;
+        }
+        
+        System.out.println("DEBUG: Falling back to authentication.getName(): " + authentication.getName());
+        return authentication.getName();
     }
 
     // 2. Trang Xác nhận đặt vé
@@ -39,18 +81,23 @@ public class BookingController {
                           @RequestParam Map<String, String> params,
                           Model model,
                           RedirectAttributes redirectAttributes) {
+        String email = getCurrentUserEmail();
+        System.out.println("DEBUG [CONFIRM]: email found = " + email);
+        
         Event event = bookingService.getEventById(eventId);
         Map<TicketType, Integer> selectedTickets = new HashMap<>();
         
         for (Map.Entry<String, String> entry : params.entrySet()) {
             if (entry.getKey().startsWith("ticket_")) {
                 Long ticketTypeId = Long.parseLong(entry.getKey().replace("ticket_", ""));
-                Integer quantity = Integer.parseInt(entry.getValue());
-                if (quantity > 0) {
-                    TicketType tt = bookingService.getTicketTypesByEventId(eventId).stream()
-                            .filter(t -> t.getId().equals(ticketTypeId))
-                            .findFirst().orElse(null);
-                    if (tt != null) selectedTickets.put(tt, quantity);
+                if (entry.getValue() != null && !entry.getValue().trim().isEmpty()) {
+                    Integer quantity = Integer.parseInt(entry.getValue());
+                    if (quantity > 0) {
+                        TicketType tt = bookingService.getTicketTypesByEventId(eventId).stream()
+                                .filter(t -> t.getId().equals(ticketTypeId))
+                                .findFirst().orElse(null);
+                        if (tt != null) selectedTickets.put(tt, quantity);
+                    }
                 }
             }
         }
@@ -62,6 +109,20 @@ public class BookingController {
 
         model.addAttribute("event", event);
         model.addAttribute("selectedTickets", selectedTickets);
+
+        // Lấy thông tin người dùng hiện tại để hiển thị trên trang xác nhận
+        if (email != null) {
+            try {
+                com.codegym.appticket.entity.User currentUser = bookingService.getUserByEmail(email);
+                System.out.println("DEBUG [CONFIRM]: Fetched User: ID=" + currentUser.getId() + ", Name=" + currentUser.getFullName() + ", Phone=" + currentUser.getPhoneNumber() + ", Email=" + currentUser.getEmail());
+                model.addAttribute("currentUser", currentUser);
+            } catch (Exception e) {
+                System.out.println("DEBUG [CONFIRM ERROR]: User not found for email " + email + ". Exception: " + e.getMessage());
+            }
+        } else {
+            System.out.println("DEBUG [CONFIRM]: No email found in SecurityContext");
+        }
+
         return "booking/confirm";
     }
 
@@ -71,39 +132,59 @@ public class BookingController {
                        @RequestParam Map<String, String> params,
                        RedirectAttributes redirectAttributes,
                        jakarta.servlet.http.HttpServletRequest request) {
-        // Giả lập lấy user theo email
-        String mockEmail = "nguyenns6802@gmail.com";
+        String userEmail = getCurrentUserEmail();
+        System.out.println("DEBUG: Saving for user email: " + userEmail);
+        
+        if (userEmail == null) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để đặt vé");
+            return "redirect:/login";
+        }
         
         Map<Long, Integer> ticketQuantities = new HashMap<>();
         for (Map.Entry<String, String> entry : params.entrySet()) {
             if (entry.getKey().startsWith("ticket_")) {
                 Long ttId = Long.parseLong(entry.getKey().replace("ticket_", ""));
-                Integer qty = Integer.parseInt(entry.getValue());
-                ticketQuantities.put(ttId, qty);
+                if (entry.getValue() != null && !entry.getValue().trim().isEmpty()) {
+                    Integer qty = Integer.parseInt(entry.getValue());
+                    if (qty > 0) {
+                        ticketQuantities.put(ttId, qty);
+                    }
+                }
             }
         }
 
         try {
-            com.codegym.appticket.entity.User mockUser = bookingService.getUserByEmail(mockEmail);
-            Long userId = mockUser.getId();
+            com.codegym.appticket.entity.User currentUser = bookingService.getUserByEmail(userEmail);
+            Long userId = currentUser.getId();
+            System.out.println("DEBUG: Proceeding to create booking for UserID: " + userId);
             
             Booking booking = bookingService.createBooking(eventId, userId, ticketQuantities);
+            System.out.println("DEBUG: Booking created with ID: " + booking.getId() + " for user: " + booking.getUser().getEmail());
             
             long totalAmount = bookingService.calculateTotalAmount(booking.getId());
+            System.out.println("DEBUG: Total amount calculated: " + totalAmount);
+            
             String paymentUrl = vnPayService.createPaymentUrl(request, booking.getId(), totalAmount);
+            System.out.println("DEBUG: Payment URL generated: " + paymentUrl);
             
             return "redirect:" + paymentUrl;
         } catch (Exception e) {
+            System.err.println("DEBUG ERROR in save: " + e.getMessage());
+            e.printStackTrace();
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/bookings/book/" + eventId;
         }
     }
 
-    // 4. Trang Kết quả thành công
     @GetMapping("/success/{id}")
     public String success(@PathVariable Long id, Model model) {
         Booking booking = bookingService.getBookingById(id);
         java.util.List<com.codegym.appticket.entity.Ticket> tickets = bookingService.getTicketsByBookingId(id);
+        
+        // Lấy thông tin sự kiện từ vé đầu tiên (vì 1 booking thường cho 1 sự kiện)
+        if (!tickets.isEmpty()) {
+            model.addAttribute("event", tickets.get(0).getBookingDetail().getTicketType().getEvent());
+        }
         
         model.addAttribute("booking", booking);
         model.addAttribute("tickets", tickets);

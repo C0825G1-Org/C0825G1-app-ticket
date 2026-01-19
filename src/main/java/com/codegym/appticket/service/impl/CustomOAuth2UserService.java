@@ -58,7 +58,16 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             }
             
             userRepository.save(newUser);
+            System.out.println("DEBUG: Created NEW OAuth2 user: " + email);
+        } else {
+            User user = existUser.get();
+            // Luôn đồng bộ tên từ Google để đảm bảo chính xác nhất
+            String googleName = oAuth2User.getName();
+            if (googleName != null && !googleName.equals(user.getFullName())) {
+                System.out.println("DEBUG: Syncing name from Google. Old: " + user.getFullName() + ", New: " + googleName);
+                user.setFullName(googleName);
+                userRepository.save(user);
+            }
         }
-        // Nếu user đã tồn tại -> Không làm gì cả, chỉ return về để Spring Security tự xử lý đăng nhập
     }
 }
