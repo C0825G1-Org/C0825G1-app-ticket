@@ -29,11 +29,23 @@ public class BookingController {
     @GetMapping("/book/{eventId}")
     public String showForm(@PathVariable Long eventId, 
                           @RequestParam Map<String, String> params,
-                          Model model) {
+                          Model model,
+                          RedirectAttributes redirectAttributes) {
         String email = getCurrentUserEmail();
-        Event event = bookingService.getEventById(eventId);
-        List<TicketType> ticketTypes = bookingService.getTicketTypesByEventId(eventId);
-        
+        Event event;
+        List<TicketType> ticketTypes;
+        try {
+            event = bookingService.getEventById(eventId);
+            ticketTypes = bookingService.getTicketTypesByEventId(eventId);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy sự kiện hoặc sự kiện đã bị hủy.");
+            return "redirect:/";
+        }
+
+        if (ticketTypes == null || ticketTypes.isEmpty()) {
+            model.addAttribute("warning", "Sự kiện hiện chưa có vé để đặt.");
+        }
+
         if (email != null) {
             try {
                 com.codegym.appticket.entity.User currentUser = bookingService.getUserByEmail(email);
