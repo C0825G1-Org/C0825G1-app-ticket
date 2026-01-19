@@ -648,7 +648,7 @@ public class EventService implements IEventService {
         }
 
     @Override
-    public List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, int limit) {
-        return eventRepository.findNearbyEvents(userLatitude, userLongitude, limit);
+    public List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, String excludeLocation, int limit) {
+        return eventRepository.findNearbyEvents(userLatitude, userLongitude, excludeLocation, limit);
     }
 }

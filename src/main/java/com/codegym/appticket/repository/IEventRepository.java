@@ -172,7 +172,12 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 WHERE e.status = 'APPROVED'
                   AND (:searchText IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :searchText, '%')))
                   AND (:categoryId IS NULL OR e.category_id = :categoryId)
-                  AND (:location IS NULL OR e.location LIKE CONCAT('%', :location, '%'))
+                  AND (:location IS NULL OR 
+                       e.location LIKE CONCAT('%', :location, '%') OR
+                       (:location = 'Hồ Chí Minh' AND (e.location LIKE '%TP.HCM%' OR e.location LIKE '%HCM%' OR e.location LIKE '%Hồ Chí Minh%')) OR
+                       (:location = 'Hà Nội' AND (e.location LIKE '%Hà Nội%' OR e.location LIKE '%Ha Noi%' OR e.location LIKE '%Hanoi%')) OR
+                       (:location = 'Đà Nẵng' AND (e.location LIKE '%Đà Nẵng%' OR e.location LIKE '%Da Nang%' OR e.location LIKE '%Danang%'))
+                      )
                 GROUP BY e.id, e.title, e.description, e.location, c.name
                 ORDER BY MIN(eo.start_time) ASC
             """, countQuery = """
@@ -181,7 +186,12 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 WHERE e.status = 'APPROVED'
                   AND (:searchText IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :searchText, '%')))
                   AND (:categoryId IS NULL OR e.category_id = :categoryId)
-                  AND (:location IS NULL OR e.location LIKE CONCAT('%', :location, '%'))
+                  AND (:location IS NULL OR 
+                       e.location LIKE CONCAT('%', :location, '%') OR
+                       (:location = 'Hồ Chí Minh' AND (e.location LIKE '%TP.HCM%' OR e.location LIKE '%HCM%' OR e.location LIKE '%Hồ Chí Minh%')) OR
+                       (:location = 'Hà Nội' AND (e.location LIKE '%Hà Nội%' OR e.location LIKE '%Ha Noi%' OR e.location LIKE '%Hanoi%')) OR
+                       (:location = 'Đà Nẵng' AND (e.location LIKE '%Đà Nẵng%' OR e.location LIKE '%Da Nang%' OR e.location LIKE '%Danang%'))
+                      )
             """, nativeQuery = true)
     Page<HomeEventDTO> searchHomeEvents(
             @Param("searchText") String searchText,
@@ -261,13 +271,21 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
     WHERE e.status = 'APPROVED'
       AND e.latitude IS NOT NULL
       AND e.longitude IS NOT NULL
+      AND NOT (
+          (:excludeLocation = 'Hồ Chí Minh' AND (e.location LIKE '%TP.HCM%' OR e.location LIKE '%HCM%' OR e.location LIKE '%Hồ Chí Minh%')) OR
+          (:excludeLocation = 'Hà Nội' AND (e.location LIKE '%Hà Nội%' OR e.location LIKE '%Ha Noi%' OR e.location LIKE '%Hanoi%')) OR
+          (:excludeLocation = 'Đà Nẵng' AND (e.location LIKE '%Đà Nẵng%' OR e.location LIKE '%Da Nang%' OR e.location LIKE '%Danang%')) OR
+          (e.location LIKE CONCAT('%', :excludeLocation, '%'))
+      )
     GROUP BY e.id, e.title, e.location, e.latitude, e.longitude, c.name
+    HAVING distance < 160
     ORDER BY distance ASC
     LIMIT :limit
     """, nativeQuery = true)
     List<NearByEventDTO> findNearbyEvents(
         @Param("userLat") Double userLatitude,
         @Param("userLon") Double userLongitude,
+        @Param("excludeLocation") String excludeLocation,
         @Param("limit") int limit
     );
 }

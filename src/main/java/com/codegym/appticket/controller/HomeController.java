@@ -25,13 +25,13 @@ import java.util.List;
 @Controller
 @Slf4j
 public class HomeController {
-    
+
     @Autowired
     private IEventService eventService;
-    
+
     @Autowired
     private IEventCategoryService eventCategoryService;
-    
+
     @Autowired
     private IEventRepository eventRepository;
 
@@ -47,7 +47,7 @@ public class HomeController {
         // Lấy top 4 upcoming events cho section "Sự kiện Sắp tới"
         List<UpComingEventDTO> upcomingEvents = eventService.findUpComingEvents();
         model.addAttribute("upcomingEvents", upcomingEvents);
-        
+
         // Load categories for search dropdown
         model.addAttribute("categories", eventCategoryService.findAll());
 
@@ -60,14 +60,14 @@ public class HomeController {
             @RequestParam(defaultValue = "6") int size,
             @RequestParam(required = false) String location,
             Model model) {
-        
+
         // Show all approved events without filters
         Page<HomeEventDTO> events = eventService.findAllEvent(page, size);
 
         model.addAttribute("categories", eventCategoryService.findAll());
         model.addAttribute("events", events);
         model.addAttribute("nearbyEvents", getNearbyEvents(null, 6));
-        
+
         return "home/event";
     }
 
@@ -130,37 +130,37 @@ public class HomeController {
 
     private String getClientIP(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
-        
+
         if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getHeader("Proxy-Client-IP");
         }
-        
+
         if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getHeader("WL-Proxy-Client-IP");
         }
-        
+
         if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getHeader("HTTP_X_FORWARDED_FOR");
         }
-        
+
         if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getHeader("HTTP_CLIENT_IP");
         }
-        
+
         if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
             ip = request.getRemoteAddr();
         }
-        
+
         // Nếu là localhost, trả về empty string để ip-api.com tự detect
         if ("127.0.0.1".equals(ip) || "0:0:0:0:0:0:0:1".equals(ip)) {
             ip = ""; // ip-api.com sẽ tự động phát hiện IP public
         }
-        
+
         // Nếu có nhiều IP (qua nhiều proxy), lấy IP đầu tiên
         if (ip != null && ip.contains(",")) {
             ip = ip.split(",")[0].trim();
         }
-        
+
         return ip;
     }
 
@@ -168,19 +168,19 @@ public class HomeController {
     public String showEventDetail(@PathVariable Long id, Model model) {
         // Fetch event details
         var eventDetail = eventRepository.findEventDetailById(id);
-        
+
         if (eventDetail == null) {
             // Event not found or not approved
             return "redirect:/events";
         }
-        
+
         // Fetch ticket types with available quantities
         var ticketTypes = eventRepository.findTicketTypesByEventId(id);
-        
+
         model.addAttribute("event", eventDetail);
         model.addAttribute("ticketTypes", ticketTypes);
         model.addAttribute("currentPage", "event-detail");
-        
+
         return "home/event_detail";
     }
 
@@ -190,35 +190,24 @@ public class HomeController {
     }
 
     private List<NearByEventDTO> getNearbyEvents(String location, int limit) {
-        log.info("=== DEBUG getNearbyEvents: location = '{}' ===", location);
-        
         // Nếu không có location hoặc là "Toàn quốc", trả về danh sách rỗng
         if (location == null || location.trim().isEmpty() || location.equals("Toàn quốc")) {
-            log.info("Location is null/empty/Toàn quốc, returning empty list");
-            return List.of(); // Trả về danh sách rỗng
+            return List.of();
         }
 
         // Lấy tọa độ từ tên địa điểm
         double[] coordinates = geoLocationService.getCoordinates(location);
 
         if (coordinates == null) {
-            log.warn("Không tìm thấy tọa độ cho địa điểm: {}", location);
             return List.of();
         }
-        
-        log.info("Tọa độ cho '{}': latitude={}, longitude={}", location, coordinates[0], coordinates[1]);
 
-        // Lấy sự kiện gần
+        // Lấy sự kiện gần (loại trừ chính địa điểm đã chọn)
         List<NearByEventDTO> nearbyEvents = eventService.findNearbyEvents(
                 coordinates[0], // latitude
                 coordinates[1], // longitude
+                location,       // tên địa điểm để loại trừ
                 limit
-        );
-        
-        log.info("Tìm thấy {} sự kiện gần '{}'", nearbyEvents.size(), location);
-        nearbyEvents.forEach(event -> 
-            log.info("  - Event: {} | Location: {} | Distance: {} km", 
-                event.getTitle(), event.getLocation(), event.getDistance())
         );
 
         return nearbyEvents;
