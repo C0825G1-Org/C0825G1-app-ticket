@@ -194,26 +194,23 @@ public class HomeController {
     }
 
     private List<NearByEventDTO> getNearbyEvents(String location, int limit) {
-        // Nếu không có location hoặc là "Toàn quốc", trả về danh sách rỗng
         if (location == null || location.trim().isEmpty() || location.equals("Toàn quốc")) {
             return List.of();
         }
+        // ✅ Thử nhiều biến thể tên
+        Double[] coordinates = geoLocationService.getCoordinates(location);
 
-        // Lấy tọa độ từ tên địa điểm
-        double[] coordinates = geoLocationService.getCoordinates(location);
-
-        if (coordinates == null) {
-            return List.of();
+        if (coordinates == null && location.contains("Huế")) {
+            // Fallback: thử "Hue" hoặc "Thua Thien Hue"
+            coordinates = geoLocationService.getCoordinates("Hue, Vietnam");
         }
 
-        // Lấy sự kiện gần (loại trừ chính địa điểm đã chọn)
-        List<NearByEventDTO> nearbyEvents = eventService.findNearbyEvents(
-                coordinates[0], // latitude
-                coordinates[1], // longitude
-                location,       // tên địa điểm để loại trừ
-                limit
+        if (coordinates == null) {
+            log.warn("Geocoding failed for location: {}", location);
+            return List.of();
+        }
+        return eventService.findNearbyEvents(
+                coordinates[0], coordinates[1], location, limit
         );
-
-        return nearbyEvents;
     }
 }
