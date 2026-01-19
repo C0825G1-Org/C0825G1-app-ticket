@@ -21,6 +21,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,19 +42,19 @@ public class UserEventController {
 
     private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null) {
-            Object principal = auth.getPrincipal();
-            if (principal instanceof UserInfoUserDetails) {
-                return ((UserInfoUserDetails) principal).getUser();
-            } else if (principal instanceof com.codegym.appticket.config.CustomOAuth2User) {
-                String email = ((com.codegym.appticket.config.CustomOAuth2User) principal).getEmail();
-                return userRepository.findByEmail(email).orElse(null);
-            }
-        }
-        String email = auth != null ? auth.getName() : null;
-        if (email == null)
+        if (auth == null || !auth.isAuthenticated()
+                || auth.getPrincipal() instanceof String && "anonymousUser".equals(auth.getPrincipal())) {
             return null;
-        return userRepository.findByEmail(email).orElse(null);
+        }
+
+        String email = auth.getName();
+        if (auth.getPrincipal() instanceof UserInfoUserDetails) {
+            email = ((UserInfoUserDetails) auth.getPrincipal()).getUsername();
+        } else if (auth.getPrincipal() instanceof com.codegym.appticket.config.CustomOAuth2User) {
+            email = ((com.codegym.appticket.config.CustomOAuth2User) auth.getPrincipal()).getEmail();
+        }
+
+        return userRepository.findByEmailAndNotDeleted(email);
     }
 
     @GetMapping
@@ -68,6 +71,10 @@ public class UserEventController {
 
     @GetMapping("/create")
     public String showCreateForm(Model model) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null)
+            return "redirect:/login";
+
         model.addAttribute("eventCreateDTO", new EventCreateDTO());
         model.addAttribute("categories", eventCategoryService.findAll());
         model.addAttribute("tinyMceApiKey", tinyMceApiKey);
@@ -76,9 +83,21 @@ public class UserEventController {
 
     @PostMapping("/create")
     @ResponseBody
-    public Map<String, Object> createEvent(@ModelAttribute EventCreateDTO createDTO) {
+    public Map<String, Object> createEvent(@Valid @ModelAttribute EventCreateDTO createDTO,
+            BindingResult bindingResult) {
         Map<String, Object> response = new HashMap<>();
+
+        if (bindingResult.hasErrors()) {
+            response.put("status", "validation_error");
+            response.put("errors", getValidationErrors(bindingResult));
+            return response;
+        }
+
         try {
+            User currentUser = getCurrentUser();
+            if (currentUser == null)
+                throw new RuntimeException("Bạn cần đăng nhập để thực hiện chức năng này");
+
             // Organizer is set to current user in Service if DTO organizerId is null.
             // But we should explicit it or ensure Service handles it.
             // Service Logic: if dto.organizerId is null -> Default to Creator.
@@ -97,11 +116,14 @@ public class UserEventController {
 
     @GetMapping("/edit/{id}")
     public String showEditForm(@PathVariable Long id, Model model) {
-        EventDTO eventDTO = eventService.findById(id);
         User currentUser = getCurrentUser();
+        if (currentUser == null)
+            return "redirect:/login";
+
+        EventDTO eventDTO = eventService.findById(id);
 
         // Security Check: Only allow if Current User is the Organizer
-        if (!eventDTO.getOrganizerId().equals(currentUser.getId())) {
+        if (eventDTO.getOrganizerId() == null || !eventDTO.getOrganizerId().equals(currentUser.getId())) {
             return "redirect:/user/events?error=unauthorized";
         }
 
@@ -136,13 +158,24 @@ public class UserEventController {
 
     @PostMapping("/edit/{id}")
     @ResponseBody
-    public Map<String, Object> updateEvent(@PathVariable Long id, @ModelAttribute EventUpdateDTO updateDTO) {
+    public Map<String, Object> updateEvent(@PathVariable Long id, @Valid @ModelAttribute EventUpdateDTO updateDTO,
+            BindingResult bindingResult) {
         Map<String, Object> response = new HashMap<>();
+
+        if (bindingResult.hasErrors()) {
+            response.put("status", "validation_error");
+            response.put("errors", getValidationErrors(bindingResult));
+            return response;
+        }
+
         try {
+            User currentUser = getCurrentUser();
+            if (currentUser == null)
+                throw new RuntimeException("Unauthorized");
+
             // Verify ownership again
             EventDTO existingEvent = eventService.findById(id);
-            User currentUser = getCurrentUser();
-            if (!existingEvent.getOrganizerId().equals(currentUser.getId())) {
+            if (existingEvent.getOrganizerId() == null || !existingEvent.getOrganizerId().equals(currentUser.getId())) {
                 response.put("status", "error");
                 response.put("message", "Unauthorized access.");
                 return response;
@@ -159,6 +192,43 @@ public class UserEventController {
             response.put("message", e.getMessage());
         }
         return response;
+    }
+
+    private Map<String, String> getValidationErrors(BindingResult bindingResult) {
+        Map<String, String> errors = new HashMap<>();
+        for (FieldError error : bindingResult.getFieldErrors()) {
+            errors.put(error.getField(), error.getDefaultMessage());
+        }
+        return errors;
+    }
+
+    @GetMapping("/detail/{id}")
+    public String showDetail(@PathVariable Long id, Model model) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null)
+            return "redirect:/login";
+
+        EventDTO eventDTO = eventService.findById(id);
+
+        // Security Check: Only allow if Current User is the Organizer
+        if (eventDTO.getOrganizerId() == null || !eventDTO.getOrganizerId().equals(currentUser.getId())) {
+            return "redirect:/user/events?error=unauthorized";
+        }
+
+        // Add additional data if needed for detail view
+        // For example, flattened variables for simpler Thymeleaf access
+        model.addAttribute("event", eventDTO);
+
+        // Find specific media types for easier access
+        model.addAttribute("bannerUrl", eventDTO.getEventMedias().stream()
+                .filter(m -> m.getMediaPurpose().name().equals("BANNER")).findFirst()
+                .map(m -> m.getMediaUrl()).orElse(null));
+
+        model.addAttribute("logoUrl", eventDTO.getEventMedias().stream()
+                .filter(m -> m.getMediaPurpose().name().equals("LOGO")).findFirst()
+                .map(m -> m.getMediaUrl()).orElse(null));
+
+        return "user/event/detail";
     }
 
     @DeleteMapping("/delete/{id}")

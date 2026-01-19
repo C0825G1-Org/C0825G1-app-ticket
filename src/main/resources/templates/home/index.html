@@ -112,8 +112,8 @@
                     <div class="carousel-indicators">
                         <button th:each="event, iterStat : ${trendingEvents}" type="button"
                             th:data-bs-target="'#trendingEventsCarousel'" th:data-bs-slide-to="${iterStat.index}"
-                            th:class="${iterStat.index == 0} ? 'active' : ''"
-                            th:aria-current="${iterStat.index == 0} ? 'true' : 'false'"
+                            th:class="${iterStat.index == 0 ? 'active' : ''}"
+                            th:aria-current="${iterStat.index == 0 ? 'true' : 'false'}"
                             th:aria-label="'Slide ' + ${iterStat.index + 1}">
                         </button>
                     </div>
@@ -121,7 +121,7 @@
                     <!-- Carousel Inner (Slides) -->
                     <div class="carousel-inner rounded-4 shadow-lg overflow-hidden">
                         <div th:each="event, iterStat : ${trendingEvents}"
-                            th:class="${iterStat.index == 0} ? 'carousel-item active' : 'carousel-item'">
+                            th:class="${iterStat.index == 0 ? 'carousel-item active' : 'carousel-item'}">
 
                             <!-- Event Card -->
                             <!-- Chưa fix -->
@@ -129,7 +129,7 @@
                                 th:onclick="'window.location.href=\'/events/' + ${event.id} + '\''">
 
                                 <!-- Background Image -->
-                                <img th:src="${event.image != null and !event.image.isEmpty()} ? ${event.image} : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200'"
+                                <img th:src="${(event.image != null and !event.image.isEmpty()) ? event.image : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200'}"
                                     class="d-block w-100 h-100 object-fit-cover position-absolute top-0 start-0"
                                     th:alt="${event.title}" style="filter: brightness(0.5);">
 
@@ -141,7 +141,7 @@
                                             <div class="col-lg-8">
                                                 <!-- Ranking Badge -->
                                                 <span class="badge mb-3"
-                                                    th:class="${iterStat.index == 0} ? 'bg-warning text-dark fs-5 px-4 py-2' : 'bg-secondary fs-6 px-3 py-2'"
+                                                    th:class="${iterStat.index == 0 ? 'bg-warning text-dark fs-5 px-4 py-2' : 'bg-secondary fs-6 px-3 py-2'}"
                                                     th:text="'#' + ${iterStat.index + 1} + ${iterStat.index == 0 ? ' Nổi bật nhất' : ' Trending'}">
                                                     #1 Nổi bật nhất
                                                 </span>
@@ -245,7 +245,7 @@
 
                         <!-- Event Image -->
                         <div class="position-relative overflow-hidden">
-                            <img th:src="${event.image != null and !event.image.isEmpty()} ? ${event.image} : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800'"
+                            <img th:src="${(event.image != null and !event.image.isEmpty()) ? event.image : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800'}"
                                 class="card-img-top" th:alt="${event.title}"
                                 style="height: 200px; object-fit: cover; transition: transform 0.3s ease;">
 
@@ -275,7 +275,7 @@
                         <div class="card-body p-4 d-flex flex-column">
                             <!-- Title -->
                             <h5 class="card-title fw-bold mb-3"
-                                style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;"
+                                style="display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;"
                                 th:text="${event.title}">
                                 EDM Symphony Night
                             </h5>

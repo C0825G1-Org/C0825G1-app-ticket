@@ -65,7 +65,7 @@ public class AdminEventController {
 
         model.addAttribute("categories", eventCategoryService.findAll());
         return "admin/event/list";
-    
+
     }
 
     @GetMapping("/{id}")
@@ -133,7 +133,6 @@ public class AdminEventController {
             EventUpdateDTO updateDTO = new EventUpdateDTO();
             updateDTO.setTitle(eventDTO.getTitle());
             updateDTO.setDescription(eventDTO.getDescription());
-            // updateDTO.setLocation(eventDTO.getLocation()); // Removed location
             updateDTO.setCategoryId(eventDTO.getCategoryId());
             updateDTO.setStatus(eventDTO.getStatus());
 

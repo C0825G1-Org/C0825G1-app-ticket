@@ -56,9 +56,13 @@
                                         <td class="px-4 py-3">
                                             <span class="badge rounded-pill px-3"
                                                 th:classappend="${event.status.name() == 'PENDING' ? 'bg-warning-subtle text-warning' : (event.status.name() == 'APPROVED' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger')}"
-                                                th:text="${event.status}">Status</span>
+                                                th:text="${event.status.name() == 'PENDING' ? 'Chờ duyệt' : (event.status.name() == 'APPROVED' ? 'Đã duyệt' : 'Từ chối')}">Status</span>
                                         </td>
                                         <td class="px-4 py-3 text-end">
+                                            <a th:href="@{/user/events/detail/{id}(id=${event.id})}"
+                                                class="btn btn-sm btn-light border me-1 rounded-3" title="Xem chi tiết">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
                                             <a th:href="@{/user/events/edit/{id}(id=${event.id})}"
                                                 class="btn btn-sm btn-light border me-1 rounded-3" title="Sửa">
                                                 <i class="bi bi-pencil"></i>

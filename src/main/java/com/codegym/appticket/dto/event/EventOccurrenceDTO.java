@@ -17,9 +17,11 @@ public class EventOccurrenceDTO {
     private Long id;
 
     @NotNull(message = "Thời gian bắt đầu không được để trống")
+    @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime startTime;
 
     @NotNull(message = "Thời gian kết thúc không được để trống")
+    @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime endTime;
 
     // Flattened Location Info

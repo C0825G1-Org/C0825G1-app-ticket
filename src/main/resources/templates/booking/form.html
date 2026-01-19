@@ -11,7 +11,7 @@
                     <div class="card shadow-sm border-0">
                         <div class="card-body p-4">
                             <h2 class="mb-4" th:text="${event.title}">Tên sự kiện</h2>
-                            <p class="text-muted" th:text="${event.location}"><i class="bi bi-geo-alt"></i> Địa điểm</p>
+                            <p class="text-muted" th:text="${location}"><i class="bi bi-geo-alt"></i> Địa điểm</p>
                             <hr>
 
                             <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">

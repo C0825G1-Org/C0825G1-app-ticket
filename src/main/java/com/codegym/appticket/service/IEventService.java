@@ -10,7 +10,7 @@ import com.codegym.appticket.dto.home.TrendingEventDTO;
 import com.codegym.appticket.dto.home.UpComingEventDTO;
 import com.codegym.appticket.entity.Event;
 import com.codegym.appticket.entity.EventStatus;
-import com.codegym.appticket.entity.User;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -37,8 +37,9 @@ public interface IEventService {
     List<TrendingEventDTO> findTopTrendingEvents();
 
     List<UpComingEventDTO> findUpComingEvents();
-    
-    Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location,int page, int size, String sort);
+
+    Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location, int page, int size,
+            String sort);
 
     List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, String excludeLocation, int limit);
 
