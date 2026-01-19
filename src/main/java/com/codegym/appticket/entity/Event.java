@@ -24,9 +24,6 @@ public class Event extends Parent {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "location")
-    private String location;
-
     @ManyToOne
     @JoinColumn(name = "category_id")
     private EventCategory category;

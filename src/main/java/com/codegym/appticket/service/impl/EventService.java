@@ -102,10 +102,19 @@ public class EventService implements IEventService {
                         Long currentEventId) {
                 // 1. Validate Location & Time
                 for (EventOccurrenceDTO occ : occurrences) {
-                        Ward ward = wardRepository.findById(occ.getWardCode())
-                                        .orElseThrow(() -> new RuntimeException("Không tìm thấy Phường/Xã"));
-                        if (!ward.getProvince().getCode().equals(occ.getProvinceCode())) {
-                                throw new RuntimeException("Phường/Xã không thuộc Tỉnh/Thành phố đã chọn");
+                        Ward ward = wardRepository.findById(occ.getWardCode()).orElse(null);
+
+                        if (ward != null) {
+                                // Existing Ward: Validate Hierarchy
+                                if (!ward.getProvince().getCode().equals(occ.getProvinceCode())) {
+                                        throw new RuntimeException("Phường/Xã không thuộc Tỉnh/Thành phố đã chọn");
+                                }
+                        } else {
+                                // New Ward: Must have name to create later
+                                if (occ.getWardName() == null || occ.getWardName().trim().isEmpty()) {
+                                        throw new RuntimeException("Không tìm thấy dữ liệu Phường/Xã");
+                                }
+                                // Cannot validate hierarchy against DB yet, trusting Frontend API
                         }
 
                         if (occ.getStartTime().isBefore(LocalDateTime.now().plusDays(3))) {
@@ -170,9 +179,6 @@ public class EventService implements IEventService {
                 Event event = new Event();
                 event.setTitle(dto.getTitle());
                 event.setDescription(dto.getDescription());
-                event.setLocation(dto.getLocation());
-                event.setCategory(category);
-                event.setLocation(dto.getLocation());
                 event.setCategory(category);
 
                 // --- LOGIC: Auto-Approve & Organizer Assignment ---
@@ -322,7 +328,6 @@ public class EventService implements IEventService {
 
                 event.setTitle(dto.getTitle());
                 event.setDescription(dto.getDescription());
-                event.setLocation(dto.getLocation());
                 event.setCategory(category);
                 event.setStatus(dto.getStatus());
 
@@ -544,7 +549,6 @@ public class EventService implements IEventService {
                                 .id(event.getId())
                                 .title(event.getTitle())
                                 .description(event.getDescription())
-                                .location(event.getLocation())
                                 .categoryId(event.getCategory() != null ? event.getCategory().getId() : null)
                                 .categoryName(event.getCategory() != null ? event.getCategory().getName() : null)
                                 .categoryName(event.getCategory() != null ? event.getCategory().getName() : null)
@@ -652,4 +656,14 @@ public class EventService implements IEventService {
     public List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, int limit) {
         return eventRepository.findNearbyEvents(userLatitude, userLongitude, limit);
     }
+
+        @Override
+        public long countByStatus(EventStatus status) {
+                return eventRepository.countByStatus(status);
+        }
+
+        @Override
+        public long countAll() {
+                return eventRepository.count();
+        }
 }
