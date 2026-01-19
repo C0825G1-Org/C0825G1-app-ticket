@@ -384,15 +384,20 @@ public class EventService implements IEventService {
                                                 .orElse(null);
                         }
 
+                        boolean isNew = false;
                         if (target == null) {
                                 target = new EventOccurrence();
                                 target.setEvent(event);
-                                currentOccurrences.add(target);
+                                isNew = true;
                         }
 
                         target.setStartTime(occDTO.getStartTime());
                         target.setEndTime(occDTO.getEndTime());
                         target.setLocation(getOrCreateLocation(occDTO));
+
+                        if (isNew) {
+                                currentOccurrences.add(target);
+                        }
                 }
 
                 // Cập nhật các loại vé: Cập nhật thông minh (Cập nhật hiện có, Tạo mới, Xóa đã
