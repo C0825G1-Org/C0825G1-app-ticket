@@ -37,7 +37,6 @@ public class BookingController {
                 com.codegym.appticket.entity.User currentUser = bookingService.getUserByEmail(email);
                 model.addAttribute("currentUser", currentUser);
             } catch (Exception e) {
-                System.out.println("DEBUG [SHOW FORM]: User not found for email " + email);
             }
         }
 
@@ -54,24 +53,18 @@ public class BookingController {
         }
         
         Object principal = authentication.getPrincipal();
-        System.out.println("DEBUG: Principal object: " + principal);
-        System.out.println("DEBUG: Principal type: " + principal.getClass().getName());
         
         if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
             String email = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
-            System.out.println("DEBUG: UserDetails email: " + email);
             return email;
         } else if (principal instanceof com.codegym.appticket.config.CustomOAuth2User) {
             String email = ((com.codegym.appticket.config.CustomOAuth2User) principal).getEmail();
-            System.out.println("DEBUG: CustomOAuth2User email: " + email);
             return email;
         } else if (principal instanceof org.springframework.security.oauth2.core.user.OAuth2User) {
             String email = ((org.springframework.security.oauth2.core.user.OAuth2User) principal).getAttribute("email");
-            System.out.println("DEBUG: OAuth2User attribute email: " + email);
             return email;
         }
         
-        System.out.println("DEBUG: Falling back to authentication.getName(): " + authentication.getName());
         return authentication.getName();
     }
 
@@ -82,7 +75,6 @@ public class BookingController {
                           Model model,
                           RedirectAttributes redirectAttributes) {
         String email = getCurrentUserEmail();
-        System.out.println("DEBUG [CONFIRM]: email found = " + email);
         
         Event event = bookingService.getEventById(eventId);
         Map<TicketType, Integer> selectedTickets = new HashMap<>();
@@ -114,13 +106,10 @@ public class BookingController {
         if (email != null) {
             try {
                 com.codegym.appticket.entity.User currentUser = bookingService.getUserByEmail(email);
-                System.out.println("DEBUG [CONFIRM]: Fetched User: ID=" + currentUser.getId() + ", Name=" + currentUser.getFullName() + ", Phone=" + currentUser.getPhoneNumber() + ", Email=" + currentUser.getEmail());
                 model.addAttribute("currentUser", currentUser);
             } catch (Exception e) {
-                System.out.println("DEBUG [CONFIRM ERROR]: User not found for email " + email + ". Exception: " + e.getMessage());
             }
         } else {
-            System.out.println("DEBUG [CONFIRM]: No email found in SecurityContext");
         }
 
         return "booking/confirm";
@@ -133,7 +122,6 @@ public class BookingController {
                        RedirectAttributes redirectAttributes,
                        jakarta.servlet.http.HttpServletRequest request) {
         String userEmail = getCurrentUserEmail();
-        System.out.println("DEBUG: Saving for user email: " + userEmail);
         
         if (userEmail == null) {
             redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để đặt vé");
@@ -156,20 +144,15 @@ public class BookingController {
         try {
             com.codegym.appticket.entity.User currentUser = bookingService.getUserByEmail(userEmail);
             Long userId = currentUser.getId();
-            System.out.println("DEBUG: Proceeding to create booking for UserID: " + userId);
             
             Booking booking = bookingService.createBooking(eventId, userId, ticketQuantities);
-            System.out.println("DEBUG: Booking created with ID: " + booking.getId() + " for user: " + booking.getUser().getEmail());
             
             long totalAmount = bookingService.calculateTotalAmount(booking.getId());
-            System.out.println("DEBUG: Total amount calculated: " + totalAmount);
             
             String paymentUrl = vnPayService.createPaymentUrl(request, booking.getId(), totalAmount);
-            System.out.println("DEBUG: Payment URL generated: " + paymentUrl);
             
             return "redirect:" + paymentUrl;
         } catch (Exception e) {
-            System.err.println("DEBUG ERROR in save: " + e.getMessage());
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/bookings/book/" + eventId;
