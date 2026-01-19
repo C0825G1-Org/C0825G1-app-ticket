@@ -45,7 +45,7 @@ public class VnPayServiceImpl implements IVnPayService {
         }
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
         
-        // Lấy thông tin booking để làm order info sinh động
+        // Lấy thông tin booking
         String orderInfo = "Thanh toan don hang #" + vnp_TxnRef;
         try {
             Long bookingId = Long.parseLong(vnp_TxnRef);
@@ -59,7 +59,6 @@ public class VnPayServiceImpl implements IVnPayService {
                 }
             }
         } catch (Exception e) {
-            System.err.println("DEBUG ERROR in VnPayService (OrderInfo): " + e.getMessage());
         }
         
         vnp_Params.put("vnp_OrderInfo", orderInfo);

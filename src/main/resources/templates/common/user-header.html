@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<!-- User Navbar Fragment (For logged-in users) -->
+<nav th:fragment="user-navbar" class="navbar navbar-expand-lg navbar-light fixed-top navbar-glass">
+    <div class="container-xl">
+        <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-4" th:href="@{/}">
+            <div class="rounded-3 d-flex align-items-center justify-content-center text-white"
+                style="width: 40px; height: 40px; background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));">
+                E
+            </div>
+            EventPro
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0 fw-medium">
+                <li class="nav-item">
+                    <a class="nav-link"
+                        th:classappend="${#strings.equals(currentPage, 'home')} ? 'active text-primary' : ''"
+                        th:href="@{/}">Trang chủ</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link"
+                        th:classappend="${#strings.equals(currentPage, 'events')} ? 'active text-primary' : ''"
+                        th:href="@{/events}">Sự kiện</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link"
+                        th:classappend="${#strings.equals(currentPage, 'my-tickets')} ? 'active text-primary' : ''"
+                        th:href="@{/tickets/my-tickets}">Vé của tôi</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link"
+                        th:classappend="${#strings.equals(currentPage, 'my-events')} ? 'active text-primary' : ''"
+                        th:href="@{/user/events}">Sự kiện của tôi</a>
+                </li>
+            </ul>
+            <div class="d-flex gap-2 align-items-center">
+                <a th:href="@{/user/profile}" class="btn btn-link text-decoration-none text-dark fw-medium">
+                    <i class="bi bi-person-circle me-1"></i>
+                    <span th:text="${session.user != null} ? ${session.user.fullName} : 'Hồ sơ'">Hồ sơ</span>
+                </a>
+                <form th:action="@{/logout}" method="post" id="userLogoutForm" class="d-none"></form>
+                <a href="#" onclick="event.preventDefault(); document.getElementById('userLogoutForm').submit();"
+                    class="btn btn-outline-danger rounded-pill px-4">Đăng xuất</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+</html>
