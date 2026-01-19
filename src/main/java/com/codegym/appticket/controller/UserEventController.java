@@ -202,6 +202,35 @@ public class UserEventController {
         return errors;
     }
 
+    @GetMapping("/detail/{id}")
+    public String showDetail(@PathVariable Long id, Model model) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null)
+            return "redirect:/login";
+
+        EventDTO eventDTO = eventService.findById(id);
+
+        // Security Check: Only allow if Current User is the Organizer
+        if (eventDTO.getOrganizerId() == null || !eventDTO.getOrganizerId().equals(currentUser.getId())) {
+            return "redirect:/user/events?error=unauthorized";
+        }
+
+        // Add additional data if needed for detail view
+        // For example, flattened variables for simpler Thymeleaf access
+        model.addAttribute("event", eventDTO);
+
+        // Find specific media types for easier access
+        model.addAttribute("bannerUrl", eventDTO.getEventMedias().stream()
+                .filter(m -> m.getMediaPurpose().name().equals("BANNER")).findFirst()
+                .map(m -> m.getMediaUrl()).orElse(null));
+
+        model.addAttribute("logoUrl", eventDTO.getEventMedias().stream()
+                .filter(m -> m.getMediaPurpose().name().equals("LOGO")).findFirst()
+                .map(m -> m.getMediaUrl()).orElse(null));
+
+        return "user/event/detail";
+    }
+
     @DeleteMapping("/delete/{id}")
     @ResponseBody
     public org.springframework.http.ResponseEntity<?> deleteEvent(@PathVariable Long id) {

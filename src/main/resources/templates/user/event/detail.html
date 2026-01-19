@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{common/layout :: head('Chi tiết sự kiện')}">
+</head>
+
+<body>
+    <div th:replace="~{common/layout :: user-layout(~{::content})}">
+        <div th:fragment="content">
+            <div class="container-xl mt-5 pt-5 mb-5">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <a th:href="@{/user/events}" class="text-decoration-none text-muted mb-2 d-inline-block">
+                            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+                        </a>
+                        <h4 class="fw-bold mb-0">Chi tiết sự kiện</h4>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a th:href="@{/user/events/edit/{id}(id=${event.id})}" class="btn btn-primary rounded-3">
+                            <i class="bi bi-pencil me-1"></i> Chỉnh sửa
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Left Column: Media & Info -->
+                    <div class="col-lg-8">
+                        <!-- Banner & Logo -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden position-relative"
+                            style="min-height: 250px;">
+                            <img th:src="${bannerUrl ?: 'https://via.placeholder.com/800x400'}"
+                                class="w-100 h-100 object-fit-cover position-absolute top-0 start-0" alt="Banner">
+                            <div class="position-absolute bottom-0 start-0 w-100 p-4 bg-gradient-dark text-white"
+                                style="background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);">
+                                <div class="d-flex align-items-end gap-3">
+                                    <img th:src="${logoUrl ?: 'https://via.placeholder.com/100'}"
+                                        class="rounded-3 border border-2 border-white bg-white" width="80" height="80"
+                                        style="object-fit: cover;">
+                                    <div>
+                                        <span class="badge bg-primary mb-2"
+                                            th:text="${event.categoryName}">Category</span>
+                                        <h2 class="fw-bold mb-1 text-white text-shadow-sm" th:text="${event.title}">
+                                            Event Title</h2>
+                                        <div class="d-flex align-items-center gap-2 text-white-50">
+                                            <span
+                                                th:classappend="${event.status.name() == 'PENDING' ? 'badge bg-warning text-dark' : (event.status.name() == 'APPROVED' ? 'badge bg-success' : 'badge bg-danger')}"
+                                                th:text="${event.status.name() == 'PENDING' ? 'Chờ duyệt' : (event.status.name() == 'APPROVED' ? 'Đã duyệt' : 'Từ chối')}">Status</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div class="card-body p-4">
+                                <h5 class="fw-bold mb-3">Mô tả sự kiện</h5>
+                                <div class="text-muted" th:utext="${event.description}">
+                                    No description.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gallery -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4"
+                            th:if="${not #lists.isEmpty(event.eventMedias)}">
+                            <div class="card-body p-4">
+                                <h5 class="fw-bold mb-3">Thư viện ảnh</h5>
+                                <div class="row g-2">
+                                    <div class="col-6 col-md-4 col-lg-3" th:each="media : ${event.eventMedias}"
+                                        th:if="${media.mediaPurpose.name() == 'GALLERY'}">
+                                        <div
+                                            class="ratio ratio-1x1 rounded-3 overflow-hidden position-relative group-hover">
+                                            <img th:src="${media.mediaUrl}" th:if="${media.mediaType.name() == 'IMAGE'}"
+                                                class="w-100 h-100 object-fit-cover" alt="Gallery Image">
+                                            <video th:src="${media.mediaUrl}"
+                                                th:if="${media.mediaType.name() == 'VIDEO'}"
+                                                class="w-100 h-100 object-fit-cover"></video>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Occurrences & Tickets -->
+                    <div class="col-lg-4">
+                        <!-- Occurrences -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div class="card-header bg-white border-0 py-3">
+                                <h5 class="fw-bold mb-0">Lịch trình & Địa điểm</h5>
+                            </div>
+                            <div class="card-body pt-0">
+                                <div th:each="occ : ${event.eventOccurrences}"
+                                    class="d-flex gap-3 mb-3 border-bottom pb-3 last:border-0 last:mb-0 last:pb-0">
+                                    <div class="text-center rounded-3 bg-light p-2"
+                                        style="min-width: 60px; height: fit-content;">
+                                        <div class="small fw-bold text-uppercase text-danger"
+                                            th:text="${#temporals.monthName(occ.startTime)}">JAN</div>
+                                        <div class="h4 fw-bold mb-0" th:text="${#temporals.day(occ.startTime)}">01</div>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold mb-1">
+                                            <span th:text="${#temporals.format(occ.startTime, 'HH:mm')}">20:00</span> -
+                                            <span th:text="${#temporals.format(occ.endTime, 'HH:mm')}">22:00</span>
+                                        </div>
+                                        <div class="small text-muted mb-1">
+                                            <i class="bi bi-geo-alt me-1"></i>
+                                            <span th:text="${occ.addressDetail}">Address</span>,
+                                            <span th:text="${occ.wardName}">Ward</span>,
+                                            <span th:text="${occ.provinceName}">Province</span>
+                                        </div>
+                                        <a th:if="${occ.mapLink}" th:href="${occ.mapLink}" target="_blank"
+                                            class="small text-primary text-decoration-none">
+                                            Xem bản đồ <i class="bi bi-box-arrow-up-right ms-1"
+                                                style="font-size: 10px;"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ticket Types -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div class="card-header bg-white border-0 py-3">
+                                <h5 class="fw-bold mb-0">Các loại vé</h5>
+                            </div>
+                            <div class="card-body pt-0">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item px-0 d-flex justify-content-between align-items-center"
+                                        th:each="ticket : ${event.ticketTypes}">
+                                        <div>
+                                            <div class="fw-bold" th:text="${ticket.name}">VIP</div>
+                                            <div class="small text-muted">Số lượng: <span
+                                                    th:text="${ticket.quantity}">100</span></div>
+                                        </div>
+                                        <span class="badge bg-primary-subtle text-primary rounded-pill fs-6">
+                                            <span
+                                                th:text="${#numbers.formatInteger(ticket.price, 0, 'COMMA')}">500,000</span>đ
+                                        </span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Ticket Map -->
+                        <div class="card border-0 shadow-sm rounded-4 mb-4"
+                            th:if="${event.eventMedias.^[mediaPurpose.name() == 'TICKET_MAP'] != null}">
+                            <div class="card-header bg-white border-0 py-3">
+                                <h5 class="fw-bold mb-0">Sơ đồ vé</h5>
+                            </div>
+                            <div class="card-body pt-0">
+                                <div th:with="mapMedia=${event.eventMedias.^[mediaPurpose.name() == 'TICKET_MAP']}">
+                                    <img th:if="${mapMedia != null}" th:src="${mapMedia.mediaUrl}"
+                                        class="img-fluid rounded-3" alt="Ticket Map">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
