@@ -1,0 +1,37 @@
+package com.codegym.appticket.service;
+
+import com.codegym.appticket.dto.report.ChartDataDTO;
+import com.codegym.appticket.dto.report.ReportSummaryDTO;
+import com.codegym.appticket.dto.report.TopEventDTO;
+import com.codegym.appticket.dto.report.TopOrganizerDTO;
+import java.io.ByteArrayInputStream;
+import java.time.LocalDate;
+import java.util.List;
+
+public interface IReportService {
+    
+    // Period types for filtering
+    enum PeriodType {
+        DAY, WEEK, MONTH, YEAR, CUSTOM
+    }
+
+    enum ComparisonType {
+        PREVIOUS_PERIOD, SAME_PERIOD_LAST_YEAR
+    }
+
+    ReportSummaryDTO getSummary(LocalDate start, LocalDate end, ComparisonType compareType);
+
+    ChartDataDTO getRevenueChart(LocalDate start, LocalDate end, PeriodType type);
+
+    ChartDataDTO getBookingChart(LocalDate start, LocalDate end, PeriodType type);
+
+    ChartDataDTO getEventCategoryChart();
+
+    ChartDataDTO getUserGrowthChart(LocalDate start, LocalDate end, PeriodType type);
+
+    List<TopEventDTO> getTopEvents(LocalDate start, LocalDate end, int limit);
+
+    List<TopOrganizerDTO> getTopOrganizers(LocalDate start, LocalDate end, int limit);
+
+    ByteArrayInputStream exportReportToExcel(LocalDate start, LocalDate end);
+}

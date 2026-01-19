@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liên hệ - EventPro</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <th:block th:replace="~{common/styles :: styles}"></th:block>
+
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .contact-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 120px 0 80px 0;
+            margin-top: 70px;
+        }
+
+        .contact-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .icon-box {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+    </style>
+</head>
+
+<body>
+    <div th:replace="~{common/header :: public-navbar}"></div>
+
+    <!-- Hero Section -->
+    <section class="contact-hero text-white text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">Liên hệ với chúng tôi</h1>
+            <p class="lead mb-0">Chúng tôi luôn sẵn sàng hỗ trợ bạn 24/7</p>
+        </div>
+    </section>
+
+    <!-- Contact Info Cards -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row g-4 mb-5">
+                <!-- Email Card -->
+                <div class="col-md-4">
+                    <div class="contact-card card border-0 shadow-sm h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="icon-box bg-primary bg-opacity-10 text-primary mx-auto mb-3">
+                                <i class="bi bi-envelope-fill"></i>
+                            </div>
+                            <h5 class="fw-bold mb-2">Email</h5>
+                            <p class="text-muted mb-2">Gửi email cho chúng tôi</p>
+                            <a href="mailto:support@eventpro.vn" class="text-decoration-none fw-semibold">
+                                support@eventpro.vn
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phone Card -->
+                <div class="col-md-4">
+                    <div class="contact-card card border-0 shadow-sm h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="icon-box bg-success bg-opacity-10 text-success mx-auto mb-3">
+                                <i class="bi bi-telephone-fill"></i>
+                            </div>
+                            <h5 class="fw-bold mb-2">Điện thoại</h5>
+                            <p class="text-muted mb-2">Hotline hỗ trợ</p>
+                            <a href="tel:1900123456" class="text-decoration-none fw-semibold">
+                                1900 123 456
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address Card -->
+                <div class="col-md-4">
+                    <div class="contact-card card border-0 shadow-sm h-100">
+                        <div class="card-body text-center p-4">
+                            <div class="icon-box bg-warning bg-opacity-10 text-warning mx-auto mb-3">
+                                <i class="bi bi-geo-alt-fill"></i>
+                            </div>
+                            <h5 class="fw-bold mb-2">Địa chỉ</h5>
+                            <p class="text-muted mb-2">Văn phòng chính</p>
+                            <p class="fw-semibold mb-0">
+                                123 Đường ABC, Quận 1<br>TP. Hồ Chí Minh
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Form -->
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-lg">
+                        <div class="card-body p-5">
+                            <h3 class="fw-bold mb-4 text-center">Gửi tin nhắn cho chúng tôi</h3>
+
+                            <form id="contactForm">
+                                <div class="row g-3">
+                                    <!-- Name -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Họ và tên <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control form-control-lg" name="name" required>
+                                    </div>
+
+                                    <!-- Email -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Email <span
+                                                class="text-danger">*</span></label>
+                                        <input type="email" class="form-control form-control-lg" name="email" required>
+                                    </div>
+
+                                    <!-- Phone -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Số điện thoại</label>
+                                        <input type="tel" class="form-control form-control-lg" name="phone">
+                                    </div>
+
+                                    <!-- Subject -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Chủ đề <span
+                                                class="text-danger">*</span></label>
+                                        <select class="form-select form-select-lg" name="subject" required>
+                                            <option value="">-- Chọn chủ đề --</option>
+                                            <option value="support">Hỗ trợ kỹ thuật</option>
+                                            <option value="event">Tạo sự kiện</option>
+                                            <option value="booking">Đặt vé</option>
+                                            <option value="partnership">Hợp tác</option>
+                                            <option value="other">Khác</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Message -->
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">Nội dung <span
+                                                class="text-danger">*</span></label>
+                                        <textarea class="form-control form-control-lg" name="message" rows="6"
+                                            required></textarea>
+                                    </div>
+
+                                    <!-- Submit Button -->
+                                    <div class="col-12">
+                                        <button type="submit"
+                                            class="btn btn-primary btn-lg w-100 rounded-3 fw-semibold">
+                                            <i class="bi bi-send-fill me-2"></i>Gửi tin nhắn
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="py-5 bg-white">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Câu hỏi thường gặp</h2>
+                <p class="text-muted">Tìm câu trả lời nhanh cho các câu hỏi phổ biến</p>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="accordion accordion-flush" id="faqAccordion">
+                        <!-- FAQ 1 -->
+                        <div class="accordion-item border rounded-3 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    Làm thế nào để đặt vé sự kiện?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-muted">
+                                    Bạn chỉ cần tìm kiếm sự kiện quan tâm, chọn loại vé và số lượng, sau đó thanh toán.
+                                    Vé điện tử sẽ được gửi ngay vào email của bạn.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 2 -->
+                        <div class="accordion-item border rounded-3 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    Tôi có thể hoàn vé không?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-muted">
+                                    Chính sách hoàn vé tùy thuộc vào từng sự kiện. Vui lòng kiểm tra thông tin chi tiết
+                                    trước khi đặt vé.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 3 -->
+                        <div class="accordion-item border rounded-3 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    Làm thế nào để tạo sự kiện?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-muted">
+                                    Đăng nhập vào tài khoản của bạn, chọn "Tạo sự kiện" và điền đầy đủ thông tin. Đội
+                                    ngũ của chúng tôi sẽ xem xét và phê duyệt trong vòng 24h.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FAQ 4 -->
+                        <div class="accordion-item border rounded-3 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-semibold" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#faq4">
+                                    Các phương thức thanh toán được hỗ trợ?
+                                </button>
+                            </h2>
+                            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-muted">
+                                    Chúng tôi hỗ trợ thanh toán qua thẻ ATM nội địa, thẻ Visa/MasterCard, ví điện tử
+                                    (MoMo, ZaloPay, VNPay), và chuyển khoản ngân hàng.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer th:replace="~{common/footer :: footer}"></footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Contact Form JS -->
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Show success message (in real app, send to backend)
+            alert('Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi trong vòng 24h.');
+
+            // Reset form
+            this.reset();
+        });
+    </script>
+</body>
+
+</html>

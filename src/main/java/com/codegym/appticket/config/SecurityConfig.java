@@ -45,11 +45,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 // Enable CSRF for standard web application security
-                .csrf((csrf) -> csrf.disable()) 
+                // .csrf((csrf) -> csrf.disable()) 
                 .authorizeHttpRequests((authorizeHttpRequests) ->
                         authorizeHttpRequests
                                 .requestMatchers("/", "/login", "/register", "/forgot-password", "/verify-forgot-password", "/reset-password", "/verify-otp", "/error/**").permitAll()
-                                .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**", "/webjars/**", "/events", "/event/**").permitAll()
+                                .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**", "/webjars/**", "/events", "/event/**", "/contact").permitAll()
                                 .requestMatchers("/admin/users/**", "/admin/reports/**").hasAnyAuthority("ADMIN")
                                 .requestMatchers("/admin/**").hasAnyAuthority("ADMIN", "STAFF")
                                 .anyRequest().authenticated())

@@ -31,8 +31,9 @@
                                         </div>
                                         <div style="width: 100px;">
                                             <input type="number" th:name="'ticket_' + ${tt.id}"
-                                                class="form-control ticket-qty" placeholder="0" min="0"
-                                                th:max="${tt.quantity}">
+                                                class="form-control ticket-qty"
+                                                th:value="${preSelectedQuantities != null and preSelectedQuantities.containsKey(tt.id) ? preSelectedQuantities.get(tt.id) : 0}"
+                                                min="0" th:max="${tt.quantity}">
                                         </div>
                                     </div>
                                 </div>

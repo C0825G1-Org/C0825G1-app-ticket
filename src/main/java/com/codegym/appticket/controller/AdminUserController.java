@@ -42,6 +42,7 @@ public class AdminUserController {
         List<Role> roles = userService.getManageableRoles();
 
         model.addAttribute("users", userPage.getContent());
+        model.addAttribute("userPage", userPage); // Add full page object for shared pagination fragment
         model.addAttribute("currentPage", page + 1);
         model.addAttribute("totalPages", userPage.getTotalPages());
         model.addAttribute("totalUsers", stats.getTotalUsers());

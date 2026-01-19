@@ -31,18 +31,161 @@
                         </div>
                     </div>
                     <div class="d-flex gap-2">
-                        <a th:href="@{/admin/events/edit/{id}(id=${event.id})}"
-                            class="btn btn-light border rounded-3 fw-bold px-4">
-                            <i class="bi bi-pencil me-2"></i> Chỉnh sửa
-                        </a>
-                        <button type="button" class="btn btn-outline-danger rounded-3 fw-bold px-4"
-                            th:data-id="${event.id}" th:data-title="${event.title}"
+                        <!-- Approve/Reject for PENDING -->
+                        <div th:if="${event.status.name() == 'PENDING'}" class="d-flex gap-2">
+                            <button type="button" class="btn btn-success fw-bold px-4 rounded-3"
+                                th:onclick="'approveEvent(' + ${event.id} + ')'">
+                                <i class="bi bi-check-lg me-2"></i> Duyệt sự kiện
+                            </button>
+                            <button type="button" class="btn btn-danger fw-bold px-4 rounded-3"
+                                th:onclick="'rejectEvent(' + ${event.id} + ')'">
+                                <i class="bi bi-x-lg me-2"></i> Từ chối
+                            </button>
+                        </div>
+
+                        <!-- Edit/Delete for others (Or maybe allow Delete always) -->
+                        <div th:unless="${event.status.name() == 'PENDING'}" class="d-flex gap-2">
+                            <a th:href="@{/admin/events/edit/{id}(id=${event.id})}"
+                                class="btn btn-light border rounded-3 fw-bold px-4">
+                                <i class="bi bi-pencil me-2"></i> Chỉnh sửa
+                            </a>
+                            <button type="button" class="btn btn-outline-danger rounded-3 fw-bold px-4"
+                                th:data-id="${event.id}" th:data-title="${event.title}"
+                                onclick="deleteEvent(this.getAttribute('data-id'), this.getAttribute('data-title'))">
+                                <i class="bi bi-trash me-2"></i> Xóa
+                            </button>
+                        </div>
+                        <!-- Allow Delete for Pending too if needed, but requirements focus on Approve/Reject -->
+                        <button th:if="${event.status.name() == 'PENDING'}" type="button"
+                            class="btn btn-outline-danger rounded-3 fw-bold px-4" th:data-id="${event.id}"
+                            th:data-title="${event.title}"
                             onclick="deleteEvent(this.getAttribute('data-id'), this.getAttribute('data-title'))">
                             <i class="bi bi-trash me-2"></i> Xóa
                         </button>
                     </div>
                 </div>
             </div>
+
+            <!-- ... (Content) ... -->
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    // SweetAlert2 Toast Mixin
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                        didOpen: (toast) => {
+                            toast.onmouseenter = Swal.stopTimer;
+                            toast.onmouseleave = Swal.resumeTimer;
+                        }
+                    });
+
+                    window.approveEvent = function (id) {
+                        Swal.fire({
+                            title: 'Duyệt sự kiện này?',
+                            text: "Sự kiện sẽ được công khai ngay lập tức.",
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: 'Duyệt ngay',
+                            cancelButtonText: 'Hủy',
+                            confirmButtonColor: '#198754'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                                fetch('/admin/events/' + id + '/approve', {
+                                    method: 'POST',
+                                    headers: { [csrfHeader]: csrfToken }
+                                })
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        if (data.status === 'success') {
+                                            Toast.fire({ icon: 'success', title: data.message });
+                                            setTimeout(() => location.reload(), 1000);
+                                        } else {
+                                            Toast.fire({ icon: 'error', title: data.message });
+                                        }
+                                    });
+                            }
+                        });
+                    }
+
+                    window.rejectEvent = function (id) {
+                        Swal.fire({
+                            title: 'Từ chối sự kiện?',
+                            input: 'textarea',
+                            inputLabel: 'Lý do từ chối',
+                            inputPlaceholder: 'Nhập lý do tại đây...',
+                            showCancelButton: true,
+                            confirmButtonText: 'Xác nhận từ chối',
+                            cancelButtonText: 'Hủy',
+                            confirmButtonColor: '#dc3545',
+                            inputValidator: (value) => {
+                                if (!value) return 'Vui lòng nhập lý do!'
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                                const reason = result.value;
+                                fetch('/admin/events/' + id + '/reject?reason=' + encodeURIComponent(reason), {
+                                    method: 'POST',
+                                    headers: { [csrfHeader]: csrfToken }
+                                })
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        if (data.status === 'success') {
+                                            Toast.fire({ icon: 'success', title: data.message });
+                                            setTimeout(() => location.reload(), 1000);
+                                        } else {
+                                            Toast.fire({ icon: 'error', title: data.message });
+                                        }
+                                    });
+                            }
+                        });
+                    }
+
+                    window.deleteEvent = function (id, title) {
+                        Swal.fire({
+                            title: `Xóa sự kiện "${title}"?`,
+                            text: "Hành động này không thể hoàn tác!",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#d33',
+                            cancelButtonColor: '#3085d6',
+                            confirmButtonText: 'Đồng ý xóa',
+                            cancelButtonText: 'Hủy'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                                fetch('/api/events/' + id, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        [csrfHeader]: csrfToken
+                                    }
+                                })
+                                    .then(async response => {
+                                        if (response.ok) {
+                                            Swal.fire('Đã xóa!', 'Sự kiện đã được xóa thành công.', 'success')
+                                                .then(() => window.location.href = '/admin/events');
+                                        } else {
+                                            Swal.fire('Lỗi!', 'Xóa sự kiện thất bại.', 'error');
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        Swal.fire('Lỗi!', 'Đã xảy ra lỗi khi xóa sự kiện.', 'error');
+                                    });
+                            }
+                        });
+                    }
+                });
+            </script>
 
             <div class="row g-4">
                 <div class="col-lg-8">
@@ -69,13 +212,13 @@
                                 <span class="badge bg-primary-subtle text-primary fs-6 px-3"
                                     th:text="${event.categoryName}">Category</span>
                                 <span class="text-muted"><i class="bi bi-geo-alt me-1"></i> <span
-                                        th:text="${event.location}">Location</span></span>
+                                        th:text="${not #lists.isEmpty(event.eventOccurrences) ? event.eventOccurrences[0].provinceName : 'Chưa cập nhật'}">Location</span></span>
                             </div>
 
                             <h5 class="fw-bold mb-2">Mô tả sự kiện</h5>
-                            <p class="text-secondary mb-4" style="line-height: 1.6;" th:text="${event.description}">
+                            <div class="text-secondary mb-4" style="line-height: 1.6;" th:utext="${event.description}">
                                 Description...
-                            </p>
+                            </div>
                         </div>
                     </div>
 
@@ -116,26 +259,33 @@
                             <h6 class="fw-bold mb-0">Thời gian & Địa điểm</h6>
                         </div>
                         <div class="card-body p-4">
-                            <!-- Loop times if multiple, just showing first 3 for brevity if needed -->
-                            <div th:each="time : ${event.eventTimes}">
+                            <!-- Loop occurrences -->
+                            <div th:each="occ : ${event.eventOccurrences}">
                                 <div class="mb-3 border-bottom pb-3 last-no-border">
                                     <div class="text-muted small mb-1">Thời gian</div>
-                                    <div class="fw-medium text-dark">
+                                    <div class="fw-medium text-dark mb-2">
                                         <i class="bi bi-calendar-event me-2 text-primary"></i>
                                         <span
-                                            th:text="${#temporals.format(time.startTime, 'HH:mm dd/MM/yyyy')}">Start</span>
+                                            th:text="${#temporals.format(occ.startTime, 'HH:mm dd/MM/yyyy')}">Start</span>
                                         -
+                                        <span th:text="${#temporals.format(occ.endTime, 'HH:mm dd/MM/yyyy')}">End</span>
+                                    </div>
+                                    <div class="text-muted small mb-1">Địa điểm chi tiết</div>
+                                    <div class="fw-medium text-dark">
+                                        <i class="bi bi-geo-alt me-2 text-primary"></i>
                                         <span
-                                            th:text="${#temporals.format(time.endTime, 'HH:mm dd/MM/yyyy')}">End</span>
+                                            th:text="${occ.addressDetail} + ', ' + ${occ.wardName} + ', ' + ${occ.provinceName}">Full
+                                            Address</span>
+                                    </div>
+                                    <div th:if="${occ.mapLink}" class="mt-1">
+                                        <a th:href="${occ.mapLink}" target="_blank"
+                                            class="small text-decoration-none"><i class="bi bi-map-fill"></i> Xem bản
+                                            đồ</a>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="mt-3">
-                                <div class="text-muted small mb-1">Địa điểm</div>
-                                <div class="fw-medium text-dark"><i class="bi bi-geo-alt me-2 text-primary"></i> <span
-                                        th:text="${event.location}">Location</span></div>
-                            </div>
+
                         </div>
                     </div>
 

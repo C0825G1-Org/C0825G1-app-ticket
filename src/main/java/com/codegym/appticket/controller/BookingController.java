@@ -27,7 +27,9 @@ public class BookingController {
 
     // 1. Trang Form đặt vé
     @GetMapping("/book/{eventId}")
-    public String showForm(@PathVariable Long eventId, Model model) {
+    public String showForm(@PathVariable Long eventId, 
+                          @RequestParam Map<String, String> params,
+                          Model model) {
         String email = getCurrentUserEmail();
         Event event = bookingService.getEventById(eventId);
         List<TicketType> ticketTypes = bookingService.getTicketTypesByEventId(eventId);
@@ -40,8 +42,24 @@ public class BookingController {
             }
         }
 
+        // Extract pre-selected ticket quantities from URL parameters
+        Map<Long, Integer> preSelectedQuantities = new HashMap<>();
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            if (entry.getKey().startsWith("ticket_")) {
+                try {
+                    Long ticketTypeId = Long.parseLong(entry.getKey().replace("ticket_", ""));
+                    Integer quantity = Integer.parseInt(entry.getValue());
+                    if (quantity > 0) {
+                        preSelectedQuantities.put(ticketTypeId, quantity);
+                    }
+                } catch (NumberFormatException e) {
+                    // Ignore invalid parameters
+                }
+            }
+        }
         model.addAttribute("event", event);
         model.addAttribute("ticketTypes", ticketTypes);
+        model.addAttribute("preSelectedQuantities", preSelectedQuantities);
         return "booking/form";
     }
 
