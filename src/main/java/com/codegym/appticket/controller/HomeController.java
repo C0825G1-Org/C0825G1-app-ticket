@@ -38,6 +38,9 @@ public class HomeController {
         // Lấy top 4 upcoming events cho section "Sự kiện Sắp tới"
         List<UpComingEventDTO> upcomingEvents = eventService.findUpComingEvents();
         model.addAttribute("upcomingEvents", upcomingEvents);
+        
+        // Load categories for search dropdown
+        model.addAttribute("categories", eventCategoryService.findAll());
 
         return "home/index";
     }
@@ -76,7 +79,7 @@ public class HomeController {
         }
         
         // Use unified search method that returns HomeEventDTO
-        Page<HomeEventDTO> events = eventService.searchHomeEvents(search, category, location, page, size);
+        Page<HomeEventDTO> events = eventService.searchHomeEvents(search, category, location, page, size, sort);
         
         // Load all categories for filter sidebar
         model.addAttribute("categories", eventCategoryService.findAll());
@@ -103,5 +106,10 @@ public class HomeController {
         model.addAttribute("currentPage", "event-detail");
         
         return "home/event_detail";
+    }
+
+    @GetMapping("/contact")
+    public String contact() {
+        return "home/contact";
     }
 }

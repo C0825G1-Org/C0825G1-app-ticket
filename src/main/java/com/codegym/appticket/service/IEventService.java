@@ -35,5 +35,5 @@ public interface IEventService {
     List<UpComingEventDTO> findUpComingEvents();
     
     // Search events for home/public pages (returns HomeEventDTO for display)
-    Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location, int page, int size);
+    Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location,int page, int size, String sort);
 }

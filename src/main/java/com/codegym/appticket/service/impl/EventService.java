@@ -400,10 +400,10 @@ public class EventService implements IEventService {
     }
 
     @Override
-    public Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Sort sort = Sort.by(Sort.Direction.ASC, "startTime");
+    public Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location, int page, int size, String sort) {
+        // Sort in Java using Pageable
+        Sort sortOrder = Sort.by(Sort.Direction.ASC, "startTime");
+        Pageable pageable = PageRequest.of(page, size, sortOrder);
         return eventRepository.searchHomeEvents(searchText, categoryId, location, pageable);
     }
-
 }

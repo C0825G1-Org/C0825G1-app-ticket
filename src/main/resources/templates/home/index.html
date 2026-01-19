@@ -38,13 +38,13 @@
 
             <!-- Search Widget -->
             <div class="search-widget mx-auto text-start" style="max-width: 900px;">
-                <form class="row g-3">
-                    <div class="col-lg-5">
+                <form method="get" th:action="@{/event/search}" class="row g-3">
+                    <div class="col-lg-4">
                         <div class="input-group">
                             <span class="input-group-text bg-white border-end-0 rounded-start-4 ps-3">
                                 <i class="bi bi-search text-muted"></i>
                             </span>
-                            <input type="text" class="form-control form-control-lg border-start-0 ps-0"
+                            <input type="text" name="search" class="form-control form-control-lg border-start-0 ps-0"
                                 placeholder="Tìm kiếm sự kiện...">
                         </div>
                     </div>
@@ -53,21 +53,33 @@
                             <span class="input-group-text bg-white border-end-0 rounded-start-4 ps-3">
                                 <i class="bi bi-geo-alt text-muted"></i>
                             </span>
-                            <select class="form-select form-select-lg border-start-0 ps-0 bg-transparent">
-                                <option>Toàn quốc</option>
-                                <option>Hà Nội</option>
-                                <option>TP. HCM</option>
+                            <select name="location"
+                                class="form-select form-select-lg border-start-0 ps-0 bg-transparent">
+                                <option value="">Toàn quốc</option>
+                                <option value="Hà Nội">Hà Nội</option>
+                                <option value="Ho Chi Minh">TP. Hồ Chí Minh</option>
+                                <option value="Đà Nẵng">Đà Nẵng</option>
+                                <option value="Hải Phòng">Hải Phòng</option>
+                                <option value="Cần Thơ">Cần Thơ</option>
+                                <option value="Nha Trang">Nha Trang</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 rounded-start-4 ps-3">
+                                <i class="bi bi-tag text-muted"></i>
+                            </span>
+                            <select name="category"
+                                class="form-select form-select-lg border-start-0 ps-0 bg-transparent">
+                                <option value="">Tất cả danh mục</option>
+                                <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}">
+                                </option>
                             </select>
                         </div>
                     </div>
                     <div class="col-lg-2">
-                        <div class="input-group">
-                            <input type="date" class="form-control form-control-lg rounded-4 text-muted">
-                        </div>
-                    </div>
-                    <div class="col-lg-2">
-                        <button type="button" onclick="window.location.href='events.html'"
-                            class="btn btn-gradient btn-lg w-100 rounded-4 fw-bold h-100">
+                        <button type="submit" class="btn btn-gradient btn-lg w-100 rounded-4 fw-bold h-100">
                             Tìm
                         </button>
                     </div>

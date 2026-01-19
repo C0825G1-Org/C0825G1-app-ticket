@@ -134,7 +134,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
             LEFT JOIN ticket_types tt ON tt.event_id = e.id
             WHERE e.status = 'APPROVED'
             GROUP BY e.id, e.title, e.description, e.location, c.name
-            ORDER BY e.created_at ASC
+            ORDER BY MIN(et.start_time) ASC
         """,
         countQuery = """
             SELECT COUNT(DISTINCT e.id)
@@ -168,7 +168,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
               AND (:categoryId IS NULL OR e.category_id = :categoryId)
               AND (:location IS NULL OR e.location LIKE CONCAT('%', :location, '%'))
             GROUP BY e.id, e.title, e.description, e.location, c.name
-            ORDER BY e.created_at ASC
+            ORDER BY MIN(et.start_time) ASC
         """,
         countQuery = """
             SELECT COUNT(DISTINCT e.id)

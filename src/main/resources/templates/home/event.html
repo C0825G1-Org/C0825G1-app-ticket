@@ -84,7 +84,7 @@
                                         th:selected="${param.location != null and param.location[0] == 'Hà Nội'}">Hà Nội
                                     </option>
                                     <option value="Ho Chi Minh"
-                                        th:selected="${param.location != null and param.location[0] == 'Ho Chi Minh'}">TP.
+                                        th:selected="${param.location != null and param.location[0] == 'Ho Chi Minh'}">
                                         Hồ Chí Minh</option>
                                     <option value="Đà Nẵng"
                                         th:selected="${param.location != null and param.location[0] == 'Đà Nẵng'}">Đà
@@ -119,26 +119,29 @@
                                 kiện
                             </p>
                         </div>
-                        <div>
-                            <form method="get" th:action="@{/event/search}" class="d-inline">
-                                <!-- Preserve other filter params -->
-                                <input type="hidden" name="search" th:value="${param.search}">
-                                <input type="hidden" name="category" th:value="${param.category}">
-                                <input type="hidden" name="location" th:value="${param.location}">
+                        <!--                        <div>-->
+                        <!--                            <form method="get" th:action="@{/event/search}" class="d-inline">-->
+                        <!--                                &lt;!&ndash; Preserve other filter params &ndash;&gt;-->
+                        <!--                                <input type="hidden" name="search" th:value="${param.search}">-->
+                        <!--                                <input type="hidden" name="category" th:value="${param.category}">-->
+                        <!--                                <input type="hidden" name="location" th:value="${param.location}">-->
 
-                                <label for="sortBy" class="small text-muted me-2">Sắp xếp:</label>
-                                <select class="form-select form-select-sm d-inline-block w-auto" name="sort" id="sortBy"
-                                    onchange="this.form.submit()">
-                                    <option value="price-asc"
-                                        th:selected="${param.sort != null and param.sort[0] == 'price-asc'}">Giá thấp
-                                        đến cao
-                                    </option>
-                                    <option value="price-desc"
-                                        th:selected="${param.sort != null and param.sort[0] == 'price-desc'}">Giá cao
-                                        đến thấp</option>
-                                </select>
-                            </form>
-                        </div>
+                        <!--                                <label for="sortBy" class="small text-muted me-2">Sắp xếp:</label>-->
+
+                        <!--                                <select class="form-select" name="sortBy" onchange="this.form.submit()">-->
+                        <!--                                    <option value="" th:selected="${param.sort == null}">Mới nhất</option>-->
+                        <!--                                    <option value="price-asc"-->
+                        <!--                                        th:selected="${param.sort != null and param.sort[0] == 'price-asc'}">Giá-->
+                        <!--                                        thấp-->
+                        <!--                                        đến cao</option>-->
+                        <!--                                    <option value="price-desc"-->
+                        <!--                                        th:selected="${param.sort != null and param.sort[0] == 'price-desc'}">Giá-->
+                        <!--                                        cao-->
+                        <!--                                        đến thấp</option>-->
+                        <!--                                </select>-->
+
+                        <!--                            </form>-->
+                        <!--                        </div>-->
                     </div>
 
 
