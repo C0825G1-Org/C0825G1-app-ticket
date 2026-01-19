@@ -7,6 +7,7 @@ import com.codegym.appticket.dto.event.EventTimeDTO;
 import com.codegym.appticket.dto.event.EventUpdateDTO;
 import com.codegym.appticket.dto.event.TicketTypeDTO;
 import com.codegym.appticket.dto.home.HomeEventDTO;
+import com.codegym.appticket.dto.home.NearByEventDTO;
 import com.codegym.appticket.dto.home.TrendingEventDTO;
 import com.codegym.appticket.dto.home.UpComingEventDTO;
 import com.codegym.appticket.entity.Event;
@@ -405,5 +406,10 @@ public class EventService implements IEventService {
         Sort sortOrder = Sort.by(Sort.Direction.ASC, "startTime");
         Pageable pageable = PageRequest.of(page, size, sortOrder);
         return eventRepository.searchHomeEvents(searchText, categoryId, location, pageable);
+    }
+
+    @Override
+    public List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, int limit) {
+        return eventRepository.findNearbyEvents(userLatitude, userLongitude, limit);
     }
 }

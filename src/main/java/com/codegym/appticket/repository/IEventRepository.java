@@ -2,6 +2,7 @@ package com.codegym.appticket.repository;
 
 import com.codegym.appticket.dto.home.EventDetailDTO;
 import com.codegym.appticket.dto.home.HomeEventDTO;
+import com.codegym.appticket.dto.home.NearByEventDTO;
 import com.codegym.appticket.dto.home.TicketTypeDTO;
 import com.codegym.appticket.dto.home.TrendingEventDTO;
 import com.codegym.appticket.dto.home.UpComingEventDTO;
@@ -15,7 +16,6 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import com.codegym.appticket.entity.User;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -224,5 +224,40 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
             ORDER BY tt.price ASC
         """, nativeQuery = true)
     List<TicketTypeDTO> findTicketTypesByEventId(@Param("eventId") Long eventId);
+
+    @Query(value = """
+    SELECT 
+        e.id AS id,
+        e.title AS title,
+        e.location AS location,
+        (SELECT em.media_url 
+         FROM event_media em 
+         WHERE em.event_id = e.id 
+         ORDER BY em.created_at ASC 
+         LIMIT 1) AS image,
+        e.latitude AS latitude,
+        e.longitude AS longitude,
+        (6371 * acos(
+            cos(radians(:userLat)) * cos(radians(e.latitude)) * 
+            cos(radians(e.longitude) - radians(:userLon)) + 
+            sin(radians(:userLat)) * sin(radians(e.latitude))
+        )) AS distance,
+        c.name AS categoryName,
+        MIN(et.start_time) AS eventDate
+    FROM events e
+    LEFT JOIN event_categories c ON c.id = e.category_id
+    LEFT JOIN event_times et ON et.event_id = e.id
+    WHERE e.status = 'APPROVED'
+      AND e.latitude IS NOT NULL
+      AND e.longitude IS NOT NULL
+    GROUP BY e.id, e.title, e.location, e.latitude, e.longitude, c.name
+    ORDER BY distance ASC
+    LIMIT :limit
+    """, nativeQuery = true)
+    List<NearByEventDTO> findNearbyEvents(
+        @Param("userLat") Double userLatitude,
+        @Param("userLon") Double userLongitude,
+        @Param("limit") int limit
+    );
 }
 
