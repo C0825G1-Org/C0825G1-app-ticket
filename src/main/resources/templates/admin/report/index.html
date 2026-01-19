@@ -116,8 +116,9 @@
                     </div>
 
                     <div class="d-grid mt-3">
-                        <a th:href="@{/admin/reports/export(startDate=${startDate}, endDate=${endDate})}"
-                            class="btn btn-success"><i class="bi bi-file-earmark-spreadsheet"></i> Xuất Excel</a>
+                        <button type="button" id="btnExport" onclick="exportReportWithCharts()" class="btn btn-success">
+                            <i class="bi bi-file-earmark-spreadsheet"></i> Xuất Excel (Kèm Báo cáo)
+                        </button>
                     </div>
                 </div>
 
@@ -145,7 +146,8 @@
                                         <span
                                             th:class="${summary.revenueChange >= 0} ? 'text-white' : 'text-danger fw-bold'"
                                             class="badge bg-white bg-opacity-25"
-                                            th:text="${summary.revenueChange >= 0 ? '+' : ''} + ${#numbers.formatDecimal(summary.revenueChange, 1, 1)} + '%'">+15%</span>
+                                            th:text="${(summary.revenueChange >= 0 ? '↑ ' : '↓ ') + #numbers.formatDecimal(summary.revenueChange >= 0 ? summary.revenueChange : summary.revenueChange * -1, 1, 1)} + '%'">↑
+                                            15%</span>
                                     </div>
                                 </div>
                             </div>
@@ -167,7 +169,8 @@
                                         <span
                                             th:class="${summary.bookingsChange >= 0} ? 'text-white' : 'text-danger fw-bold'"
                                             class="badge bg-white bg-opacity-25"
-                                            th:text="${summary.bookingsChange >= 0 ? '+' : ''} + ${#numbers.formatDecimal(summary.bookingsChange, 1, 1)} + '%'">+8%</span>
+                                            th:text="${(summary.bookingsChange >= 0 ? '↑ ' : '↓ ') + #numbers.formatDecimal(summary.bookingsChange >= 0 ? summary.bookingsChange : summary.bookingsChange * -1, 1, 1)} + '%'">↑
+                                            8%</span>
                                     </div>
                                 </div>
                             </div>
@@ -189,7 +192,8 @@
                                         <span
                                             th:class="${summary.eventsChange >= 0} ? 'text-white' : 'text-danger fw-bold'"
                                             class="badge bg-white bg-opacity-25"
-                                            th:text="${summary.eventsChange >= 0 ? '+' : ''} + ${#numbers.formatDecimal(summary.eventsChange, 1, 1)} + '%'">+12%</span>
+                                            th:text="${(summary.eventsChange >= 0 ? '↑ ' : '↓ ') + #numbers.formatDecimal(summary.eventsChange >= 0 ? summary.eventsChange : summary.eventsChange * -1, 1, 1)} + '%'">↑
+                                            12%</span>
                                     </div>
                                 </div>
                             </div>
@@ -211,7 +215,8 @@
                                         <span
                                             th:class="${summary.usersChange >= 0} ? 'text-white' : 'text-danger fw-bold'"
                                             class="badge bg-white bg-opacity-25"
-                                            th:text="${summary.usersChange >= 0 ? '+' : ''} + ${#numbers.formatDecimal(summary.usersChange, 1, 1)} + '%'">+25%</span>
+                                            th:text="${(summary.usersChange >= 0 ? '↑ ' : '↓ ') + #numbers.formatDecimal(summary.usersChange >= 0 ? summary.usersChange : summary.usersChange * -1, 1, 1)} + '%'">↑
+                                            25%</span>
                                     </div>
                                 </div>
                             </div>
@@ -385,12 +390,42 @@
 
                     <!-- Chart.js -->
                     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-                    <script th:inline="javascript">
-                        /*<![CDATA[*/
-                        const revenueChartData = JSON.parse(/*[[${revenueChart}]]*/ '{}');
-                        const bookingChartData = JSON.parse(/*[[${bookingChart}]]*/ '{}');
-                        const categoryChartData = JSON.parse(/*[[${categoryChart}]]*/ '{}');
-                        const userChartData = JSON.parse(/*[[${userChart}]]*/ '{}');
+                    <!-- Hidden Data Container -->
+                    <div id="chartData" th:data-revenue="${revenueChart}" th:data-booking="${bookingChart}"
+                        th:data-category="${categoryChart}" th:data-user="${userChart}" style="display: none;"></div>
+
+                    <!-- Chart.js -->
+                    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                    <script>
+                        // DEBUG: Confirm script execution
+                        // console.log('Script starting...');
+                        // alert('Script starting...');
+
+                        const dataDiv = document.getElementById('chartData');
+
+                        let revenueChartData = {}, bookingChartData = {}, categoryChartData = {}, userChartData = {};
+
+                        try {
+                            const revAttr = dataDiv.getAttribute('data-revenue');
+                            // console.log('Raw Revenue Attr:', revAttr);
+
+                            if (revAttr && revAttr !== '{}') {
+                                revenueChartData = JSON.parse(revAttr);
+                            }
+
+                            bookingChartData = JSON.parse(dataDiv.getAttribute('data-booking') || '{}');
+                            categoryChartData = JSON.parse(dataDiv.getAttribute('data-category') || '{}');
+                            userChartData = JSON.parse(dataDiv.getAttribute('data-user') || '{}');
+
+                            // console.log('Parsed Revenue Data:', revenueChartData);
+
+                            if (!revenueChartData.labels || revenueChartData.labels.length === 0) {
+                                console.warn("Chart Data Empty");
+                            }
+                        } catch (e) {
+                            console.error('JSON Parse Error:', e);
+                            alert('Lỗi dữ liệu biểu đồ: ' + e.message);
+                        }
 
                         // --- Common Options ---
                         const commonOptions = {
@@ -401,8 +436,11 @@
                             }
                         };
 
+                        // Register global instances
+                        window.reportCharts = {};
+
                         // 1. Revenue Chart (Line)
-                        new Chart(document.getElementById('revenueChart'), {
+                        window.reportCharts.revenue = new Chart(document.getElementById('revenueChart'), {
                             type: 'line',
                             data: {
                                 labels: revenueChartData.labels,
@@ -425,7 +463,7 @@
                         });
 
                         // 2. Category Chart (Doughnut)
-                        new Chart(document.getElementById('categoryChart'), {
+                        window.reportCharts.category = new Chart(document.getElementById('categoryChart'), {
                             type: 'doughnut',
                             data: {
                                 labels: categoryChartData.labels,
@@ -443,7 +481,7 @@
                         });
 
                         // 3. Booking Chart (Bar)
-                        new Chart(document.getElementById('bookingChart'), {
+                        window.reportCharts.booking = new Chart(document.getElementById('bookingChart'), {
                             type: 'bar',
                             data: {
                                 labels: bookingChartData.labels,
@@ -458,7 +496,7 @@
                         });
 
                         // 4. User Growth Chart (Area)
-                        new Chart(document.getElementById('userChart'), {
+                        window.reportCharts.user = new Chart(document.getElementById('userChart'), {
                             type: 'line',
                             data: {
                                 labels: userChartData.labels,
@@ -474,6 +512,15 @@
                             options: commonOptions
                         });
                         /*]]>*/
+
+                        function exportReportWithCharts() {
+                            const startDate = "[[${startDate}]]";
+                            const endDate = "[[${endDate}]]";
+                            const compareType = document.querySelector('input[name="compareType"]:checked').value;
+
+                            // Redirect to GET endpoint
+                            window.location.href = `/admin/reports/export?startDate=${startDate}&endDate=${endDate}&compareType=${compareType}`;
+                        }
                     </script>
                 </div>
             </div>

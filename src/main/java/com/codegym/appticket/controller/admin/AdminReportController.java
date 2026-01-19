@@ -24,7 +24,7 @@ import java.time.temporal.ChronoUnit;
 public class AdminReportController {
 
     private final IReportService reportService;
-    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules();
 
     @GetMapping
     public String index(
@@ -108,17 +108,15 @@ public class AdminReportController {
         
         // Charts Data
         // Charts Data
+        // Charts Data
+        // Charts Data
         try {
             model.addAttribute("revenueChart", objectMapper.writeValueAsString(reportService.getRevenueChart(startDate, endDate, periodType)));
             model.addAttribute("bookingChart", objectMapper.writeValueAsString(reportService.getBookingChart(startDate, endDate, periodType)));
             model.addAttribute("categoryChart", objectMapper.writeValueAsString(reportService.getEventCategoryChart()));
             model.addAttribute("userChart", objectMapper.writeValueAsString(reportService.getUserGrowthChart(startDate, endDate, periodType)));
-        } catch (Exception e) {
-            e.printStackTrace();
-            model.addAttribute("revenueChart", "{}");
-            model.addAttribute("bookingChart", "{}");
-            model.addAttribute("categoryChart", "{}");
-            model.addAttribute("userChart", "{}");
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize chart data", e);
         }
 
         // Top Lists
@@ -137,12 +135,20 @@ public class AdminReportController {
     @GetMapping("/export")
     public ResponseEntity<InputStreamResource> export(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String compareType) {
         
         if (startDate == null) startDate = LocalDate.now().withDayOfMonth(1);
         if (endDate == null) endDate = LocalDate.now();
 
-        ByteArrayInputStream in = reportService.exportReportToExcel(startDate, endDate);
+        // Determine Comparison Type & Period Type
+        IReportService.ComparisonType comparison = IReportService.ComparisonType.PREVIOUS_PERIOD;
+        if ("same_period_last_year".equals(compareType)) {
+            comparison = IReportService.ComparisonType.SAME_PERIOD_LAST_YEAR;
+        }
+
+        // Generate Excel with Native Charts
+        ByteArrayInputStream in = reportService.createNativeExcelReport(startDate, endDate, comparison);
 
         String filename = "report_" + startDate.format(DateTimeFormatter.BASIC_ISO_DATE) + "_" + endDate.format(DateTimeFormatter.BASIC_ISO_DATE) + ".xlsx";
 

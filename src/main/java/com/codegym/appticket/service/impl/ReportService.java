@@ -43,10 +43,15 @@ public class ReportService implements IReportService {
             prevStart = start.minusYears(1);
             prevEnd = end.minusYears(1);
         } else {
-            // Default: Previous Period (Classic)
-            long days = ChronoUnit.DAYS.between(start, end) + 1;
-            prevStart = start.minusDays(days);
-            prevEnd = end.minusDays(days);
+            // Refactored Logic: Previous Period
+            // 1. Calculate duration (number of days)
+            long duration = ChronoUnit.DAYS.between(start, end) + 1;
+            
+            // 2. prevEndDate = startDate - 1 day
+            prevEnd = start.minusDays(1);
+            
+            // 3. prevStartDate = prevEndDate - duration + 1 day
+            prevStart = prevEnd.minusDays(duration - 1);
         }
 
         var prevData = getPeriodData(prevStart, prevEnd);
@@ -191,10 +196,15 @@ public class ReportService implements IReportService {
     }
 
     @Override
-    public ByteArrayInputStream exportReportToExcel(LocalDate start, LocalDate end) {
+    public ByteArrayInputStream exportReportToExcel(LocalDate start, LocalDate end, Map<String, String> chartImages) {
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             // Sheet 1: Summary
-            createSummarySheet(workbook, start, end);
+            Sheet summarySheet = createSummarySheet(workbook, start, end);
+            
+            // Insert Charts if available
+            if (chartImages != null && !chartImages.isEmpty()) {
+                insertCharts(workbook, summarySheet, chartImages);
+            }
             
             // Sheet 2: Top Events
             createTopEventsSheet(workbook, start, end);
@@ -246,7 +256,7 @@ public class ReportService implements IReportService {
         }
     }
 
-    private void createSummarySheet(Workbook workbook, LocalDate start, LocalDate end) {
+    private Sheet createSummarySheet(Workbook workbook, LocalDate start, LocalDate end) {
         Sheet sheet = workbook.createSheet("Summary");
         Row header = sheet.createRow(0);
         header.createCell(0).setCellValue("Metric");
@@ -270,6 +280,62 @@ public class ReportService implements IReportService {
         }
         sheet.autoSizeColumn(0);
         sheet.autoSizeColumn(1);
+        return sheet;
+    }
+
+    private void insertCharts(Workbook workbook, Sheet sheet, Map<String, String> chartImages) {
+        Drawing<?> drawing = sheet.createDrawingPatriarch();
+        
+        // Configuration for image placement
+        // Grid layout: 2 columns, rows after summary
+        // Row start: 10
+        int startRow = 8;
+        int colWidth = 8; // Number of cols (Approx width)
+        int rowHeight = 15; // Number of rows
+        
+        // Chart placement config: Key -> [col1, row1, col2, row2]
+        // But simpler: just position them sequentially
+        String[] order = {"revenueChart", "categoryChart", "bookingChart", "userChart"};
+        
+        int currentRow = startRow;
+        int currentCol = 0;
+        
+        for (String chartId : order) {
+             String base64 = chartImages.get(chartId);
+             if (base64 == null) continue;
+             
+             try {
+                 // Remove header "data:image/png;base64,"
+                 String cleanBase64 = base64.split(",")[1];
+                 byte[] bytes = Base64.getDecoder().decode(cleanBase64);
+                 
+                 int pictureIdx = workbook.addPicture(bytes, Workbook.PICTURE_TYPE_PNG);
+                 ClientAnchor anchor = workbook.getCreationHelper().createClientAnchor();
+                 
+                 // Position
+                 anchor.setCol1(currentCol);
+                 anchor.setRow1(currentRow);
+                 anchor.setCol2(currentCol + colWidth);
+                 anchor.setRow2(currentRow + rowHeight);
+                 
+                 drawing.createPicture(anchor, pictureIdx);
+                 
+                 // Update position for next chart (2x2 grid attempt)
+                 // Or just vertical stack? 2x2 is nicer.
+                 // let's do: 0,row -> 8,row+15
+                 // next: 9,row -> 17,row+15
+                 
+                 if (currentCol == 0) {
+                     currentCol = colWidth + 1; // Move right
+                 } else {
+                     currentCol = 0; // Move left
+                     currentRow += rowHeight + 1; // Move down
+                 }
+                 
+             } catch (Exception e) {
+                 System.err.println("Failed to insert chart: " + chartId + " error: " + e.getMessage());
+             }
+        }
     }
 
     private void createTopEventsSheet(Workbook workbook, LocalDate start, LocalDate end) {
@@ -306,5 +372,170 @@ public class ReportService implements IReportService {
             row.createCell(3).setCellValue(org.getEventCount());
             row.createCell(4).setCellValue(org.getTotalRevenue() != null ? org.getTotalRevenue().toString() : "0");
         }
+    }
+
+
+    @Override
+    public ByteArrayInputStream createNativeExcelReport(LocalDate start, LocalDate end, ComparisonType comparison) {
+        try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            
+            // 1. Fetch Data
+            long daysDiff = ChronoUnit.DAYS.between(start, end);
+            PeriodType periodType = (daysDiff > 31) ? PeriodType.MONTH : PeriodType.DAY;
+            
+            ChartDataDTO revenueData = getRevenueChart(start, end, periodType);
+            ChartDataDTO bookingData = getBookingChart(start, end, periodType);
+            ChartDataDTO userData = getUserGrowthChart(start, end, periodType);
+            ChartDataDTO categoryData = getEventCategoryChart();
+
+            // 2. Create "Data" Sheet (Hidden)
+            // Storing raw data in a separate sheet for charts to reference
+            org.apache.poi.xssf.usermodel.XSSFSheet dataSheet = workbook.createSheet("ChartData");
+            // Hide the data sheet to keep it clean
+            // workbook.setSheetHidden(workbook.getSheetIndex(dataSheet), true); 
+            
+            int timeSeriesRows = fillTimeSeriesData(dataSheet, revenueData, bookingData, userData);
+            int categoryRows = fillCategoryData(dataSheet, categoryData);
+            
+            // 3. Create "Summary" Sheet
+            org.apache.poi.xssf.usermodel.XSSFSheet summarySheet = (org.apache.poi.xssf.usermodel.XSSFSheet) createSummarySheet(workbook, start, end);
+            
+            // 4. Create Native Charts on Summary Sheet
+            createNativeCharts(summarySheet, dataSheet, timeSeriesRows, categoryRows);
+
+            // 5. Other Sheets
+            createTopEventsSheet(workbook, start, end);
+            createTopOrganizersSheet(workbook, start, end);
+
+            workbook.write(out);
+            return new ByteArrayInputStream(out.toByteArray());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to create Excel report", e);
+        }
+    }
+
+    // --- Native Excel Helper Methods ---
+
+    private int fillTimeSeriesData(Sheet sheet, ChartDataDTO revenue, ChartDataDTO booking, ChartDataDTO user) {
+        Row header = sheet.createRow(0);
+        header.createCell(0).setCellValue("Date");
+        header.createCell(1).setCellValue("Revenue");
+        header.createCell(2).setCellValue("Bookings");
+        header.createCell(3).setCellValue("New Users");
+
+        List<String> labels = revenue.getLabels();
+        int rows = labels.size();
+        
+        for (int i = 0; i < rows; i++) {
+            Row row = sheet.getRow(i + 1) != null ? sheet.getRow(i + 1) : sheet.createRow(i + 1);
+            row.createCell(0).setCellValue(labels.get(i));
+            row.createCell(1).setCellValue(revenue.getData().get(i).doubleValue());
+            row.createCell(2).setCellValue(booking.getData().get(i).doubleValue());
+            row.createCell(3).setCellValue(user.getData().get(i).doubleValue());
+        }
+        return rows;
+    }
+
+    private int fillCategoryData(Sheet sheet, ChartDataDTO category) {
+        Row header = sheet.getRow(0); // Assumed created
+        header.createCell(5).setCellValue("Category");
+        header.createCell(6).setCellValue("Count");
+
+        List<String> labels = category.getLabels();
+        int rows = labels.size();
+
+        for (int i = 0; i < rows; i++) {
+            Row row = sheet.getRow(i + 1) != null ? sheet.getRow(i + 1) : sheet.createRow(i + 1);
+            row.createCell(5).setCellValue(labels.get(i));
+            row.createCell(6).setCellValue(category.getData().get(i).doubleValue());
+        }
+        return rows;
+    }
+
+    private void createNativeCharts(org.apache.poi.xssf.usermodel.XSSFSheet summarySheet, org.apache.poi.xssf.usermodel.XSSFSheet dataSheet, int timeRows, int categoryRows) {
+        org.apache.poi.xssf.usermodel.XSSFDrawing drawing = summarySheet.createDrawingPatriarch();
+        
+        // 1. Revenue Chart (Line) - Position: C8 to I20
+        createLineChart(drawing, dataSheet, "Revenue Stats", 0, 1, timeRows, 2, 8, 8, 20);
+
+        // 2. Booking Chart (Bar) - Position: J8 to P20
+        createBarChart(drawing, dataSheet, "Booking Stats", 0, 2, timeRows, 9, 8, 15, 20);
+
+        // 3. Category Chart (Pie) - Position: C22 to I34
+        createPieChart(drawing, dataSheet, "Event Categories", 5, 6, categoryRows, 2, 22, 8, 34);
+        
+        // 4. User Growth Chart (Line) - Position: J22 to P34
+        createLineChart(drawing, dataSheet, "User Growth", 0, 3, timeRows, 9, 22, 15, 34);
+    }
+
+    private void createLineChart(org.apache.poi.xssf.usermodel.XSSFDrawing drawing, org.apache.poi.xssf.usermodel.XSSFSheet dataSheet, 
+                                 String title, int xCol, int yCol, int rows,
+                                 int col1, int row1, int col2, int row2) {
+        org.apache.poi.xssf.usermodel.XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, col1, row1, col2, row2);
+        org.apache.poi.xddf.usermodel.chart.XDDFChart chart = drawing.createChart(anchor);
+        chart.setTitleText(title);
+        chart.setTitleOverlay(false);
+
+        // Legend
+        org.apache.poi.xddf.usermodel.chart.XDDFChartLegend legend = chart.getOrAddLegend();
+        legend.setPosition(org.apache.poi.xddf.usermodel.chart.LegendPosition.BOTTOM);
+
+        // Data Sources
+        org.apache.poi.xddf.usermodel.chart.XDDFDataSource<String> xs = org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromStringCellRange(dataSheet, new org.apache.poi.ss.util.CellRangeAddress(1, rows, xCol, xCol));
+        org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource<Double> ys = org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromNumericCellRange(dataSheet, new org.apache.poi.ss.util.CellRangeAddress(1, rows, yCol, yCol));
+
+        // Axis
+        org.apache.poi.xddf.usermodel.chart.XDDFCategoryAxis bottomAxis = chart.createCategoryAxis(org.apache.poi.xddf.usermodel.chart.AxisPosition.BOTTOM);
+        org.apache.poi.xddf.usermodel.chart.XDDFValueAxis leftAxis = chart.createValueAxis(org.apache.poi.xddf.usermodel.chart.AxisPosition.LEFT);
+        
+        // Data
+        org.apache.poi.xddf.usermodel.chart.XDDFLineChartData data = (org.apache.poi.xddf.usermodel.chart.XDDFLineChartData) chart.createData(org.apache.poi.xddf.usermodel.chart.ChartTypes.LINE, bottomAxis, leftAxis);
+        org.apache.poi.xddf.usermodel.chart.XDDFLineChartData.Series series = (org.apache.poi.xddf.usermodel.chart.XDDFLineChartData.Series) data.addSeries(xs, ys);
+        series.setTitle(title, null);
+        series.setSmooth(true);
+        series.setMarkerStyle(org.apache.poi.xddf.usermodel.chart.MarkerStyle.NONE);
+
+        chart.plot(data);
+    }
+
+    private void createBarChart(org.apache.poi.xssf.usermodel.XSSFDrawing drawing, org.apache.poi.xssf.usermodel.XSSFSheet dataSheet, 
+                                String title, int xCol, int yCol, int rows,
+                                int col1, int row1, int col2, int row2) {
+        org.apache.poi.xssf.usermodel.XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, col1, row1, col2, row2);
+        org.apache.poi.xddf.usermodel.chart.XDDFChart chart = drawing.createChart(anchor);
+        chart.setTitleText(title);
+        chart.setTitleOverlay(false);
+        
+        org.apache.poi.xddf.usermodel.chart.XDDFCategoryAxis bottomAxis = chart.createCategoryAxis(org.apache.poi.xddf.usermodel.chart.AxisPosition.BOTTOM);
+        org.apache.poi.xddf.usermodel.chart.XDDFValueAxis leftAxis = chart.createValueAxis(org.apache.poi.xddf.usermodel.chart.AxisPosition.LEFT);
+
+        org.apache.poi.xddf.usermodel.chart.XDDFDataSource<String> xs = org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromStringCellRange(dataSheet, new org.apache.poi.ss.util.CellRangeAddress(1, rows, xCol, xCol));
+        org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource<Double> ys = org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromNumericCellRange(dataSheet, new org.apache.poi.ss.util.CellRangeAddress(1, rows, yCol, yCol));
+
+        org.apache.poi.xddf.usermodel.chart.XDDFBarChartData data = (org.apache.poi.xddf.usermodel.chart.XDDFBarChartData) chart.createData(org.apache.poi.xddf.usermodel.chart.ChartTypes.BAR, bottomAxis, leftAxis);
+        data.setBarDirection(org.apache.poi.xddf.usermodel.chart.BarDirection.COL);
+        
+        org.apache.poi.xddf.usermodel.chart.XDDFBarChartData.Series series = (org.apache.poi.xddf.usermodel.chart.XDDFBarChartData.Series) data.addSeries(xs, ys);
+        series.setTitle(title, null);
+        
+        chart.plot(data);
+    }
+
+    private void createPieChart(org.apache.poi.xssf.usermodel.XSSFDrawing drawing, org.apache.poi.xssf.usermodel.XSSFSheet dataSheet, 
+                                String title, int xCol, int yCol, int rows,
+                                int col1, int row1, int col2, int row2) {
+        org.apache.poi.xssf.usermodel.XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, col1, row1, col2, row2);
+        org.apache.poi.xddf.usermodel.chart.XDDFChart chart = drawing.createChart(anchor);
+        chart.setTitleText(title);
+        chart.setTitleOverlay(false);
+
+        org.apache.poi.xddf.usermodel.chart.XDDFDataSource<String> xs = org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromStringCellRange(dataSheet, new org.apache.poi.ss.util.CellRangeAddress(1, rows, xCol, xCol));
+        org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource<Double> ys = org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromNumericCellRange(dataSheet, new org.apache.poi.ss.util.CellRangeAddress(1, rows, yCol, yCol));
+
+        org.apache.poi.xddf.usermodel.chart.XDDFChartData data = chart.createData(org.apache.poi.xddf.usermodel.chart.ChartTypes.DOUGHNUT, null, null);
+        data.setVaryColors(true);
+        data.addSeries(xs, ys);
+        
+        chart.plot(data);
     }
 }
