@@ -80,24 +80,73 @@
                                 <h6 class="fw-bold mb-3">Địa điểm</h6>
                                 <select class="form-select" name="location">
                                     <option value="" th:selected="${param.location == null}">Toàn quốc</option>
-                                    <option value="Hà Nội"
-                                        th:selected="${param.location != null and param.location[0] == 'Hà Nội'}">Hà Nội
-                                    </option>
-                                    <option value="Ho Chi Minh"
-                                        th:selected="${param.location != null and param.location[0] == 'Ho Chi Minh'}">
-                                        Hồ Chí Minh</option>
-                                    <option value="Đà Nẵng"
-                                        th:selected="${param.location != null and param.location[0] == 'Đà Nẵng'}">Đà
-                                        Nẵng</option>
-                                    <option value="Hải Phòng"
-                                        th:selected="${param.location != null and param.location[0] == 'Hải Phòng'}">Hải
-                                        Phòng</option>
-                                    <option value="Cần Thơ"
-                                        th:selected="${param.location != null and param.location[0] == 'Cần Thơ'}">Cần
-                                        Thơ</option>
-                                    <option value="Nha Trang"
-                                        th:selected="${param.location != null and param.location[0] == 'Nha Trang'}">Nha
-                                        Trang</option>
+
+                                    <!-- Thành phố trực thuộc TW -->
+                                    <option value="Hà Nội" th:selected="${param.location != null and param.location[0] == 'Hà Nội'}">Hà Nội</option>
+                                    <option value="Hồ Chí Minh" th:selected="${param.location != null and param.location[0] == 'Hồ Chí Minh'}">TP. Hồ Chí Minh</option>
+                                    <option value="Đà Nẵng" th:selected="${param.location != null and param.location[0] == 'Đà Nẵng'}">Đà Nẵng</option>
+                                    <option value="Hải Phòng" th:selected="${param.location != null and param.location[0] == 'Hải Phòng'}">Hải Phòng</option>
+                                    <option value="Cần Thơ" th:selected="${param.location != null and param.location[0] == 'Cần Thơ'}">Cần Thơ</option>
+
+                                    <!-- Miền Bắc -->
+                                    <option value="An Giang" th:selected="${param.location != null and param.location[0] == 'An Giang'}">An Giang</option>
+                                    <option value="Bà Rịa - Vũng Tàu" th:selected="${param.location != null and param.location[0] == 'Bà Rịa - Vũng Tàu'}">Bà Rịa - Vũng Tàu</option>
+                                    <option value="Bắc Giang" th:selected="${param.location != null and param.location[0] == 'Bắc Giang'}">Bắc Giang</option>
+                                    <option value="Bắc Kạn" th:selected="${param.location != null and param.location[0] == 'Bắc Kạn'}">Bắc Kạn</option>
+                                    <option value="Bạc Liêu" th:selected="${param.location != null and param.location[0] == 'Bạc Liêu'}">Bạc Liêu</option>
+                                    <option value="Bắc Ninh" th:selected="${param.location != null and param.location[0] == 'Bắc Ninh'}">Bắc Ninh</option>
+                                    <option value="Bến Tre" th:selected="${param.location != null and param.location[0] == 'Bến Tre'}">Bến Tre</option>
+                                    <option value="Bình Định" th:selected="${param.location != null and param.location[0] == 'Bình Định'}">Bình Định</option>
+                                    <option value="Bình Dương" th:selected="${param.location != null and param.location[0] == 'Bình Dương'}">Bình Dương</option>
+                                    <option value="Bình Phước" th:selected="${param.location != null and param.location[0] == 'Bình Phước'}">Bình Phước</option>
+                                    <option value="Bình Thuận" th:selected="${param.location != null and param.location[0] == 'Bình Thuận'}">Bình Thuận</option>
+                                    <option value="Cà Mau" th:selected="${param.location != null and param.location[0] == 'Cà Mau'}">Cà Mau</option>
+                                    <option value="Cao Bằng" th:selected="${param.location != null and param.location[0] == 'Cao Bằng'}">Cao Bằng</option>
+                                    <option value="Đắk Lắk" th:selected="${param.location != null and param.location[0] == 'Đắk Lắk'}">Đắk Lắk</option>
+                                    <option value="Đắk Nông" th:selected="${param.location != null and param.location[0] == 'Đắk Nông'}">Đắk Nông</option>
+                                    <option value="Điện Biên" th:selected="${param.location != null and param.location[0] == 'Điện Biên'}">Điện Biên</option>
+                                    <option value="Đồng Nai" th:selected="${param.location != null and param.location[0] == 'Đồng Nai'}">Đồng Nai</option>
+                                    <option value="Đồng Tháp" th:selected="${param.location != null and param.location[0] == 'Đồng Tháp'}">Đồng Tháp</option>
+                                    <option value="Gia Lai" th:selected="${param.location != null and param.location[0] == 'Gia Lai'}">Gia Lai</option>
+                                    <option value="Hà Giang" th:selected="${param.location != null and param.location[0] == 'Hà Giang'}">Hà Giang</option>
+                                    <option value="Hà Nam" th:selected="${param.location != null and param.location[0] == 'Hà Nam'}">Hà Nam</option>
+                                    <option value="Hà Tĩnh" th:selected="${param.location != null and param.location[0] == 'Hà Tĩnh'}">Hà Tĩnh</option>
+                                    <option value="Hải Dương" th:selected="${param.location != null and param.location[0] == 'Hải Dương'}">Hải Dương</option>
+                                    <option value="Hậu Giang" th:selected="${param.location != null and param.location[0] == 'Hậu Giang'}">Hậu Giang</option>
+                                    <option value="Hòa Bình" th:selected="${param.location != null and param.location[0] == 'Hòa Bình'}">Hòa Bình</option>
+                                    <option value="Hưng Yên" th:selected="${param.location != null and param.location[0] == 'Hưng Yên'}">Hưng Yên</option>
+                                    <option value="Khánh Hòa" th:selected="${param.location != null and param.location[0] == 'Khánh Hòa'}">Khánh Hòa</option>
+                                    <option value="Kiên Giang" th:selected="${param.location != null and param.location[0] == 'Kiên Giang'}">Kiên Giang</option>
+                                    <option value="Kon Tum" th:selected="${param.location != null and param.location[0] == 'Kon Tum'}">Kon Tum</option>
+                                    <option value="Lai Châu" th:selected="${param.location != null and param.location[0] == 'Lai Châu'}">Lai Châu</option>
+                                    <option value="Lâm Đồng" th:selected="${param.location != null and param.location[0] == 'Lâm Đồng'}">Lâm Đồng</option>
+                                    <option value="Lạng Sơn" th:selected="${param.location != null and param.location[0] == 'Lạng Sơn'}">Lạng Sơn</option>
+                                    <option value="Lào Cai" th:selected="${param.location != null and param.location[0] == 'Lào Cai'}">Lào Cai</option>
+                                    <option value="Long An" th:selected="${param.location != null and param.location[0] == 'Long An'}">Long An</option>
+                                    <option value="Nam Định" th:selected="${param.location != null and param.location[0] == 'Nam Định'}">Nam Định</option>
+                                    <option value="Nghệ An" th:selected="${param.location != null and param.location[0] == 'Nghệ An'}">Nghệ An</option>
+                                    <option value="Ninh Bình" th:selected="${param.location != null and param.location[0] == 'Ninh Bình'}">Ninh Bình</option>
+                                    <option value="Ninh Thuận" th:selected="${param.location != null and param.location[0] == 'Ninh Thuận'}">Ninh Thuận</option>
+                                    <option value="Phú Thọ" th:selected="${param.location != null and param.location[0] == 'Phú Thọ'}">Phú Thọ</option>
+                                    <option value="Phú Yên" th:selected="${param.location != null and param.location[0] == 'Phú Yên'}">Phú Yên</option>
+                                    <option value="Quảng Bình" th:selected="${param.location != null and param.location[0] == 'Quảng Bình'}">Quảng Bình</option>
+                                    <option value="Quảng Nam" th:selected="${param.location != null and param.location[0] == 'Quảng Nam'}">Quảng Nam</option>
+                                    <option value="Quảng Ngãi" th:selected="${param.location != null and param.location[0] == 'Quảng Ngãi'}">Quảng Ngãi</option>
+                                    <option value="Quảng Ninh" th:selected="${param.location != null and param.location[0] == 'Quảng Ninh'}">Quảng Ninh</option>
+                                    <option value="Quảng Trị" th:selected="${param.location != null and param.location[0] == 'Quảng Trị'}">Quảng Trị</option>
+                                    <option value="Sóc Trăng" th:selected="${param.location != null and param.location[0] == 'Sóc Trăng'}">Sóc Trăng</option>
+                                    <option value="Sơn La" th:selected="${param.location != null and param.location[0] == 'Sơn La'}">Sơn La</option>
+                                    <option value="Tây Ninh" th:selected="${param.location != null and param.location[0] == 'Tây Ninh'}">Tây Ninh</option>
+                                    <option value="Thái Bình" th:selected="${param.location != null and param.location[0] == 'Thái Bình'}">Thái Bình</option>
+                                    <option value="Thái Nguyên" th:selected="${param.location != null and param.location[0] == 'Thái Nguyên'}">Thái Nguyên</option>
+                                    <option value="Thanh Hóa" th:selected="${param.location != null and param.location[0] == 'Thanh Hóa'}">Thanh Hóa</option>
+                                    <option value="Thừa Thiên Huế" th:selected="${param.location != null and param.location[0] == 'Thừa Thiên Huế'}">Thừa Thiên Huế</option>
+                                    <option value="Tiền Giang" th:selected="${param.location != null and param.location[0] == 'Tiền Giang'}">Tiền Giang</option>
+                                    <option value="Trà Vinh" th:selected="${param.location != null and param.location[0] == 'Trà Vinh'}">Trà Vinh</option>
+                                    <option value="Tuyên Quang" th:selected="${param.location != null and param.location[0] == 'Tuyên Quang'}">Tuyên Quang</option>
+                                    <option value="Vĩnh Long" th:selected="${param.location != null and param.location[0] == 'Vĩnh Long'}">Vĩnh Long</option>
+                                    <option value="Vĩnh Phúc" th:selected="${param.location != null and param.location[0] == 'Vĩnh Phúc'}">Vĩnh Phúc</option>
+                                    <option value="Yên Bái" th:selected="${param.location != null and param.location[0] == 'Yên Bái'}">Yên Bái</option>
                                 </select>
                             </div>
 
@@ -144,10 +193,68 @@
                         <!--                        </div>-->
                     </div>
 
-
                     <!-- Events List (using fragment) -->
                     <div th:replace="~{home/event_fragment :: eventList(${events})}"></div>
 
+                    <!-- Sidebar sự kiện gần -->
+                    <!-- Sự kiện gần bạn - Hiển thị theo hàng ngang -->
+                    <div class="mt-5">
+                        <div class="mb-4">
+                            <h4 class="fw-bold mb-1">
+                                <i class="bi bi-geo-fill text-primary"></i>
+                                Sự kiện gần bạn
+                            </h4>
+                            <p class="text-muted mb-0" th:if="${param.location != null and !param.location[0].isEmpty()}">
+                                Sự kiện gần <strong th:text="${param.location[0]}">địa điểm</strong>
+                            </p>
+                            <p class="text-muted mb-0" th:if="${param.location == null or param.location[0].isEmpty()}">
+                                Vui lòng chọn địa điểm để xem sự kiện gần bạn
+                            </p>
+                        </div>
+                        <!-- Danh sách sự kiện theo hàng ngang -->
+                        <div th:if="${nearbyEvents != null and !nearbyEvents.isEmpty()}">
+                            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
+                                <div th:each="event : ${nearbyEvents}" class="col">
+                                    <div class="card h-100 shadow-sm nearby-event-card"
+                                         th:onclick="'window.location.href=\'/event/' + ${event.id} + '\''"
+                                         style="cursor: pointer; transition: transform 0.2s;">
+                                        <!-- Hình ảnh sự kiện -->
+                                        <img th:src="${event.image != null and !event.image.isEmpty()} ? ${event.image} : 'https://via.placeholder.com/300x200'"
+                                             th:alt="${event.title}"
+                                             class="card-img-top"
+                                             style="height: 150px; object-fit: cover;">
+
+                                        <!-- Nội dung -->
+                                        <div class="card-body p-3">
+                                            <h6 class="fw-bold mb-2 text-truncate"
+                                                th:text="${event.title}">Event Title</h6>
+
+                                            <p class="mb-2 small text-muted">
+                                                <i class="bi bi-geo-alt-fill text-primary"></i>
+                                                <span th:text="${event.location}">Location</span>
+                                            </p>
+
+                                            <div class="d-flex gap-1 flex-wrap">
+                            <span class="badge bg-success">
+                                <i class="bi bi-pin-map-fill"></i>
+                                <span th:text="${#numbers.formatDecimal(event.distance, 1, 1)} + ' km'">0.0 km</span>
+                            </span>
+                                                <span th:if="${event.categoryName != null}"
+                                                      class="badge bg-secondary"
+                                                      th:text="${event.categoryName}">Category</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Không có sự kiện -->
+                        <div th:if="${nearbyEvents == null or nearbyEvents.isEmpty()}"
+                             class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            Không có sự kiện nào gần bạn
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

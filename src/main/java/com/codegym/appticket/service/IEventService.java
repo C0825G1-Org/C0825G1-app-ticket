@@ -5,6 +5,7 @@ import com.codegym.appticket.dto.event.EventDTO;
 import com.codegym.appticket.dto.event.EventSearchDTO;
 import com.codegym.appticket.dto.event.EventUpdateDTO;
 import com.codegym.appticket.dto.home.HomeEventDTO;
+import com.codegym.appticket.dto.home.NearByEventDTO;
 import com.codegym.appticket.dto.home.TrendingEventDTO;
 import com.codegym.appticket.dto.home.UpComingEventDTO;
 import com.codegym.appticket.entity.Event;
@@ -34,11 +35,10 @@ public interface IEventService {
     List<TrendingEventDTO> findTopTrendingEvents();
 
     List<UpComingEventDTO> findUpComingEvents();
+    
+    Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location,int page, int size, String sort);
 
-    // Search events for home/public pages (returns HomeEventDTO for display)
-    // Search events for home/public pages (returns HomeEventDTO for display)
-    Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location, int page, int size,
-            String sort);
+    List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, int limit);
 
     // User/Organizer methods
     org.springframework.data.domain.Page<Event> findEventsByOrganizer(com.codegym.appticket.entity.User organizer,

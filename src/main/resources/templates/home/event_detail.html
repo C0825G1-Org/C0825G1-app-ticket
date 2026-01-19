@@ -242,7 +242,25 @@
         // Form submit
         document.getElementById('ticketForm').addEventListener('submit', function (e) {
             e.preventDefault();
-            alert('Chức năng đặt vé đang được phát triển!');
+
+            // Get event ID from URL
+            const pathParts = window.location.pathname.split('/');
+            const eventId = pathParts[pathParts.length - 1];
+
+            // Build URL with ticket quantities
+            const params = new URLSearchParams();
+            let hasTickets = false;
+
+            for (const [ticketId, quantity] of Object.entries(ticketQuantities)) {
+                if (quantity > 0) {
+                    params.append('ticket_' + ticketId, quantity);
+                    hasTickets = true;
+                }
+            }
+
+            if (hasTickets) {
+                window.location.href = '/bookings/book/' + eventId + '?' + params.toString();
+            }
         });
     </script>
 </body>

@@ -7,6 +7,7 @@ import com.codegym.appticket.dto.event.EventMediaDTO;
 import com.codegym.appticket.dto.event.EventUpdateDTO;
 import com.codegym.appticket.dto.event.TicketTypeDTO;
 import com.codegym.appticket.dto.home.HomeEventDTO;
+import com.codegym.appticket.dto.home.NearByEventDTO;
 import com.codegym.appticket.dto.home.TrendingEventDTO;
 import com.codegym.appticket.dto.home.UpComingEventDTO;
 import com.codegym.appticket.dto.event.EventOccurrenceDTO;
@@ -39,6 +40,7 @@ import java.util.HashSet;
 import java.util.Set;
 import com.codegym.appticket.service.IEventService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -80,10 +82,9 @@ public class EventService implements IEventService {
                 return eventRepository.findAllEvent(PageRequest.of(page, size, sort));
         }
 
-        @Override
-        @Transactional(readOnly = true)
-        public Page<EventDTO> search(EventSearchDTO dto,
-                        Pageable pageable) {
+    @Override
+        public org.springframework.data.domain.Page<EventDTO> search(com.codegym.appticket.dto.event.EventSearchDTO dto,
+                        org.springframework.data.domain.Pageable pageable) {
                 java.time.LocalDateTime start = dto.getStartDate() != null ? dto.getStartDate().atStartOfDay() : null;
                 java.time.LocalDateTime end = dto.getEndDate() != null
                                 ? dto.getEndDate().atTime(java.time.LocalTime.MAX)
@@ -546,6 +547,7 @@ public class EventService implements IEventService {
                                 .location(event.getLocation())
                                 .categoryId(event.getCategory() != null ? event.getCategory().getId() : null)
                                 .categoryName(event.getCategory() != null ? event.getCategory().getName() : null)
+                                .categoryName(event.getCategory() != null ? event.getCategory().getName() : null)
                                 .createdById(event.getCreatedBy() != null ? event.getCreatedBy().getId() : null)
                                 .createdByName(event.getCreatedBy() != null ? event.getCreatedBy().getFullName() : null)
                                 .status(event.getStatus())
@@ -645,4 +647,9 @@ public class EventService implements IEventService {
                 // We can add logic to save reason later or send notification
                 eventRepository.save(event);
         }
+
+    @Override
+    public List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, int limit) {
+        return eventRepository.findNearbyEvents(userLatitude, userLongitude, limit);
+    }
 }
