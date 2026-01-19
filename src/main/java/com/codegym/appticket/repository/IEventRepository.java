@@ -345,5 +345,32 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
         @Param("excludeLocation") String excludeLocation,
         @Param("limit") int limit
     );
+
+    @Query(value = """
+    SELECT 
+        e.id AS id,
+        e.title AS title,
+        p.name AS location,
+        (SELECT em.media_url FROM event_media em 
+         WHERE em.event_id = e.id 
+         ORDER BY em.created_at ASC LIMIT 1) AS image,
+        c.name AS categoryName,
+        MIN(eo.start_time) AS eventDate
+    FROM events e
+    LEFT JOIN event_categories c ON c.id = e.category_id
+    LEFT JOIN event_occurrences eo ON eo.event_id = e.id
+    LEFT JOIN locations l ON l.id = eo.location_id
+    LEFT JOIN wards w ON w.code = l.ward_code
+    LEFT JOIN provinces p ON p.code = w.province_code
+    WHERE e.status = 'APPROVED'
+      AND p.name IN :nearbyProvinces
+    GROUP BY e.id, e.title, p.name, c.name
+    ORDER BY MIN(eo.start_time) ASC
+    LIMIT :limit
+    """, nativeQuery = true)
+    List<NearByEventDTO> findEventsByProvinces(
+            @Param("nearbyProvinces") List<String> nearbyProvinces,
+            @Param("limit") int limit
+    );
 }
 

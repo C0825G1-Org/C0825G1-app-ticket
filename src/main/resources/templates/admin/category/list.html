@@ -117,18 +117,38 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-end">
-                                        <div class="btn-group" role="group">
+                                        <div class="d-flex justify-content-end gap-1">
+<!--                                            <a th:href="@{/admin/categories/{id}/edit(id=${category.id})}"-->
+<!--                                                class="btn btn-sm btn-outline-primary rounded-start-3"-->
+<!--                                                title="Chỉnh sửa">-->
+<!--                                                <i class="bi bi-pencil"></i>-->
+<!--                                            </a>-->
+<!--                                            <button type="button" class="btn btn-sm btn-outline-danger rounded-end-3"-->
+<!--                                                data-bs-toggle="modal"-->
+<!--                                                th:data-bs-target="'#deleteModal' + ${category.id}" title="Xóa">-->
+<!--                                                <i class="bi bi-trash"></i>-->
+<!--                                            </button>-->
+
+                                            <!-- Nút Edit -->
                                             <a th:href="@{/admin/categories/{id}/edit(id=${category.id})}"
-                                                class="btn btn-sm btn-outline-primary rounded-start-3"
-                                                title="Chỉnh sửa">
+                                               class="btn btn-sm btn-light border rounded-3"
+                                               title="Chỉnh sửa">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger rounded-end-3"
-                                                data-bs-toggle="modal"
-                                                th:data-bs-target="'#deleteModal' + ${category.id}" title="Xóa">
+
+                                            <!-- Nút Delete -->
+                                            <button type="button"
+                                                    class="btn btn-sm btn-light border text-danger rounded-3"
+                                                    data-bs-toggle="modal"
+                                                    th:data-bs-target="'#deleteModal' + ${category.id}"
+                                                    th:data-id="${category.id}"
+                                                    th:data-name="${category.name}"
+                                                    title="Xóa">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
+
+
 
                                         <!-- Delete Confirmation Modal -->
                                         <div class="modal fade" th:id="'deleteModal' + ${category.id}" tabindex="-1">
