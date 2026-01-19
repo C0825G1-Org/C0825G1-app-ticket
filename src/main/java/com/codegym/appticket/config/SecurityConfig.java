@@ -45,7 +45,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 // Enable CSRF for standard web application security
-                .csrf((csrf) -> csrf.disable()) 
+                // .csrf((csrf) -> csrf.disable()) 
                 .authorizeHttpRequests((authorizeHttpRequests) ->
                         authorizeHttpRequests
                                 .requestMatchers("/", "/login", "/register", "/forgot-password", "/verify-forgot-password", "/reset-password", "/verify-otp", "/error/**").permitAll()
