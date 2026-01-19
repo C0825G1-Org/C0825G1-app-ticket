@@ -112,7 +112,6 @@ public class HomeController {
     public String contact() {
         return "home/contact";
     }
-
     @GetMapping("/403")
     public String showAccessDenied() {
         return "error/403";

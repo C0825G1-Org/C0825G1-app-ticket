@@ -4,5 +4,6 @@ public enum EventStatus {
     PENDING,
     APPROVED,
     REJECTED,
-    CANCELLED
+    CANCELLED,
+    DELETED
 }

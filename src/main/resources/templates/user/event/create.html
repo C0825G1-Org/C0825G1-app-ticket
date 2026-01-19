@@ -17,7 +17,7 @@
                     <h4 class="fw-bold mb-0">Tạo sự kiện mới</h4>
                     <p class="text-muted small mb-0">Nhập thông tin chi tiết để tạo sự kiện mới</p>
                 </div>
-                <a th:href="@{/admin/events}" class="btn btn-outline-secondary rounded-3">
+                <a th:href="@{/user/events}" class="btn btn-outline-secondary rounded-3">
                     <i class="bi bi-arrow-left me-2"></i> Quay lại
                 </a>
             </div>
@@ -69,16 +69,7 @@
                                         <div class="text-danger small error-message" id="error-title"></div>
                                     </div>
 
-                                    <div class="mb-3">
-                                        <label class="form-label fw-medium">Nhà tổ chức (Tùy chọn)</label>
-                                        <select class="form-select form-select-lg" name="organizerId">
-                                            <option value="">-- Mặc định (Người tạo) --</option>
-                                            <option th:each="org : ${organizers}" th:value="${org.id}"
-                                                th:text="${org.fullName + ' (' + org.email + ')'}">Organizer</option>
-                                        </select>
-                                        <div class="form-text text-muted">Nếu để trống, bạn sẽ được set là người tổ
-                                            chức.</div>
-                                    </div>
+                                    <!-- Organizer Section Removed for User: Automaticaly set to self -->
 
                                     <div class="mb-3">
                                         <label class="form-label fw-medium">Danh mục <span
@@ -356,7 +347,7 @@
                                         [csrfHeader]: csrfToken
                                     };
 
-                                    const response = await fetch('/admin/events/create', {
+                                    const response = await fetch('/user/events/create', {
                                         method: 'POST',
                                         headers: headers,
                                         body: searchParams // Sends application/x-www-form-urlencoded

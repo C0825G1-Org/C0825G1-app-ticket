@@ -32,8 +32,20 @@ public interface IEventService {
     void delete(Long id);
 
     List<TrendingEventDTO> findTopTrendingEvents();
+
     List<UpComingEventDTO> findUpComingEvents();
-    
+
     // Search events for home/public pages (returns HomeEventDTO for display)
-    Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location,int page, int size, String sort);
+    // Search events for home/public pages (returns HomeEventDTO for display)
+    Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location, int page, int size,
+            String sort);
+
+    // User/Organizer methods
+    org.springframework.data.domain.Page<Event> findEventsByOrganizer(com.codegym.appticket.entity.User organizer,
+            Pageable pageable);
+
+    // Approval Flow
+    void approve(Long id);
+
+    void reject(Long id, String reason);
 }
