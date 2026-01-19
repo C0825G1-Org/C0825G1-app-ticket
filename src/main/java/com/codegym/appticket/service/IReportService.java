@@ -33,5 +33,7 @@ public interface IReportService {
 
     List<TopOrganizerDTO> getTopOrganizers(LocalDate start, LocalDate end, int limit);
 
-    ByteArrayInputStream exportReportToExcel(LocalDate start, LocalDate end);
+    ByteArrayInputStream exportReportToExcel(LocalDate start, LocalDate end, java.util.Map<String, String> chartImages);
+    
+    ByteArrayInputStream createNativeExcelReport(LocalDate startDate, LocalDate endDate, ComparisonType comparison);
 }
