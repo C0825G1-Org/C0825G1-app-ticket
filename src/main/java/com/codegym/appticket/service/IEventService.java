@@ -8,6 +8,8 @@ import com.codegym.appticket.dto.home.HomeEventDTO;
 import com.codegym.appticket.dto.home.TrendingEventDTO;
 import com.codegym.appticket.dto.home.UpComingEventDTO;
 import com.codegym.appticket.entity.Event;
+import com.codegym.appticket.entity.EventStatus;
+import com.codegym.appticket.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -48,4 +50,8 @@ public interface IEventService {
     void approve(Long id);
 
     void reject(Long id, String reason);
+
+    long countByStatus(EventStatus status);
+
+    long countAll();
 }

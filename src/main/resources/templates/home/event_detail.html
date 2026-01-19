@@ -91,7 +91,9 @@
                     </div>
                     <div class="badge bg-white bg-opacity-25 text-white rounded-pill px-3 py-2">
                         <i class="bi bi-geo-alt me-2"></i>
-                        <span th:text="${event.location}">SVĐ QK7, TP. HCM</span>
+                        <span
+                            th:text="${not #lists.isEmpty(event.eventOccurrences) ? event.eventOccurrences[0].provinceName : 'Chưa cập nhật'}">SVĐ
+                            QK7, TP. HCM</span>
                     </div>
                 </div>
             </div>

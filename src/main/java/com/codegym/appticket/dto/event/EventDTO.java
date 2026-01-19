@@ -16,7 +16,7 @@ public class EventDTO {
     private Long id;
     private String title;
     private String description;
-    private String location;
+
     private Long categoryId;
     private String categoryName;
     private Long createdById;

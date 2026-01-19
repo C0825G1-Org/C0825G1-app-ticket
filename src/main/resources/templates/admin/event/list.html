@@ -17,18 +17,67 @@
             </div>
 
             <!-- Stats Cards (Static Mockup for now) -->
+            <!-- Stats Cards -->
             <div class="row g-4 mb-4">
-                <div class="col-md-3">
-                    <div class="card border-0 shadow-sm rounded-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card border-0 shadow-sm rounded-4 h-100">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <div class="text-muted small mb-1">Tổng sự kiện</div>
-                                    <h3 class="fw-bold mb-0" th:text="${events != null ? events.totalElements : 0}">0
-                                    </h3>
+                                    <div class="text-muted small mb-1 fw-bold text-uppercase">Tổng sự kiện</div>
+                                    <h3 class="fw-bold mb-0 text-dark" th:text="${totalEvents}">0</h3>
                                 </div>
-                                <div class="bg-primary-subtle text-primary rounded-circle p-3">
+                                <div class="bg-primary-subtle text-primary rounded-circle p-3 d-flex align-items-center justify-content-center"
+                                    style="width: 50px; height: 50px;">
                                     <i class="bi bi-calendar-event fs-4"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="card border-0 shadow-sm rounded-4 h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small mb-1 fw-bold text-uppercase">Chờ duyệt</div>
+                                    <h3 class="fw-bold mb-0 text-warning" th:text="${pendingCount}">0</h3>
+                                </div>
+                                <div class="bg-warning-subtle text-warning rounded-circle p-3 d-flex align-items-center justify-content-center"
+                                    style="width: 50px; height: 50px;">
+                                    <i class="bi bi-hourglass-split fs-4"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="card border-0 shadow-sm rounded-4 h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small mb-1 fw-bold text-uppercase">Đã duyệt</div>
+                                    <h3 class="fw-bold mb-0 text-success" th:text="${approvedCount}">0</h3>
+                                </div>
+                                <div class="bg-success-subtle text-success rounded-circle p-3 d-flex align-items-center justify-content-center"
+                                    style="width: 50px; height: 50px;">
+                                    <i class="bi bi-check-circle fs-4"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="card border-0 shadow-sm rounded-4 h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small mb-1 fw-bold text-uppercase">Từ chối / Hủy</div>
+                                    <h3 class="fw-bold mb-0 text-danger" th:text="${rejectedCount}">0</h3>
+                                </div>
+                                <div class="bg-danger-subtle text-danger rounded-circle p-3 d-flex align-items-center justify-content-center"
+                                    style="width: 50px; height: 50px;">
+                                    <i class="bi bi-x-circle fs-4"></i>
                                 </div>
                             </div>
                         </div>
@@ -99,7 +148,7 @@
                                             </div>
                                             <div>
                                                 <div class="fw-bold" th:text="${event.title}">Title</div>
-                                                <div class="small text-muted" th:text="${event.location}">Location</div>
+
                                             </div>
                                         </div>
                                     </td>

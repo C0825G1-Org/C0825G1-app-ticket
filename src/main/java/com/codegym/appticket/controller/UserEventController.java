@@ -108,7 +108,7 @@ public class UserEventController {
         EventUpdateDTO updateDTO = new EventUpdateDTO();
         updateDTO.setTitle(eventDTO.getTitle());
         updateDTO.setDescription(eventDTO.getDescription());
-        updateDTO.setLocation(eventDTO.getLocation());
+        // updateDTO.setLocation(eventDTO.getLocation()); // Removed location
         updateDTO.setCategoryId(eventDTO.getCategoryId());
         updateDTO.setStatus(eventDTO.getStatus());
         updateDTO.setBannerUrl(

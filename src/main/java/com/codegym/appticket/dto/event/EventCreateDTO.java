@@ -25,10 +25,6 @@ public class EventCreateDTO {
     @Size(min = 50, message = "Mô tả phải có ít nhất 50 ký tự")
     private String description;
 
-    @NotBlank(message = "Địa điểm không được để trống")
-    @Size(min = 5, max = 255, message = "Địa điểm phải từ 5 đến 255 ký tự")
-    private String location;
-
     @NotNull(message = "Danh mục sự kiện không được để trống")
     private Long categoryId;
 
