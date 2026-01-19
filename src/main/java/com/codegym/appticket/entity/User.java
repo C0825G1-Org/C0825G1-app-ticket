@@ -2,6 +2,8 @@ package com.codegym.appticket.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.LastModifiedBy;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -13,6 +15,14 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User extends Parent {
+
+    @CreatedBy
+    @Column(name = "created_by")
+    private String createdBy;
+
+    @LastModifiedBy
+    @Column(name = "last_modified_by")
+    private String lastModifiedBy;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,6 +57,18 @@ public class User extends Parent {
 
     @Column(name = "enabled")
     private Boolean enabled = false; // Default false for new users (wait for OTP)
+
+    @Column(name = "locked_at")
+    private java.time.LocalDateTime lockedAt;
+
+    @Column(name = "lock_reason", columnDefinition = "TEXT")
+    private String lockReason;
+
+    @Column(name = "unlock_reason", columnDefinition = "TEXT")
+    private String unlockReason;
+
+    @Column(name = "delete_reason", columnDefinition = "TEXT")
+    private String deleteReason;
 
     @ManyToMany
     @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))

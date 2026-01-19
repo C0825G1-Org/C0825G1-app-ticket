@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{common/layout :: head('Đặt vé')}"></head>
+
+<body>
+    <div th:replace="~{common/layout :: user-layout(~{:: .booking-form})}">
+        <div class="booking-form container py-5">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-4">
+                            <h2 class="mb-4" th:text="${event.title}">Tên sự kiện</h2>
+                            <p class="text-muted" th:text="${event.location}"><i class="bi bi-geo-alt"></i> Địa điểm</p>
+                            <hr>
+
+                            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+                            <form th:action="@{/bookings/confirm}" method="post" id="bookingForm">
+                                <input type="hidden" name="eventId" th:value="${event.id}">
+
+                                <h5 class="mb-3">Chọn loại vé:</h5>
+                                <div th:each="tt : ${ticketTypes}" class="mb-3 p-3 border rounded">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-0" th:text="${tt.name}">Tên vé</h6>
+                                            <small class="text-primary"
+                                                th:text="${#numbers.formatDecimal(tt.price, 0, 'COMMA', 0, 'POINT')} + ' VND'"></small>
+                                            <br>
+                                            <small class="text-muted" th:text="'Còn lại: ' + ${tt.quantity}"></small>
+                                        </div>
+                                        <div style="width: 100px;">
+                                            <input type="number" th:name="'ticket_' + ${tt.id}"
+                                                class="form-control ticket-qty" value="0" min="0"
+                                                th:max="${tt.quantity}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2 mt-4">
+                                    <button type="submit" class="btn btn-primary btn-lg">Tiếp tục đặt vé</button>
+                                    <a th:href="@{/events/detail/{id}(id=${event.id})}"
+                                        class="btn btn-outline-secondary">Quay lại</a>
+                                </div>
+                            </form>
+
+                            <script>
+                                document.getElementById('bookingForm').addEventListener('submit', function (e) {
+                                    let total = 0;
+                                    document.querySelectorAll('.ticket-qty').forEach(input => {
+                                        total += parseInt(input.value) || 0;
+                                    });
+                                    if (total <= 0) {
+                                        e.preventDefault();
+                                        alert('Vui lòng chọn ít nhất một vé để tiếp tục.');
+                                    }
+                                });
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{common/layout :: head('Xác nhận đặt vé')}"></head>
+
+<body>
+    <div th:replace="~{common/layout :: user-layout(~{:: .booking-confirm})}">
+        <div class="booking-confirm container py-5">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-4 text-center">
+                            <h3 class="mb-4">Xác nhận thông tin đặt vé</h3>
+                            <div class="text-start mb-4">
+                                <p><strong>Sự kiện:</strong> <span th:text="${event.title}"></span></p>
+                                <p><strong>Địa điểm:</strong> <span th:text="${event.location}"></span></p>
+                                <hr>
+                                <h6>Danh sách vé đã chọn:</h6>
+                                <div th:each="entry : ${selectedTickets}" class="d-flex justify-content-between mb-2">
+                                    <span th:text="${entry.key.name} + ' (x' + ${entry.value} + ')'"></span>
+                                    <span
+                                        th:text="${#numbers.formatDecimal(entry.key.price * entry.value, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                                </div>
+                            </div>
+
+                            <form th:action="@{/bookings/save}" method="post">
+                                <input type="hidden" name="eventId" th:value="${event.id}">
+                                <th:block th:each="entry : ${selectedTickets}">
+                                    <input type="hidden" th:name="'ticket_' + ${entry.key.id}"
+                                        th:value="${entry.value}">
+                                </th:block>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-success btn-lg">Xác nhận và Thanh toán</button>
+                                    <button type="button" class="btn btn-outline-secondary"
+                                        onclick="history.back()">Quay lại chỉnh sửa</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

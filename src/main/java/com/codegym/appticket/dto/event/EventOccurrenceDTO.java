@@ -22,11 +22,17 @@ public class EventOccurrenceDTO {
     private LocalDateTime endTime;
 
     // Flattened Location Info
-    @NotBlank(message = "Tỉnh/Thành phố không được để trống")
-    private String provinceCity;
+    // Codes are required for mapping
+    @NotBlank(message = "Vui lòng chọn Tỉnh/Thành phố")
+    private String provinceCode;
+    private String provinceName; // To save if new
 
-    @NotBlank(message = "Quận/Huyện không được để trống")
-    private String wardCommune;
+    private String districtCode; // Frontend use only
+    private String districtName; // Frontend use only
+
+    @NotBlank(message = "Vui lòng chọn Phường/Xã")
+    private String wardCode;
+    private String wardName; // To save if new
 
     @NotBlank(message = "Địa chỉ chi tiết không được để trống")
     private String addressDetail;

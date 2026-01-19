@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khám phá Sự kiện - EventPro</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <th:block th:replace="~{common/styles :: styles}"></th:block>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <div th:replace="~{common/header :: public-navbar}"></div>
+
+    <!-- Breadcrumb & Page Title -->
+    <section class="mt-5 pt-5 py-4 bg-light border-bottom">
+        <div class="container-xl">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-2">
+                    <li class="breadcrumb-item"><a th:href="@{/}" class="text-decoration-none">Trang chủ</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Sự kiện</li>
+                </ol>
+            </nav>
+            <h1 class="display-6 fw-bold mb-0">Khám phá Sự kiện</h1>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row">
+                <!-- Left Sidebar - Filters -->
+                <div class="col-lg-3 mb-4">
+                    <div class="sticky-top" style="top: 100px;">
+                        <!-- Filter Form -->
+                        <form method="get" th:action="@{/event/search}" id="filterForm">
+                            <!-- Search Box -->
+                            <div class="mb-4">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0">
+                                        <i class="bi bi-search text-muted"></i>
+                                    </span>
+                                    <input type="text" class="form-control border-start-0 ps-0"
+                                        placeholder="Tìm kiếm..." name="search"
+                                        th:value="${param.search != null ? param.search[0] : ''}">
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary btn-sm flex-fill mt-2">
+                                        <i class="bi bi-search me-1"></i> Tìm kiếm
+                                    </button>
+                                    <a th:href="@{/events}" class="btn btn-primary btn-sm flex-fill mt-2">
+                                        <i class="bi bi-x-circle me-1"></i> Xóa
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Category Filter -->
+                            <div class="mb-4">
+                                <h6 class="fw-bold mb-3">Danh mục</h6>
+                                <select class="form-select" name="category">
+                                    <option value="" th:selected="${param.category == null}">Tất cả danh mục</option>
+                                    <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"
+                                        th:selected="${param.category != null and param.category[0] == cat.id.toString()}">
+                                        Âm nhạc
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Location Filter -->
+                            <div class="mb-4">
+                                <h6 class="fw-bold mb-3">Địa điểm</h6>
+                                <select class="form-select" name="location">
+                                    <option value="" th:selected="${param.location == null}">Toàn quốc</option>
+                                    <option value="Hà Nội"
+                                        th:selected="${param.location != null and param.location[0] == 'Hà Nội'}">Hà Nội
+                                    </option>
+                                    <option value="Ho Chi Minh"
+                                        th:selected="${param.location != null and param.location[0] == 'Ho Chi Minh'}">
+                                        Hồ Chí Minh</option>
+                                    <option value="Đà Nẵng"
+                                        th:selected="${param.location != null and param.location[0] == 'Đà Nẵng'}">Đà
+                                        Nẵng</option>
+                                    <option value="Hải Phòng"
+                                        th:selected="${param.location != null and param.location[0] == 'Hải Phòng'}">Hải
+                                        Phòng</option>
+                                    <option value="Cần Thơ"
+                                        th:selected="${param.location != null and param.location[0] == 'Cần Thơ'}">Cần
+                                        Thơ</option>
+                                    <option value="Nha Trang"
+                                        th:selected="${param.location != null and param.location[0] == 'Nha Trang'}">Nha
+                                        Trang</option>
+                                </select>
+                            </div>
+
+                            <!-- Hidden field to preserve page on filter change -->
+                            <input type="hidden" name="page" value="0">
+
+                            <!-- NO TIME FILTER per requirement -->
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Right Content - Events List -->
+                <div class="col-lg-9">
+                    <!-- Results Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <p class="text-muted mb-0">
+                                Tìm thấy <strong th:text="${events != null ? events.totalElements : 0}">24</strong> sự
+                                kiện
+                            </p>
+                        </div>
+                        <!--                        <div>-->
+                        <!--                            <form method="get" th:action="@{/event/search}" class="d-inline">-->
+                        <!--                                &lt;!&ndash; Preserve other filter params &ndash;&gt;-->
+                        <!--                                <input type="hidden" name="search" th:value="${param.search}">-->
+                        <!--                                <input type="hidden" name="category" th:value="${param.category}">-->
+                        <!--                                <input type="hidden" name="location" th:value="${param.location}">-->
+
+                        <!--                                <label for="sortBy" class="small text-muted me-2">Sắp xếp:</label>-->
+
+                        <!--                                <select class="form-select" name="sortBy" onchange="this.form.submit()">-->
+                        <!--                                    <option value="" th:selected="${param.sort == null}">Mới nhất</option>-->
+                        <!--                                    <option value="price-asc"-->
+                        <!--                                        th:selected="${param.sort != null and param.sort[0] == 'price-asc'}">Giá-->
+                        <!--                                        thấp-->
+                        <!--                                        đến cao</option>-->
+                        <!--                                    <option value="price-desc"-->
+                        <!--                                        th:selected="${param.sort != null and param.sort[0] == 'price-desc'}">Giá-->
+                        <!--                                        cao-->
+                        <!--                                        đến thấp</option>-->
+                        <!--                                </select>-->
+
+                        <!--                            </form>-->
+                        <!--                        </div>-->
+                    </div>
+
+
+                    <!-- Events List (using fragment) -->
+                    <div th:replace="~{home/event_fragment :: eventList(${events})}"></div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer th:replace="~{common/footer :: footer}"></footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

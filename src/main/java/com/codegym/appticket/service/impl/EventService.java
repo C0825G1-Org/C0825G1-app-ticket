@@ -6,6 +6,9 @@ import com.codegym.appticket.dto.event.EventMediaDTO;
 
 import com.codegym.appticket.dto.event.EventUpdateDTO;
 import com.codegym.appticket.dto.event.TicketTypeDTO;
+import com.codegym.appticket.dto.home.HomeEventDTO;
+import com.codegym.appticket.dto.home.TrendingEventDTO;
+import com.codegym.appticket.dto.home.UpComingEventDTO;
 import com.codegym.appticket.entity.Event;
 import com.codegym.appticket.entity.EventCategory;
 import com.codegym.appticket.entity.EventMedia;
@@ -17,6 +20,11 @@ import com.codegym.appticket.repository.IEventRepository;
 
 import com.codegym.appticket.service.IEventService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +38,8 @@ public class EventService implements IEventService {
         private final IEventRepository eventRepository;
         private final IEventCategoryRepository eventCategoryRepository;
         private final com.codegym.appticket.repository.ILocationRepository locationRepository;
+        private final com.codegym.appticket.repository.IProvinceRepository provinceRepository;
+        private final com.codegym.appticket.repository.IWardRepository wardRepository;
         private final IEventMediaRepository eventMediaRepository;
         private final com.codegym.appticket.repository.ITicketTypeRepository ticketTypeRepository;
         private final AdminNotificationService adminNotificationService;
@@ -38,6 +48,12 @@ public class EventService implements IEventService {
         public org.springframework.data.domain.Page<EventDTO> findAll(
                         org.springframework.data.domain.Pageable pageable) {
                 return eventRepository.findAll(pageable).map(this::convertToDTO);
+        }
+
+        @Override
+        public Page<HomeEventDTO> findAllEvent(int size, int page) {
+                Sort sort = Sort.by(Sort.Direction.ASC, "startTime");
+                return eventRepository.findAllEvent(PageRequest.of(size, page, sort));
         }
 
         @Override
@@ -86,22 +102,40 @@ public class EventService implements IEventService {
 
                 Event savedEvent = eventRepository.save(event);
 
-                // Tạo EventOccurrences (New Logic)
+                // Create EventOccurrences (New Logic)
                 if (dto.getEventOccurrences() != null && !dto.getEventOccurrences().isEmpty()) {
                         List<com.codegym.appticket.entity.EventOccurrence> occurrences = dto.getEventOccurrences()
                                         .stream()
                                         .map(occDTO -> {
-                                                // Create or Reuse Location
+                                                // 1. Handle Province
+                                                com.codegym.appticket.entity.Province province = provinceRepository
+                                                                .findById(occDTO.getProvinceCode())
+                                                                .orElseGet(() -> {
+                                                                        com.codegym.appticket.entity.Province newProv = new com.codegym.appticket.entity.Province();
+                                                                        newProv.setCode(occDTO.getProvinceCode());
+                                                                        newProv.setName(occDTO.getProvinceName());
+                                                                        return provinceRepository.save(newProv);
+                                                                });
+
+                                                // 2. Handle Ward
+                                                com.codegym.appticket.entity.Ward ward = wardRepository
+                                                                .findById(occDTO.getWardCode())
+                                                                .orElseGet(() -> {
+                                                                        com.codegym.appticket.entity.Ward newWard = new com.codegym.appticket.entity.Ward();
+                                                                        newWard.setCode(occDTO.getWardCode());
+                                                                        newWard.setName(occDTO.getWardName());
+                                                                        newWard.setProvince(province);
+                                                                        return wardRepository.save(newWard);
+                                                                });
+
+                                                // 3. Create or Reuse Location
                                                 com.codegym.appticket.entity.Location location = locationRepository
-                                                                .findByProvinceCityAndWardCommuneAndAddressDetail(
-                                                                                occDTO.getProvinceCity(),
-                                                                                occDTO.getWardCommune(),
+                                                                .findByWardCodeAndAddressDetail(
+                                                                                occDTO.getWardCode(),
                                                                                 occDTO.getAddressDetail())
                                                                 .orElseGet(() -> {
                                                                         com.codegym.appticket.entity.Location newLoc = new com.codegym.appticket.entity.Location();
-                                                                        newLoc.setProvinceCity(
-                                                                                        occDTO.getProvinceCity());
-                                                                        newLoc.setWardCommune(occDTO.getWardCommune());
+                                                                        newLoc.setWard(ward);
                                                                         newLoc.setAddressDetail(
                                                                                         occDTO.getAddressDetail());
                                                                         newLoc.setMapLink(occDTO.getMapLink());
@@ -221,17 +255,35 @@ public class EventService implements IEventService {
                         List<com.codegym.appticket.entity.EventOccurrence> newOccurrences = dto.getEventOccurrences()
                                         .stream()
                                         .map(occDTO -> {
-                                                // Create or Reuse Location
+                                                // 1. Handle Province
+                                                com.codegym.appticket.entity.Province province = provinceRepository
+                                                                .findById(occDTO.getProvinceCode())
+                                                                .orElseGet(() -> {
+                                                                        com.codegym.appticket.entity.Province newProv = new com.codegym.appticket.entity.Province();
+                                                                        newProv.setCode(occDTO.getProvinceCode());
+                                                                        newProv.setName(occDTO.getProvinceName());
+                                                                        return provinceRepository.save(newProv);
+                                                                });
+
+                                                // 2. Handle Ward
+                                                com.codegym.appticket.entity.Ward ward = wardRepository
+                                                                .findById(occDTO.getWardCode())
+                                                                .orElseGet(() -> {
+                                                                        com.codegym.appticket.entity.Ward newWard = new com.codegym.appticket.entity.Ward();
+                                                                        newWard.setCode(occDTO.getWardCode());
+                                                                        newWard.setName(occDTO.getWardName());
+                                                                        newWard.setProvince(province);
+                                                                        return wardRepository.save(newWard);
+                                                                });
+
+                                                // 3. Create or Reuse Location
                                                 com.codegym.appticket.entity.Location location = locationRepository
-                                                                .findByProvinceCityAndWardCommuneAndAddressDetail(
-                                                                                occDTO.getProvinceCity(),
-                                                                                occDTO.getWardCommune(),
+                                                                .findByWardCodeAndAddressDetail(
+                                                                                occDTO.getWardCode(),
                                                                                 occDTO.getAddressDetail())
                                                                 .orElseGet(() -> {
                                                                         com.codegym.appticket.entity.Location newLoc = new com.codegym.appticket.entity.Location();
-                                                                        newLoc.setProvinceCity(
-                                                                                        occDTO.getProvinceCity());
-                                                                        newLoc.setWardCommune(occDTO.getWardCommune());
+                                                                        newLoc.setWard(ward);
                                                                         newLoc.setAddressDetail(
                                                                                         occDTO.getAddressDetail());
                                                                         newLoc.setMapLink(occDTO.getMapLink());
@@ -367,15 +419,26 @@ public class EventService implements IEventService {
                 // Convert EventOccurrences
                 List<com.codegym.appticket.dto.event.EventOccurrenceDTO> occurrenceDTOs = event.getEventOccurrences()
                                 .stream()
-                                .map(occ -> com.codegym.appticket.dto.event.EventOccurrenceDTO.builder()
-                                                .id(occ.getId())
-                                                .startTime(occ.getStartTime())
-                                                .endTime(occ.getEndTime())
-                                                .provinceCity(occ.getLocation().getProvinceCity())
-                                                .wardCommune(occ.getLocation().getWardCommune())
-                                                .addressDetail(occ.getLocation().getAddressDetail())
-                                                .mapLink(occ.getLocation().getMapLink())
-                                                .build())
+                                .map(occ -> {
+                                        String provinceName = occ.getLocation().getWard().getProvince().getName();
+                                        String wardName = occ.getLocation().getWard().getName();
+                                        // District is not stored, so we cant restore it fully for DTO,
+                                        // but for FE display we map names.
+                                        // NOTE: Updating FE to load API data will require handling empty defaults
+                                        // unless we pass names.
+                                        return com.codegym.appticket.dto.event.EventOccurrenceDTO.builder()
+                                                        .id(occ.getId())
+                                                        .startTime(occ.getStartTime())
+                                                        .endTime(occ.getEndTime())
+                                                        .provinceCode(occ.getLocation().getWard().getProvince()
+                                                                        .getCode())
+                                                        .provinceName(provinceName)
+                                                        .wardCode(occ.getLocation().getWard().getCode())
+                                                        .wardName(wardName)
+                                                        .addressDetail(occ.getLocation().getAddressDetail())
+                                                        .mapLink(occ.getLocation().getMapLink())
+                                                        .build();
+                                })
                                 .collect(Collectors.toList());
 
                 // Convert EventMedias
@@ -412,5 +475,24 @@ public class EventService implements IEventService {
                                                                 .build())
                                                 .collect(Collectors.toList()))
                                 .build();
+        }
+
+        @Override
+        public List<UpComingEventDTO> findUpComingEvents() {
+                return eventRepository.findUpComingEvents();
+        }
+
+        @Override
+        public List<TrendingEventDTO> findTopTrendingEvents() {
+                return eventRepository.findTopTrendingEvents();
+        }
+
+        @Override
+        public Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location, int page,
+                        int size, String sort) {
+                // Sort in Java using Pageable
+                Sort sortOrder = Sort.by(Sort.Direction.ASC, "startTime");
+                Pageable pageable = PageRequest.of(page, size, sortOrder);
+                return eventRepository.searchHomeEvents(searchText, categoryId, location, pageable);
         }
 }

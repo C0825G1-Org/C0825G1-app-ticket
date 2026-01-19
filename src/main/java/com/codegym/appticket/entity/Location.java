@@ -16,11 +16,9 @@ public class Location extends Parent {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "province_city", nullable = false)
-    private String provinceCity;
-
-    @Column(name = "ward_commune", nullable = false)
-    private String wardCommune;
+    @ManyToOne
+    @JoinColumn(name = "ward_code", nullable = false)
+    private Ward ward;
 
     @Column(name = "address_detail", nullable = false)
     private String addressDetail;

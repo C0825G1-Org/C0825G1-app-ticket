@@ -433,7 +433,55 @@
                             };
 
                             // Event Occurrence Logic
-                            window.addEventOccurrence = function () {
+                            // Cache for API data to reduce requests
+                            const locationCache = {
+                                provinces: null,
+                                districts: {}, // keyed by provinceCode
+                                wards: {}      // keyed by districtCode
+                            };
+
+                            const API_BASE = 'https://provinces.open-api.vn/api/v2';
+
+                            async function fetchProvinces() {
+                                if (locationCache.provinces) return locationCache.provinces;
+                                try {
+                                    const response = await fetch(`${API_BASE}/p/`);
+                                    const data = await response.json();
+                                    locationCache.provinces = data;
+                                    return data;
+                                } catch (e) {
+                                    console.error('Error fetching provinces:', e);
+                                    return [];
+                                }
+                            }
+
+                            async function fetchDistricts(provinceCode) {
+                                if (locationCache.districts[provinceCode]) return locationCache.districts[provinceCode];
+                                try {
+                                    const response = await fetch(`${API_BASE}/p/${provinceCode}?depth=2`);
+                                    const data = await response.json();
+                                    locationCache.districts[provinceCode] = data.districts;
+                                    return data.districts;
+                                } catch (e) {
+                                    console.error('Error fetching districts:', e);
+                                    return [];
+                                }
+                            }
+
+                            async function fetchWards(districtCode) {
+                                if (locationCache.wards[districtCode]) return locationCache.wards[districtCode];
+                                try {
+                                    const response = await fetch(`${API_BASE}/d/${districtCode}?depth=2`);
+                                    const data = await response.json();
+                                    locationCache.wards[districtCode] = data.wards;
+                                    return data.wards;
+                                } catch (e) {
+                                    console.error('Error fetching wards:', e);
+                                    return [];
+                                }
+                            }
+
+                            window.addEventOccurrence = async function () {
                                 const container = document.getElementById('eventOccurrencesContainer');
                                 const idx = document.querySelectorAll('.event-occurrence-item').length;
 
@@ -457,17 +505,33 @@
                                                 <input type="datetime-local" class="form-control" name="eventOccurrences[${idx}].endTime" required>
                                             </div>
                                             <div class="col-12"><hr class="my-1"></div>
+                                            
+                                            <!-- Location Selects -->
                                             <div class="col-md-4">
-                                                <label class="form-label small fw-medium">Tỉnh/Thành <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="eventOccurrences[${idx}].provinceCity" placeholder="Hà Nội" required>
+                                                <label class="form-label small fw-medium">Tỉnh/Thành phố <span class="text-danger">*</span></label>
+                                                <select class="form-select province-select" name="eventOccurrences[${idx}].provinceCode" required data-index="${idx}" onchange="onProvinceChange(this, ${idx})">
+                                                    <option value="">-- Chọn Tỉnh/Thành --</option>
+                                                </select>
+                                                <input type="hidden" name="eventOccurrences[${idx}].provinceName" class="province-name">
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label small fw-medium">Quận/Huyện <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="eventOccurrences[${idx}].wardCommune" placeholder="Cầu Giấy" required>
+                                                <select class="form-select district-select" name="eventOccurrences[${idx}].districtCode" required disabled onchange="onDistrictChange(this, ${idx})">
+                                                    <option value="">-- Chọn Quận/Huyện --</option>
+                                                </select>
+                                                <input type="hidden" name="eventOccurrences[${idx}].districtName" class="district-name">
                                             </div>
                                             <div class="col-md-4">
+                                                <label class="form-label small fw-medium">Phường/Xã <span class="text-danger">*</span></label>
+                                                <select class="form-select ward-select" name="eventOccurrences[${idx}].wardCode" required disabled onchange="onWardChange(this, ${idx})">
+                                                    <option value="">-- Chọn Phường/Xã --</option>
+                                                </select>
+                                                <input type="hidden" name="eventOccurrences[${idx}].wardName" class="ward-name">
+                                            </div>
+
+                                            <div class="col-12">
                                                 <label class="form-label small fw-medium">Địa chỉ chi tiết <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="eventOccurrences[${idx}].addressDetail" placeholder="Số 1 Đại Cồ Việt" required>
+                                                <input type="text" class="form-control" name="eventOccurrences[${idx}].addressDetail" placeholder="Số nhà, Tên đường..." required>
                                             </div>
                                             <div class="col-12">
                                                 <label class="form-label small fw-medium">Link Bản đồ (Tùy chọn)</label>
@@ -477,156 +541,102 @@
                                     </div>
                                 `;
                                 container.appendChild(item);
-                            };
 
-                            // Init one occurrence
-                            addEventOccurrence();
-
-                            // Generic Row Removal with SweetAlert
-                            window.removeRow = function (button, itemName) {
-                                // Check if this is the only row left (optional check, but good UX)
-                                // if (button.closest('.card-body').querySelectorAll('.row').length <= 1) { ... }
-
-                                Swal.fire({
-                                    title: `Xóa ${itemName}?`,
-                                    text: "Bạn có chắc muốn xóa dòng này không?",
-                                    icon: 'warning',
-                                    showCancelButton: true,
-                                    confirmButtonColor: '#d33',
-                                    cancelButtonColor: '#3085d6',
-                                    confirmButtonText: 'Xóa',
-                                    cancelButtonText: 'Hủy'
-                                }).then((result) => {
-                                    if (result.isConfirmed) {
-                                        const row = button.closest('.row');
-                                        const container = row.parentNode;
-                                        row.remove();
-
-                                        // Re-index based on container ID
-                                        if (container.id === 'ticketTypesContainer') {
-                                            reindexTicketTypes();
-                                        } else if (container.id === 'eventOccurrencesContainer') {
-                                            reindexEventOccurrences();
-                                        }
-                                    }
+                                // Load Provinces
+                                const provinceSelect = item.querySelector('.province-select');
+                                const provinces = await fetchProvinces();
+                                provinces.forEach(p => {
+                                    const option = document.createElement('option');
+                                    option.value = p.code;
+                                    option.textContent = p.name;
+                                    provinceSelect.appendChild(option);
                                 });
                             };
 
-                            // Wizard Navigation Functions
-                            window.showStep = function (step) {
-                                document.getElementById('step-info').classList.toggle('d-none', step !== 1);
-                                document.getElementById('step-media').classList.toggle('d-none', step !== 2);
+                            window.onProvinceChange = async function (select, idx) {
+                                const provinceCode = select.value;
+                                const provinceName = select.options[select.selectedIndex].text;
+                                const row = select.closest('.row');
 
-                                const step1 = document.getElementById('step-indicator-1');
-                                const step2 = document.getElementById('step-indicator-2');
+                                // Set Hidden Name
+                                row.querySelector('.province-name').value = provinceName;
 
-                                if (step === 1) {
-                                    step1.classList.add('active');
-                                    step2.classList.remove('active');
-                                } else {
-                                    step1.classList.remove('active'); // Optional: keep 1 active if progress-like
-                                    step1.classList.add('active'); // Changed my mind: keep 1 completed
-                                    step2.classList.add('active');
-                                }
+                                // Reset District & Ward
+                                const districtSelect = row.querySelector('.district-select');
+                                const wardSelect = row.querySelector('.ward-select');
 
-                                window.scrollTo(0, 0);
-                            };
+                                districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+                                districtSelect.disabled = true;
+                                wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                                wardSelect.disabled = true;
 
-                            window.nextStep = function () {
-                                // Sync TinyMCE to textarea
-                                if (tinymce.get('description')) {
-                                    tinymce.get('description').save();
-                                }
-
-                                // Simple HTML5 validation for Step 1
-                                const infoContainer = document.getElementById('step-info');
-                                const inputs = infoContainer.querySelectorAll('input, select, textarea');
-                                let valid = true;
-                                inputs.forEach(input => {
-                                    if (!input.checkValidity()) {
-                                        input.reportValidity();
-                                        valid = false;
-                                        return;
-                                    }
-                                });
-
-                                // Check description manually if needed (sometimes required attr on hidden textarea works, sometimes not perfectly with all browsers/tinymce versions)
-                                const descContent = tinymce.get('description') ? tinymce.get('description').getContent() : document.getElementById('description').value;
-                                if (!descContent.trim()) {
-                                    document.getElementById('error-description').innerText = 'Vui lòng nhập mô tả sự kiện';
-                                    valid = false;
-                                } else {
-                                    document.getElementById('error-description').innerText = '';
-                                }
-
-                                if (valid) {
-                                    showStep(2);
-                                }
-                            };
-
-                            window.prevStep = function () {
-                                showStep(1);
-                            };
-
-                            // Preview Functions
-                            window.previewFile = function (input, imgId, placeholderId) {
-                                const file = input.files[0];
-                                const img = document.getElementById(imgId);
-                                const placeholder = document.getElementById(placeholderId);
-
-                                if (file) {
-                                    const reader = new FileReader();
-                                    reader.onload = function (e) {
-                                        img.src = e.target.result;
-                                        img.style.display = 'block';
-                                        placeholder.style.display = 'none';
-                                    }
-                                    reader.readAsDataURL(file);
-                                } else {
-                                    img.src = '';
-                                    img.style.display = 'none';
-                                    placeholder.style.display = 'block';
-                                }
-                            };
-
-                            window.previewGallery = function (input, gridId) {
-                                const grid = document.getElementById(gridId);
-                                grid.innerHTML = '';
-
-                                if (input.files) {
-                                    Array.from(input.files).forEach(file => {
-                                        const item = document.createElement('div');
-                                        item.className = 'gallery-item';
-
-                                        const reader = new FileReader();
-                                        reader.onload = function (e) {
-                                            if (file.type.startsWith('video/')) {
-                                                const video = document.createElement('video');
-                                                video.src = e.target.result;
-                                                video.controls = false;
-                                                item.appendChild(video);
-                                            } else {
-                                                const img = document.createElement('img');
-                                                img.src = e.target.result;
-                                                item.appendChild(img);
-                                            }
-                                        }
-                                        reader.readAsDataURL(file);
-
-                                        grid.appendChild(item);
+                                if (provinceCode) {
+                                    const districts = await fetchDistricts(provinceCode);
+                                    districts.forEach(d => {
+                                        const option = document.createElement('option');
+                                        option.value = d.code;
+                                        option.textContent = d.name;
+                                        districtSelect.appendChild(option);
                                     });
+                                    districtSelect.disabled = false;
                                 }
                             };
+
+                            window.onDistrictChange = async function (select, idx) {
+                                const districtCode = select.value;
+                                const districtName = select.options[select.selectedIndex].text;
+                                const row = select.closest('.row');
+
+                                // Set Hidden Name
+                                row.querySelector('.district-name').value = districtName;
+
+                                // Reset Ward
+                                const wardSelect = row.querySelector('.ward-select');
+                                wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                                wardSelect.disabled = true;
+
+                                if (districtCode) {
+                                    const wards = await fetchWards(districtCode);
+                                    wards.forEach(w => {
+                                        const option = document.createElement('option');
+                                        option.value = w.code;
+                                        option.textContent = w.name;
+                                        wardSelect.appendChild(option);
+                                    });
+                                    wardSelect.disabled = false;
+                                }
+                            };
+
+                            window.onWardChange = function (select, idx) {
+                                const wardName = select.options[select.selectedIndex].text;
+                                const row = select.closest('.row');
+                                row.querySelector('.ward-name').value = wardName;
+                            }
 
                             // Event Occurrence Logic 
                             window.reindexEventOccurrences = function () {
                                 const items = document.querySelectorAll('.event-occurrence-item');
                                 items.forEach((item, idx) => {
                                     item.querySelector('.fw-bold.text-muted').innerText = `Lịch trình #${idx + 1}`;
+
+                                    // Update names and onchange indices
+                                    const provSel = item.querySelector('.province-select');
+                                    provSel.name = `eventOccurrences[${idx}].provinceCode`;
+                                    provSel.setAttribute('onchange', `onProvinceChange(this, ${idx})`);
+                                    item.querySelector('.province-name').name = `eventOccurrences[${idx}].provinceName`;
+
+                                    const distSel = item.querySelector('.district-select');
+                                    distSel.name = `eventOccurrences[${idx}].districtCode`;
+                                    distSel.setAttribute('onchange', `onDistrictChange(this, ${idx})`);
+                                    item.querySelector('.district-name').name = `eventOccurrences[${idx}].districtName`;
+
+                                    const wardSel = item.querySelector('.ward-select');
+                                    wardSel.name = `eventOccurrences[${idx}].wardCode`;
+                                    wardSel.setAttribute('onchange', `onWardChange(this, ${idx})`);
+                                    item.querySelector('.ward-name').name = `eventOccurrences[${idx}].wardName`;
+
                                     item.querySelector('input[name$=".startTime"]').name = `eventOccurrences[${idx}].startTime`;
                                     item.querySelector('input[name$=".endTime"]').name = `eventOccurrences[${idx}].endTime`;
-                                    item.querySelector('input[name$=".provinceCity"]').name = `eventOccurrences[${idx}].provinceCity`;
-                                    item.querySelector('input[name$=".wardCommune"]').name = `eventOccurrences[${idx}].wardCommune`;
                                     item.querySelector('input[name$=".addressDetail"]').name = `eventOccurrences[${idx}].addressDetail`;
                                     item.querySelector('input[name$=".mapLink"]').name = `eventOccurrences[${idx}].mapLink`;
                                 });

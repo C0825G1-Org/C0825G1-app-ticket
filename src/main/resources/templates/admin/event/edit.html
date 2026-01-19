@@ -149,32 +149,62 @@
                                                 <div class="col-12">
                                                     <hr class="my-1">
                                                 </div>
+                                                <!-- Location Selects with Data Attributes for Restoration -->
                                                 <div class="col-md-4">
-                                                    <label class="form-label small fw-medium">Tỉnh/Thành <span
+                                                    <label class="form-label small fw-medium">Tỉnh/Thành phố <span
                                                             class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control"
-                                                        th:field="*{eventOccurrences[__${stat.index}__].provinceCity}"
-                                                        placeholder="Hà Nội" required>
+                                                    <select class="form-select province-select"
+                                                        th:name="|eventOccurrences[${stat.index}].provinceCode|"
+                                                        th:attr="data-selected-code=${occ.provinceCode}"
+                                                        th:data-index="${stat.index}"
+                                                        th:onchange="|onProvinceChange(this, ${stat.index})|" required>
+                                                        <option value="">-- Chọn Tỉnh/Thành --</option>
+                                                    </select>
+                                                    <input type="hidden"
+                                                        th:name="|eventOccurrences[${stat.index}].provinceName|"
+                                                        class="province-name" th:value="${occ.provinceName}">
                                                 </div>
                                                 <div class="col-md-4">
                                                     <label class="form-label small fw-medium">Quận/Huyện <span
                                                             class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control"
-                                                        th:field="*{eventOccurrences[__${stat.index}__].wardCommune}"
-                                                        placeholder="Cầu Giấy" required>
+                                                    <select class="form-select district-select"
+                                                        th:name="|eventOccurrences[${stat.index}].districtCode|"
+                                                        th:attr="data-selected-code=${occ.districtCode}" disabled
+                                                        th:onchange="|onDistrictChange(this, ${stat.index})|" required>
+                                                        <option value="">-- Chọn Quận/Huyện --</option>
+                                                    </select>
+                                                    <input type="hidden"
+                                                        th:name="|eventOccurrences[${stat.index}].districtName|"
+                                                        class="district-name" th:value="${occ.districtName}">
                                                 </div>
                                                 <div class="col-md-4">
+                                                    <label class="form-label small fw-medium">Phường/Xã <span
+                                                            class="text-danger">*</span></label>
+                                                    <select class="form-select ward-select"
+                                                        th:name="|eventOccurrences[${stat.index}].wardCode|"
+                                                        th:attr="data-selected-code=${occ.wardCode}" disabled
+                                                        th:onchange="|onWardChange(this, ${stat.index})|" required>
+                                                        <option value="">-- Chọn Phường/Xã --</option>
+                                                    </select>
+                                                    <input type="hidden"
+                                                        th:name="|eventOccurrences[${stat.index}].wardName|"
+                                                        class="ward-name" th:value="${occ.wardName}">
+                                                </div>
+
+                                                <div class="col-12">
                                                     <label class="form-label small fw-medium">Địa chỉ chi tiết <span
                                                             class="text-danger">*</span></label>
                                                     <input type="text" class="form-control"
-                                                        th:field="*{eventOccurrences[__${stat.index}__].addressDetail}"
-                                                        placeholder="Số 1 Đại Cồ Việt" required>
+                                                        th:name="|eventOccurrences[${stat.index}].addressDetail|"
+                                                        th:value="${occ.addressDetail}" placeholder="Số 1 Đại Cồ Việt"
+                                                        required>
                                                 </div>
                                                 <div class="col-12">
                                                     <label class="form-label small fw-medium">Link Bản đồ (Tùy
                                                         chọn)</label>
                                                     <input type="text" class="form-control"
-                                                        th:field="*{eventOccurrences[__${stat.index}__].mapLink}"
+                                                        th:name="|eventOccurrences[${stat.index}].mapLink|"
+                                                        th:value="${occ.mapLink}"
                                                         placeholder="https://maps.google.com/...">
                                                 </div>
                                             </div>
@@ -671,63 +701,282 @@
                             });
                         }
 
-                        function addEventOccurrence() {
+                        // Event Occurrence Logic
+                        // Cache for API data
+                        const locationCache = {
+                            provinces: null,
+                            provinceDetails: {} // Full tree with depth=3 for restoration
+                        };
+
+                        const API_BASE = 'https://provinces.open-api.vn/api/v2';
+
+                        async function fetchProvinces() {
+                            if (locationCache.provinces) return locationCache.provinces;
+                            try {
+                                const response = await fetch(`${API_BASE}/p/`);
+                                const data = await response.json();
+                                locationCache.provinces = data;
+                                return data;
+                            } catch (e) {
+                                console.error('Error fetching provinces:', e);
+                                return [];
+                            }
+                        }
+
+                        async function fetchDistricts(provinceCode) {
+                            // For simple dropdown change, we just need depth=2
+                            try {
+                                const response = await fetch(`${API_BASE}/p/${provinceCode}?depth=2`);
+                                const data = await response.json();
+                                return data.districts;
+                            } catch (e) {
+                                console.error('Error fetching districts:', e);
+                                return [];
+                            }
+                        }
+
+                        async function fetchWards(districtCode) {
+                            try {
+                                const response = await fetch(`${API_BASE}/d/${districtCode}?depth=2`);
+                                const data = await response.json();
+                                return data.wards;
+                            } catch (e) {
+                                console.error('Error fetching wards:', e);
+                                return [];
+                            }
+                        }
+
+                        // Load full province tree to find district from ward
+                        async function fetchProvinceFull(provinceCode) {
+                            if (locationCache.provinceDetails[provinceCode]) return locationCache.provinceDetails[provinceCode];
+                            try {
+                                const response = await fetch(`${API_BASE}/p/${provinceCode}?depth=3`);
+                                const data = await response.json();
+                                locationCache.provinceDetails[provinceCode] = data;
+                                return data;
+                            } catch (e) {
+                                console.error('Error fetching province full:', e);
+                                return null;
+                            }
+                        }
+
+                        window.addEventOccurrence = async function () {
                             const container = document.getElementById('eventOccurrencesContainer');
                             const idx = document.querySelectorAll('.event-occurrence-item').length;
                             const item = document.createElement('div');
                             item.className = 'card mb-3 border bg-light event-occurrence-item';
                             item.innerHTML = `
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <h6 class="fw-bold text-muted">Lịch trình #${idx + 1}</h6>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.event-occurrence-item').remove(); reindexEventOccurrences();">
-                                            <i class="bi bi-trash"></i> Xóa
-                                        </button>
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <h6 class="fw-bold text-muted">Lịch trình #${idx + 1}</h6>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.event-occurrence-item').remove(); reindexEventOccurrences();">
+                                                <i class="bi bi-trash"></i> Xóa
+                                            </button>
+                                        </div>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-medium">Bắt đầu <span class="text-danger">*</span></label>
+                                                <input type="datetime-local" class="form-control" name="eventOccurrences[${idx}].startTime" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-medium">Kết thúc <span class="text-danger">*</span></label>
+                                                <input type="datetime-local" class="form-control" name="eventOccurrences[${idx}].endTime" required>
+                                            </div>
+                                            <div class="col-12"><hr class="my-1"></div>
+                                            <div class="col-md-4">
+                                                <label class="form-label small fw-medium">Tỉnh/Thành phố <span class="text-danger">*</span></label>
+                                                <select class="form-select province-select" name="eventOccurrences[${idx}].provinceCode" required data-index="${idx}" onchange="onProvinceChange(this, ${idx})">
+                                                    <option value="">-- Chọn Tỉnh/Thành --</option>
+                                                </select>
+                                                <input type="hidden" name="eventOccurrences[${idx}].provinceName" class="province-name">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label small fw-medium">Quận/Huyện <span class="text-danger">*</span></label>
+                                                <select class="form-select district-select" name="eventOccurrences[${idx}].districtCode" required disabled onchange="onDistrictChange(this, ${idx})">
+                                                    <option value="">-- Chọn Quận/Huyện --</option>
+                                                </select>
+                                                <input type="hidden" name="eventOccurrences[${idx}].districtName" class="district-name">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label small fw-medium">Phường/Xã <span class="text-danger">*</span></label>
+                                                <select class="form-select ward-select" name="eventOccurrences[${idx}].wardCode" required disabled onchange="onWardChange(this, ${idx})">
+                                                    <option value="">-- Chọn Phường/Xã --</option>
+                                                </select>
+                                                <input type="hidden" name="eventOccurrences[${idx}].wardName" class="ward-name">
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label small fw-medium">Địa chỉ chi tiết <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" name="eventOccurrences[${idx}].addressDetail" placeholder="Số nhà, Tên đường..." required>
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label small fw-medium">Link Bản đồ (Tùy chọn)</label>
+                                                <input type="text" class="form-control" name="eventOccurrences[${idx}].mapLink" placeholder="https://maps.google.com/...">
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label small fw-medium">Bắt đầu <span class="text-danger">*</span></label>
-                                            <input type="datetime-local" class="form-control" name="eventOccurrences[${idx}].startTime" required>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label small fw-medium">Kết thúc <span class="text-danger">*</span></label>
-                                            <input type="datetime-local" class="form-control" name="eventOccurrences[${idx}].endTime" required>
-                                        </div>
-                                        <div class="col-12"><hr class="my-1"></div>
-                                        <div class="col-md-4">
-                                            <label class="form-label small fw-medium">Tỉnh/Thành <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="eventOccurrences[${idx}].provinceCity" placeholder="Hà Nội" required>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label small fw-medium">Quận/Huyện <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="eventOccurrences[${idx}].wardCommune" placeholder="Cầu Giấy" required>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label small fw-medium">Địa chỉ chi tiết <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="eventOccurrences[${idx}].addressDetail" placeholder="Số 1 Đại Cồ Việt" required>
-                                        </div>
-                                        <div class="col-12">
-                                            <label class="form-label small fw-medium">Link Bản đồ (Tùy chọn)</label>
-                                            <input type="text" class="form-control" name="eventOccurrences[${idx}].mapLink" placeholder="https://maps.google.com/...">
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
+                                `;
                             container.appendChild(item);
+
+                            // Load Provinces
+                            const provinceSelect = item.querySelector('.province-select');
+                            const provinces = await fetchProvinces();
+                            provinces.forEach(p => {
+                                const option = document.createElement('option');
+                                option.value = p.code;
+                                option.textContent = p.name;
+                                provinceSelect.appendChild(option);
+                            });
+                        }
+
+                        window.onProvinceChange = async function (select, idx) {
+                            const provinceCode = select.value;
+                            const provinceName = select.options[select.selectedIndex].text;
+                            const row = select.closest('.row');
+                            row.querySelector('.province-name').value = provinceName;
+
+                            const districtSelect = row.querySelector('.district-select');
+                            const wardSelect = row.querySelector('.ward-select');
+
+                            districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+                            districtSelect.disabled = true;
+                            wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                            wardSelect.disabled = true;
+
+                            if (provinceCode) {
+                                const districts = await fetchDistricts(provinceCode);
+                                districts.forEach(d => {
+                                    const option = document.createElement('option');
+                                    option.value = d.code;
+                                    option.textContent = d.name;
+                                    districtSelect.appendChild(option);
+                                });
+                                districtSelect.disabled = false;
+                            }
+                        };
+
+                        window.onDistrictChange = async function (select, idx) {
+                            const districtCode = select.value;
+                            const districtName = select.options[select.selectedIndex].text;
+                            const row = select.closest('.row');
+                            row.querySelector('.district-name').value = districtName;
+
+                            const wardSelect = row.querySelector('.ward-select');
+                            wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                            wardSelect.disabled = true;
+
+                            if (districtCode) {
+                                const wards = await fetchWards(districtCode);
+                                wards.forEach(w => {
+                                    const option = document.createElement('option');
+                                    option.value = w.code;
+                                    option.textContent = w.name;
+                                    wardSelect.appendChild(option);
+                                });
+                                wardSelect.disabled = false;
+                            }
+                        };
+
+                        window.onWardChange = function (select, idx) {
+                            const wardName = select.options[select.selectedIndex].text;
+                            const row = select.closest('.row');
+                            row.querySelector('.ward-name').value = wardName;
                         }
 
                         function reindexEventOccurrences() {
                             const items = document.querySelectorAll('.event-occurrence-item');
                             items.forEach((item, idx) => {
                                 item.querySelector('.fw-bold.text-muted').innerText = `Lịch trình #${idx + 1}`;
+
+                                const provSel = item.querySelector('.province-select');
+                                provSel.name = `eventOccurrences[${idx}].provinceCode`;
+                                provSel.setAttribute('onchange', `onProvinceChange(this, ${idx})`);
+                                item.querySelector('.province-name').name = `eventOccurrences[${idx}].provinceName`;
+
+                                const distSel = item.querySelector('.district-select');
+                                distSel.name = `eventOccurrences[${idx}].districtCode`;
+                                distSel.setAttribute('onchange', `onDistrictChange(this, ${idx})`);
+                                item.querySelector('.district-name').name = `eventOccurrences[${idx}].districtName`;
+
+                                const wardSel = item.querySelector('.ward-select');
+                                wardSel.name = `eventOccurrences[${idx}].wardCode`;
+                                wardSel.setAttribute('onchange', `onWardChange(this, ${idx})`);
+                                item.querySelector('.ward-name').name = `eventOccurrences[${idx}].wardName`;
+
                                 item.querySelector('input[name$=".startTime"]').name = `eventOccurrences[${idx}].startTime`;
                                 item.querySelector('input[name$=".endTime"]').name = `eventOccurrences[${idx}].endTime`;
-                                item.querySelector('input[name$=".provinceCity"]').name = `eventOccurrences[${idx}].provinceCity`;
-                                item.querySelector('input[name$=".wardCommune"]').name = `eventOccurrences[${idx}].wardCommune`;
                                 item.querySelector('input[name$=".addressDetail"]').name = `eventOccurrences[${idx}].addressDetail`;
                                 item.querySelector('input[name$=".mapLink"]').name = `eventOccurrences[${idx}].mapLink`;
                             });
                         }
+
+                        // Init Page: Restore data for existing occurrences
+                        (async function initLocations() {
+                            const provinces = await fetchProvinces();
+                            const items = document.querySelectorAll('.event-occurrence-item');
+
+                            for (let i = 0; i < items.length; i++) {
+                                const item = items[i];
+                                const provSelect = item.querySelector('.province-select');
+                                const distSelect = item.querySelector('.district-select');
+                                const wardSelect = item.querySelector('.ward-select');
+
+                                // Populate provinces
+                                provinces.forEach(p => {
+                                    const option = document.createElement('option');
+                                    option.value = p.code;
+                                    option.textContent = p.name;
+                                    provSelect.appendChild(option);
+                                });
+
+                                // Get codes from data attributes
+                                const savedProvCode = provSelect.getAttribute('data-selected-code');
+                                const savedWardCode = wardSelect.getAttribute('data-selected-code');
+
+                                if (savedProvCode) {
+                                    provSelect.value = savedProvCode;
+                                    item.querySelector('.province-name').value = provSelect.options[provSelect.selectedIndex]?.text || '';
+
+                                    // Fetch full province tree to find district
+                                    const provData = await fetchProvinceFull(savedProvCode);
+                                    if (provData && provData.districts) {
+                                        // Populate districts
+                                        let foundDistCode = null;
+                                        provData.districts.forEach(d => {
+                                            const option = document.createElement('option');
+                                            option.value = d.code;
+                                            option.textContent = d.name;
+                                            distSelect.appendChild(option);
+
+                                            // Check if this district contains the ward
+                                            if (d.wards && d.wards.some(w => w.code == savedWardCode)) {
+                                                foundDistCode = d.code;
+                                            }
+                                        });
+                                        distSelect.disabled = false;
+
+                                        if (foundDistCode) {
+                                            distSelect.value = foundDistCode;
+                                            item.querySelector('.district-name').value = distSelect.options[distSelect.selectedIndex]?.text || '';
+
+                                            // Populate wards from the found district's data (no need to fetch again if depth=3)
+                                            // Actually logic fetchProvinceFull returns depth=3 structure.
+                                            const districtHandlers = provData.districts.find(d => d.code == foundDistCode);
+                                            if (districtHandlers && districtHandlers.wards) {
+                                                districtHandlers.wards.forEach(w => {
+                                                    const option = document.createElement('option');
+                                                    option.value = w.code;
+                                                    option.textContent = w.name;
+                                                    wardSelect.appendChild(option);
+                                                });
+                                                wardSelect.disabled = false;
+                                                wardSelect.value = savedWardCode;
+                                                item.querySelector('.ward-name').value = wardSelect.options[wardSelect.selectedIndex]?.text || '';
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        })();
                     </script>
 
                 </div>

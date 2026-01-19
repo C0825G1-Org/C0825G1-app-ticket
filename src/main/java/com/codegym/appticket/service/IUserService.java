@@ -36,11 +36,11 @@ public interface IUserService extends IService<UserDTO> {
     UserDTO updateUser(UserUpdateDTO dto);
 
     /**
-     * Khóa/Mở khóa tài khoản
+     * Khóa/Mở khóa/Xóa tài khoản với lý do
      */
-    void toggleLock(Long id);
-
-    void delete(Long id);
+    void lockUser(Long id, String reason);
+    void unlockUser(Long id, String reason);
+    void deleteUser(Long id, String reason);
 
     // Registration & OTP
     void registerUser(com.codegym.appticket.dto.auth.RegisterDTO dto);
@@ -85,4 +85,8 @@ public interface IUserService extends IService<UserDTO> {
     boolean existsByEmail(String email);
 
     UserDTO getUserByEmail(String email);
+
+    java.util.List<com.codegym.appticket.entity.Role> getManageableRoles();
+
+    boolean checkPassword(Long userId, String rawPassword);
 }
