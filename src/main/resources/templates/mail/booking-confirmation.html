@@ -70,6 +70,7 @@
         <div class="content">
             <p>Chào <strong><span th:text="${booking.user.fullName}"></span></strong>,</p>
             <p>Cảm ơn bạn đã đặt vé tại <strong>EventPro</strong>. Đơn hàng của bạn đã được xác nhận thành công.</p>
+            <p><strong>Email đăng ký:</strong> <span th:text="${booking.user.email}"></span></p>
 
             <div class="ticket-box">
                 <h3 style="margin-top: 0; color: #0d6efd;">Chi tiết đơn hàng #<span th:text="${booking.id}"></span></h3>

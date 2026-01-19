@@ -130,26 +130,33 @@ public class BookingServiceImpl implements IBookingService {
 
     @Override
     @Transactional
-    public void confirmBooking(Long bookingId) {
+    public void confirmBooking(Long bookingId, String transactionCode) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
         if (booking.getStatus() == BookingStatus.SUCCESS) return;
 
         booking.setStatus(BookingStatus.SUCCESS);
+        if (transactionCode != null) {
+            booking.setTransactionCode(transactionCode);
+        }
         bookingRepository.save(booking);
 
         // Gửi email xác nhận
         emailService.sendBookingConfirmation(booking);
+        emailService.sendInvoiceWithPdf(booking);
     }
 
     @Override
     public long calculateTotalAmount(Long bookingId) {
+        System.out.println("DEBUG: Calculating total for booking: " + bookingId);
         List<BookingDetail> details = bookingDetailRepository.findByBookingId(bookingId);
         java.math.BigDecimal total = java.math.BigDecimal.ZERO;
         for (BookingDetail d : details) {
+            System.out.println("DEBUG: Item: " + d.getTicketType().getName() + " Qty: " + d.getQuantity() + " Price: " + d.getTicketType().getPrice());
             total = total.add(d.getTicketType().getPrice().multiply(new java.math.BigDecimal(d.getQuantity())));
         }
+        System.out.println("DEBUG: Calculated total: " + total);
         return total.longValue();
     }
 }

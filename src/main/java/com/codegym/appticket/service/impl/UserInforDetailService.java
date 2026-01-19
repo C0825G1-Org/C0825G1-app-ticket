@@ -17,10 +17,26 @@ public class UserInforDetailService implements UserDetailsService {
     @Override
     @org.springframework.transaction.annotation.Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmailAndNotDeleted(email);
-        if (user == null) {
-            throw new UsernameNotFoundException("User not found");
+        System.out.println("DEBUG: Looking for user: " + email);
+        
+        // Thử tìm user mà không kèm điều kiện isDeleted trước để debug
+        java.util.Optional<User> userOptional = userRepository.findByEmail(email);
+        
+        if (userOptional.isEmpty()) {
+            System.out.println("DEBUG: [FAILED] No user found with email: " + email);
+            throw new UsernameNotFoundException("User not found: " + email);
         }
+
+        User user = userOptional.get();
+        System.out.println("DEBUG: [FOUND] User ID: " + user.getId() + ", Email: " + user.getEmail());
+        System.out.println("DEBUG: Password in DB: " + user.getPassword());
+        System.out.println("DEBUG: Status - Enabled: " + user.getEnabled() + ", IsDeleted: " + user.getIsDeleted() + ", IsBlocked: " + user.getIsBlocked());
+
+        if (Boolean.TRUE.equals(user.getIsDeleted())) {
+            System.out.println("DEBUG: [FAILED] User is marked as DELETED");
+            throw new UsernameNotFoundException("User has been deleted");
+        }
+
         UserInfoUserDetails userInfoUserDetails = new UserInfoUserDetails(user);
         return userInfoUserDetails;
     }

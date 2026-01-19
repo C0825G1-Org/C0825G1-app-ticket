@@ -25,4 +25,7 @@ public class Booking extends Parent {
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private BookingStatus status;
+
+    @Column(name = "transaction_code")
+    private String transactionCode;
 }
