@@ -31,7 +31,7 @@
                 Khám phá & Đặt vé <br>
                 <span class="gradient-text">Sự kiện Đẳng cấp</span>
             </h1>
-            <p class="lead text-muted mb-5 mx-auto" style="max-width: 700px;">
+            <p class="lead text-dark mb-5 mx-auto" style="max-width: 700px; opacity: 0.8;">
                 Hàng ngàn sự kiện âm nhạc, hội thảo, thể thao đang chờ đón bạn. Trải nghiệm đặt vé dễ dàng, check-in
                 nhanh chóng.
             </p>
@@ -284,6 +284,10 @@
                             <div class="text-muted small mb-3">
                                 <i class="bi bi-geo-alt-fill text-primary me-1"></i>
                                 <span th:text="${event.location ?: 'TBA'}">TP. Hồ Chí Minh</span>
+                                <span th:if="${event.locationCount != null and event.locationCount > 1}"
+                                    th:text="' và ' + ${event.locationCount - 1} + ' địa điểm khác'">
+                                    và 1 địa điểm khác
+                                </span>
                             </div>
 
                             <!-- Price -->

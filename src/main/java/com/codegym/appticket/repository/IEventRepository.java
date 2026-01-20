@@ -61,7 +61,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                     e.id AS id,
                     e.title AS title,
                     e.description AS description,
-                    p.name AS location,
+                    MIN(p.name) AS location,
                     (SELECT em.media_url
                      FROM event_media em
                      WHERE em.event_id = e.id
@@ -81,7 +81,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 JOIN bookings b ON b.id = bd.booking_id
                 WHERE b.status = 'SUCCESS'
                   AND e.status = 'APPROVED'
-                GROUP BY e.id, e.title, e.description, p.name, c.name
+                GROUP BY e.id, e.title, e.description, c.name
                 ORDER BY totalTickets DESC
                 LIMIT 3
             """, nativeQuery = true)
@@ -92,7 +92,8 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                     e.id AS id,
                     e.title AS title,
                     e.description AS description,
-                    p.name AS location,
+                    MIN(p.name) AS location,
+                    COUNT(DISTINCT p.code) AS locationCount,
                     (SELECT em.media_url
                      FROM event_media em
                      WHERE em.event_id = e.id
@@ -110,7 +111,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 LEFT JOIN ticket_types tt ON tt.event_id = e.id
                 WHERE eo.start_time > NOW()
                   AND e.status = 'APPROVED'
-                GROUP BY e.id, e.title, e.description, p.name, c.name
+                GROUP BY e.id, e.title, e.description, c.name
                 ORDER BY startTime ASC
                 LIMIT 4
             """, nativeQuery = true)
@@ -133,7 +134,8 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                     e.id AS id,
                     e.title AS title,
                     e.description AS description,
-                    p.name AS location,
+                    MIN(p.name) AS location,
+                    COUNT(DISTINCT p.code) AS locationCount,
                     (SELECT em.media_url
                      FROM event_media em
                      WHERE em.event_id = e.id
@@ -150,7 +152,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 LEFT JOIN provinces p ON p.code = w.province_code
                 LEFT JOIN ticket_types tt ON tt.event_id = e.id
                 WHERE e.status = 'APPROVED'
-                GROUP BY e.id, e.title, e.description, p.name, c.name
+                GROUP BY e.id, e.title, e.description, c.name
                 ORDER BY MIN(eo.start_time) ASC
             """, countQuery = """
                 SELECT COUNT(DISTINCT e.id)
@@ -165,7 +167,8 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                     e.id AS id,
                     e.title AS title,
                     e.description AS description,
-                    p.name AS location,
+                    MIN(p.name) AS location,
+                    COUNT(DISTINCT p.code) AS locationCount,
                     (SELECT em.media_url
                      FROM event_media em
                      WHERE em.event_id = e.id
@@ -190,7 +193,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                        (:location = 'Hà Nội' AND (p.name LIKE '%Hà Nội%' OR p.name LIKE '%Ha Noi%' OR p.name LIKE '%Hanoi%' OR p.name LIKE '%Thành phố Hà Nội%')) OR
                        (:location = 'Đà Nẵng' AND (p.name LIKE '%Đà Nẵng%' OR p.name LIKE '%Da Nang%' OR p.name LIKE '%Danang%' OR p.name LIKE '%Thành phố Đà Nẵng%'))
                       )
-                GROUP BY e.id, e.title, e.description, p.name, c.name
+                GROUP BY e.id, e.title, e.description, c.name
                 ORDER BY MIN(eo.start_time) ASC
             """, countQuery = """
                 SELECT COUNT(DISTINCT e.id)
@@ -221,7 +224,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                     e.id AS id,
                     e.title AS title,
                     e.description AS description,
-                    p.name AS location,
+                    MIN(p.name) AS location,
                     c.name AS categoryName,
                     (SELECT em.media_url
                      FROM event_media em
@@ -237,7 +240,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 LEFT JOIN wards w ON w.code = l.ward_code
                 LEFT JOIN provinces p ON p.code = w.province_code
                 WHERE e.id = :eventId AND e.status = 'APPROVED'
-                GROUP BY e.id, e.title, e.description, p.name, c.name
+                GROUP BY e.id, e.title, e.description, c.name
             """, nativeQuery = true)
     EventDetailDTO findEventDetailById(@Param("eventId") Long eventId);
 
@@ -257,6 +260,23 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 ORDER BY tt.price ASC
             """, nativeQuery = true)
     List<TicketTypeDTO> findTicketTypesByEventId(@Param("eventId") Long eventId);
+
+    // Get all occurrences for an event
+    @Query(value = """
+                SELECT
+                    eo.id AS id,
+                    CONCAT(p.name, ', ', w.name) AS location,
+                    l.address_detail AS addressDetail,
+                    eo.start_time AS startTime,
+                    eo.end_time AS endTime
+                FROM event_occurrences eo
+                LEFT JOIN locations l ON l.id = eo.location_id
+                LEFT JOIN wards w ON w.code = l.ward_code
+                LEFT JOIN provinces p ON p.code = w.province_code
+                WHERE eo.event_id = :eventId
+                ORDER BY eo.start_time ASC
+            """, nativeQuery = true)
+    List<com.codegym.appticket.dto.home.EventOccurrenceDisplayDTO> findOccurrencesByEventId(@Param("eventId") Long eventId);
 
     // Find events by Organizer (for User dashboard)
     org.springframework.data.domain.Page<Event> findByOrganizer(User organizer, Pageable pageable);

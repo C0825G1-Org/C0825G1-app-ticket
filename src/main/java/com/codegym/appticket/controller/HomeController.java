@@ -176,9 +176,13 @@ public class HomeController {
 
         // Fetch ticket types with available quantities
         var ticketTypes = eventRepository.findTicketTypesByEventId(id);
+        
+        // Fetch all occurrences (time + location)
+        var occurrences = eventRepository.findOccurrencesByEventId(id);
 
         model.addAttribute("event", eventDetail);
         model.addAttribute("ticketTypes", ticketTypes);
+        model.addAttribute("occurrences", occurrences);
         model.addAttribute("currentPage", "event-detail");
 
         return "home/event_detail";
