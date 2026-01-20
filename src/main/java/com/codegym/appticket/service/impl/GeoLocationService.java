@@ -45,11 +45,9 @@ public class GeoLocationService implements IGeoLocationService {
         Double[] coords = vietnamProvinceCoordinates.getCoordinates(location);
         
         if (coords != null) {
-            log.info("Found coordinates for '{}': [{}, {}]", location, coords[0], coords[1]);
             return coords;
         }
-        
-        log.warn("Province '{}' not found in map", location);
+
         return null;
     }
 }

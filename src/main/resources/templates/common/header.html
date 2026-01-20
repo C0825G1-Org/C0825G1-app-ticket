@@ -56,7 +56,7 @@
                         class="btn btn-link text-decoration-none text-dark fw-medium dropdown-toggle d-flex align-items-center gap-2"
                         type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-person-circle fs-5"></i>
-                        <span sec:authentication="name">User</span>
+                        <span sec:authentication="principal.fullName">User</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end mt-2" aria-labelledby="userDropdown">
                         <li>

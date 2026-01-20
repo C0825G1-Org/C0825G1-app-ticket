@@ -95,6 +95,8 @@ public class AdminReportController {
         IReportService.ComparisonType comparison = IReportService.ComparisonType.PREVIOUS_PERIOD;
         if ("same_period_last_year".equals(compareType)) {
             comparison = IReportService.ComparisonType.SAME_PERIOD_LAST_YEAR;
+        } else if ("none".equals(compareType)) {
+            comparison = IReportService.ComparisonType.NONE;
         }
 
         IReportService.PeriodType periodType;
@@ -111,10 +113,10 @@ public class AdminReportController {
         // Charts Data
         // Charts Data
         try {
-            model.addAttribute("revenueChart", objectMapper.writeValueAsString(reportService.getRevenueChart(startDate, endDate, periodType)));
-            model.addAttribute("bookingChart", objectMapper.writeValueAsString(reportService.getBookingChart(startDate, endDate, periodType)));
-            model.addAttribute("categoryChart", objectMapper.writeValueAsString(reportService.getEventCategoryChart()));
-            model.addAttribute("userChart", objectMapper.writeValueAsString(reportService.getUserGrowthChart(startDate, endDate, periodType)));
+            model.addAttribute("revenueChart", objectMapper.writeValueAsString(reportService.getRevenueChart(startDate, endDate, periodType, comparison)));
+            model.addAttribute("bookingChart", objectMapper.writeValueAsString(reportService.getBookingChart(startDate, endDate, periodType, comparison)));
+            model.addAttribute("categoryChart", objectMapper.writeValueAsString(reportService.getEventCategoryChart(startDate, endDate, comparison)));
+            model.addAttribute("userChart", objectMapper.writeValueAsString(reportService.getUserGrowthChart(startDate, endDate, periodType, comparison)));
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
             throw new RuntimeException("Failed to serialize chart data", e);
         }
@@ -145,6 +147,8 @@ public class AdminReportController {
         IReportService.ComparisonType comparison = IReportService.ComparisonType.PREVIOUS_PERIOD;
         if ("same_period_last_year".equals(compareType)) {
             comparison = IReportService.ComparisonType.SAME_PERIOD_LAST_YEAR;
+        } else if ("none".equals(compareType)) {
+            comparison = IReportService.ComparisonType.NONE;
         }
 
         // Generate Excel with Native Charts

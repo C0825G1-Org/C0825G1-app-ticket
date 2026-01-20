@@ -116,15 +116,13 @@ public interface IUserRepository extends JpaRepository<User, Long> {
                 u.full_name AS fullName,
                 u.email AS email,
                 COUNT(DISTINCT e.id) AS eventCount,
-                COALESCE(SUM(bd.quantity * tt.price) * 0.05, 0) AS totalRevenue
+                COALESCE(SUM(CASE WHEN b.status = 'SUCCESS' AND b.booking_time BETWEEN :start AND :end THEN bd.quantity * tt.price ELSE 0 END) * 0.05, 0) AS totalRevenue
             FROM users u
             JOIN events e ON e.organizer_id = u.id
-            JOIN ticket_types tt ON tt.event_id = e.id
-            JOIN booking_details bd ON bd.ticket_type_id = tt.id
-            JOIN bookings b ON b.id = bd.booking_id
-            WHERE b.status = 'SUCCESS'
-              AND e.status = 'APPROVED'
-              AND (b.booking_time BETWEEN :start AND :end)
+            LEFT JOIN ticket_types tt ON tt.event_id = e.id
+            LEFT JOIN booking_details bd ON bd.ticket_type_id = tt.id
+            LEFT JOIN bookings b ON b.id = bd.booking_id
+            WHERE e.status = 'APPROVED'
             GROUP BY u.id, u.full_name, u.email
             ORDER BY totalRevenue DESC
             LIMIT :limit

@@ -16,18 +16,18 @@ public interface IReportService {
     }
 
     enum ComparisonType {
-        PREVIOUS_PERIOD, SAME_PERIOD_LAST_YEAR
+        PREVIOUS_PERIOD, SAME_PERIOD_LAST_YEAR, NONE
     }
 
     ReportSummaryDTO getSummary(LocalDate start, LocalDate end, ComparisonType compareType);
 
-    ChartDataDTO getRevenueChart(LocalDate start, LocalDate end, PeriodType type);
+    ChartDataDTO getRevenueChart(LocalDate start, LocalDate end, PeriodType type, ComparisonType comparison);
 
-    ChartDataDTO getBookingChart(LocalDate start, LocalDate end, PeriodType type);
+    ChartDataDTO getBookingChart(LocalDate start, LocalDate end, PeriodType type, ComparisonType comparison);
 
-    ChartDataDTO getEventCategoryChart();
+    ChartDataDTO getEventCategoryChart(LocalDate start, LocalDate end, ComparisonType comparison);
 
-    ChartDataDTO getUserGrowthChart(LocalDate start, LocalDate end, PeriodType type);
+    ChartDataDTO getUserGrowthChart(LocalDate start, LocalDate end, PeriodType type, ComparisonType comparison);
 
     List<TopEventDTO> getTopEvents(LocalDate start, LocalDate end, int limit);
 
