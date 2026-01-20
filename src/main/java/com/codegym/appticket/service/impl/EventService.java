@@ -185,11 +185,7 @@ public class EventService implements IEventService {
 
             if (dto.getEventOccurrences() != null && !dto.getEventOccurrences().isEmpty()) {
                 EventOccurrenceDTO firstOcc = dto.getEventOccurrences().get(0);
-                String fullAddress = firstOcc.getAddressDetail() + ", " +
-                        firstOcc.getWardName() + ", " +
-                        firstOcc.getProvinceName();
-
-                Double[] coords = geocodingService.getCoordinates(fullAddress);
+                Double[] coords = geocodingService.getCoordinates(firstOcc.getProvinceName());
                 if (coords != null) {
                     event.setLatitude(coords[0]);
                     event.setLongitude(coords[1]);
@@ -353,11 +349,7 @@ public class EventService implements IEventService {
 
             if (dto.getEventOccurrences() != null && !dto.getEventOccurrences().isEmpty()) {
                 EventOccurrenceDTO firstOcc = dto.getEventOccurrences().get(0);
-                String fullAddress = firstOcc.getAddressDetail() + ", " +
-                        firstOcc.getWardName() + ", " +
-                        firstOcc.getProvinceName();
-
-                Double[] coords = geocodingService.getCoordinates(fullAddress);
+                Double[] coords = geocodingService.getCoordinates(firstOcc.getProvinceName());
                 if (coords != null) {
                     event.setLatitude(coords[0]);
                     event.setLongitude(coords[1]);
