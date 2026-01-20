@@ -201,6 +201,11 @@ public class EventService implements IEventService {
             org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
                             .getContext().getAuthentication();
             String currentEmail = auth.getName();
+            if (auth.getPrincipal() instanceof com.codegym.appticket.config.CustomOAuth2User) {
+                currentEmail = ((com.codegym.appticket.config.CustomOAuth2User) auth.getPrincipal()).getEmail();
+            } else if (auth.getPrincipal() instanceof com.codegym.appticket.dto.user.UserInfoUserDetails) {
+                 currentEmail = ((com.codegym.appticket.dto.user.UserInfoUserDetails) auth.getPrincipal()).getUsername();
+            }
             com.codegym.appticket.entity.User currentUser = userRepository.findByEmailAndNotDeleted(currentEmail);
             event.setCreatedBy(currentUser);
 
