@@ -324,37 +324,39 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
     SELECT 
         e.id AS id,
         e.title AS title,
-        p.name AS location,
+        CONCAT(p.name, ', ', w.name) AS location,
         (SELECT em.media_url 
          FROM event_media em 
          WHERE em.event_id = e.id 
          ORDER BY em.created_at ASC 
          LIMIT 1) AS image,
-        e.latitude AS latitude,
-        e.longitude AS longitude,
+        l.latitude AS latitude,
+        l.longitude AS longitude,
         (6371 * acos(
-            cos(radians(:userLat)) * cos(radians(e.latitude)) * 
-            cos(radians(e.longitude) - radians(:userLon)) + 
-            sin(radians(:userLat)) * sin(radians(e.latitude))
+            cos(radians(:userLat)) * cos(radians(l.latitude)) * 
+            cos(radians(l.longitude) - radians(:userLon)) + 
+            sin(radians(:userLat)) * sin(radians(l.latitude))
         )) AS distance,
         c.name AS categoryName,
-        MIN(eo.start_time) AS eventDate
+        eo.start_time AS eventDate,
+        l.address_detail AS addressDetail,
+        eo.id AS occurrenceId
     FROM events e
     LEFT JOIN event_categories c ON c.id = e.category_id
-    LEFT JOIN event_occurrences eo ON eo.event_id = e.id
-    LEFT JOIN locations l ON l.id = eo.location_id
+    JOIN event_occurrences eo ON eo.event_id = e.id
+    JOIN locations l ON l.id = eo.location_id
     LEFT JOIN wards w ON w.code = l.ward_code
     LEFT JOIN provinces p ON p.code = w.province_code
     WHERE e.status = 'APPROVED'
-      AND e.latitude IS NOT NULL
-      AND e.longitude IS NOT NULL
+      AND l.latitude IS NOT NULL
+      AND l.longitude IS NOT NULL
+      AND eo.start_time > NOW()
       AND NOT (
           (:excludeLocation = 'Hồ Chí Minh' AND (p.name LIKE '%TP.HCM%' OR p.name LIKE '%HCM%' OR p.name LIKE '%Hồ Chí Minh%' OR p.name LIKE '%Thành phố Hồ Chí Minh%')) OR
           (:excludeLocation = 'Hà Nội' AND (p.name LIKE '%Hà Nội%' OR p.name LIKE '%Ha Noi%' OR p.name LIKE '%Hanoi%' OR p.name LIKE '%Thành phố Hà Nội%')) OR
           (:excludeLocation = 'Đà Nẵng' AND (p.name LIKE '%Đà Nẵng%' OR p.name LIKE '%Da Nang%' OR p.name LIKE '%Danang%' OR p.name LIKE '%Thành phố Đà Nẵng%')) OR
           (p.name LIKE CONCAT('%', :excludeLocation, '%'))
       )
-    GROUP BY e.id, e.title, p.name, e.latitude, e.longitude, c.name
     HAVING distance < 160
     ORDER BY distance ASC
     LIMIT :limit

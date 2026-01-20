@@ -25,4 +25,10 @@ public class Location extends Parent {
 
     @Column(name = "map_link", columnDefinition = "TEXT")
     private String mapLink;
+
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
 }
