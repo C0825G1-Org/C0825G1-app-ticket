@@ -157,3 +157,20 @@ body {
 .card-event:hover img {
     transform: scale(1.05);
 }
+
+/* Description Clamp - Force inline display for HTML content */
+.description-clamp * {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.description-clamp p,
+.description-clamp div {
+    display: inline !important;
+}
+
+.description-clamp p:not(:last-child)::after,
+.description-clamp div:not(:last-child)::after {
+    content: " ";
+}
