@@ -13,6 +13,7 @@ import com.codegym.appticket.entity.MediaPurpose;
 
 import com.codegym.appticket.service.IEventCategoryService;
 import com.codegym.appticket.service.IEventService;
+import com.codegym.appticket.repository.IUserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +39,7 @@ public class AdminEventController {
 
     private final IEventService eventService;
     private final IEventCategoryService eventCategoryService;
-    private final com.codegym.appticket.repository.IUserRepository userRepository;
+    private final IUserRepository userRepository;
 
     @Value("${tinymce.api-key}")
     private String tinyMceApiKey;

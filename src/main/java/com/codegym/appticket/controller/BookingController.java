@@ -4,6 +4,11 @@ import com.codegym.appticket.entity.Booking;
 import com.codegym.appticket.entity.Event;
 import com.codegym.appticket.entity.TicketType;
 import com.codegym.appticket.service.IBookingService;
+import com.codegym.appticket.service.IVnPayService;
+import com.codegym.appticket.entity.Location;
+import jakarta.servlet.http.HttpServletRequest;
+import com.codegym.appticket.entity.User;
+import com.codegym.appticket.entity.Ticket;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,7 +25,7 @@ import java.util.Map;
 public class BookingController {
 
     private final IBookingService bookingService;
-    private final com.codegym.appticket.service.IVnPayService vnPayService;
+    private final IVnPayService vnPayService;
 
     // 1. Trang Form đặt vé
     @GetMapping("/book/{eventId}")
@@ -51,7 +56,7 @@ public class BookingController {
         // Fix location display
         String location = "Chưa cập nhật";
         if (event.getEventOccurrences() != null && !event.getEventOccurrences().isEmpty()) {
-            com.codegym.appticket.entity.Location loc = event.getEventOccurrences().get(0).getLocation();
+            Location loc = event.getEventOccurrences().get(0).getLocation();
             if (loc != null && loc.getWard() != null && loc.getWard().getProvince() != null) {
                 location = loc.getWard().getProvince().getName();
             }
@@ -96,7 +101,7 @@ public class BookingController {
         // Fix location display
         String location = "Chưa cập nhật";
         if (event.getEventOccurrences() != null && !event.getEventOccurrences().isEmpty()) {
-            com.codegym.appticket.entity.Location loc = event.getEventOccurrences().get(0).getLocation();
+            Location loc = event.getEventOccurrences().get(0).getLocation();
             if (loc != null && loc.getWard() != null && loc.getWard().getProvince() != null) {
                 location = loc.getWard().getProvince().getName();
             }
@@ -112,7 +117,7 @@ public class BookingController {
     public String save(@RequestParam Long eventId,
             @RequestParam Map<String, String> params,
             RedirectAttributes redirectAttributes,
-            jakarta.servlet.http.HttpServletRequest request) {
+            HttpServletRequest request) {
         // Giả lập lấy user theo email
         String mockEmail = "nguyenns6802@gmail.com";
 
@@ -126,7 +131,7 @@ public class BookingController {
         }
 
         try {
-            com.codegym.appticket.entity.User mockUser = bookingService.getUserByEmail(mockEmail);
+            User mockUser = bookingService.getUserByEmail(mockEmail);
             Long userId = mockUser.getId();
 
             Booking booking = bookingService.createBooking(eventId, userId, ticketQuantities);
@@ -145,7 +150,7 @@ public class BookingController {
     @GetMapping("/success/{id}")
     public String success(@PathVariable Long id, Model model) {
         Booking booking = bookingService.getBookingById(id);
-        java.util.List<com.codegym.appticket.entity.Ticket> tickets = bookingService.getTicketsByBookingId(id);
+        List<Ticket> tickets = bookingService.getTicketsByBookingId(id);
 
         model.addAttribute("booking", booking);
         model.addAttribute("tickets", tickets);

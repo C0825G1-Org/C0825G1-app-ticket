@@ -1,8 +1,22 @@
 package com.codegym.appticket.service.impl;
 
-import com.codegym.appticket.entity.*;
-import com.codegym.appticket.repository.*;
+import com.codegym.appticket.entity.Booking;
+import com.codegym.appticket.entity.BookingDetail;
+import com.codegym.appticket.entity.BookingStatus;
+import com.codegym.appticket.entity.Event;
+import com.codegym.appticket.entity.Ticket;
+import com.codegym.appticket.entity.TicketType;
+import com.codegym.appticket.entity.User;
+import com.codegym.appticket.entity.QRCode;
+import com.codegym.appticket.repository.BookingDetailRepository;
+import com.codegym.appticket.repository.BookingRepository;
+import com.codegym.appticket.repository.EventRepository;
+import com.codegym.appticket.repository.TicketRepository;
+import com.codegym.appticket.repository.TicketTypeRepository;
+import com.codegym.appticket.repository.UserRepository;
+import com.codegym.appticket.repository.QRCodeRepository;
 import com.codegym.appticket.service.IBookingService;
+import com.codegym.appticket.service.IEmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,8 +36,8 @@ public class BookingServiceImpl implements IBookingService {
     private final TicketTypeRepository ticketTypeRepository;
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
-    private final com.codegym.appticket.repository.QRCodeRepository qrCodeRepository;
-    private final com.codegym.appticket.service.IEmailService emailService;
+    private final QRCodeRepository qrCodeRepository;
+    private final IEmailService emailService;
 
     @Override
     public Event getEventById(Long eventId) {
@@ -39,7 +53,7 @@ public class BookingServiceImpl implements IBookingService {
     @Transactional
     public Booking createBooking(Long eventId, Long userId, Map<Long, Integer> ticketQuantities) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         Booking booking = new Booking();
         booking.setUser(user);
         booking.setStatus(BookingStatus.PENDING); // Chờ thanh toán
@@ -49,7 +63,8 @@ public class BookingServiceImpl implements IBookingService {
             Long ticketTypeId = entry.getKey();
             Integer quantity = entry.getValue();
 
-            if (quantity <= 0) continue;
+            if (quantity <= 0)
+                continue;
 
             TicketType ticketType = ticketTypeRepository.findById(ticketTypeId)
                     .orElseThrow(() -> new RuntimeException("Ticket type not found"));
@@ -79,7 +94,7 @@ public class BookingServiceImpl implements IBookingService {
                 ticket = ticketRepository.save(ticket);
 
                 // Tác vụ bổ sung: Sinh dữ liệu mã QR
-                com.codegym.appticket.entity.QRCode qr = new com.codegym.appticket.entity.QRCode();
+                QRCode qr = new QRCode();
                 qr.setTicket(ticket);
                 qr.setQrData("TICKET-" + ticketCode);
                 qrCodeRepository.save(qr);
@@ -120,7 +135,8 @@ public class BookingServiceImpl implements IBookingService {
 
     @Override
     public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
     }
 
     @Override
@@ -134,7 +150,8 @@ public class BookingServiceImpl implements IBookingService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
-        if (booking.getStatus() == BookingStatus.SUCCESS) return;
+        if (booking.getStatus() == BookingStatus.SUCCESS)
+            return;
 
         booking.setStatus(BookingStatus.SUCCESS);
         bookingRepository.save(booking);

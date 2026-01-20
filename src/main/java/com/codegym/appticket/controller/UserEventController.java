@@ -11,6 +11,7 @@ import com.codegym.appticket.service.IEventCategoryService;
 import com.codegym.appticket.service.IEventService;
 import com.codegym.appticket.repository.IUserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -233,18 +234,18 @@ public class UserEventController {
 
     @DeleteMapping("/delete/{id}")
     @ResponseBody
-    public org.springframework.http.ResponseEntity<?> deleteEvent(@PathVariable Long id) {
+    public ResponseEntity<?> deleteEvent(@PathVariable Long id) {
         try {
             EventDTO eventDTO = eventService.findById(id);
             User currentUser = getCurrentUser();
             if (!eventDTO.getOrganizerId().equals(currentUser.getId())) {
-                return org.springframework.http.ResponseEntity.status(403).body("Bạn không có quyền xóa sự kiện này.");
+                return ResponseEntity.status(403).body("Bạn không có quyền xóa sự kiện này.");
             }
 
             eventService.delete(id); // Soft delete
-            return org.springframework.http.ResponseEntity.ok("Deleted");
+            return ResponseEntity.ok("Deleted");
         } catch (Exception e) {
-            return org.springframework.http.ResponseEntity.internalServerError().body(e.getMessage());
+            return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }
 }

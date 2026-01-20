@@ -3,6 +3,7 @@ package com.codegym.appticket.controller;
 import com.codegym.appticket.entity.QRCode;
 import com.codegym.appticket.entity.Ticket;
 import com.codegym.appticket.service.ITicketService;
+import com.codegym.appticket.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,9 +25,9 @@ public class TicketController {
     public String myTickets(Model model) {
         // Giả lập lấy user theo email (Thay cho ID cố định)
         String mockEmail = "nguyenns6802@gmail.com";
-        com.codegym.appticket.entity.User mockUser = ticketService.getUserByEmail(mockEmail);
+        User mockUser = ticketService.getUserByEmail(mockEmail);
         Long userId = mockUser.getId();
-        
+
         List<Ticket> tickets = ticketService.getTicketsByUserId(userId);
         model.addAttribute("tickets", tickets);
         return "ticket/list";
@@ -37,7 +38,7 @@ public class TicketController {
     public String detail(@PathVariable Long id, Model model) {
         Ticket ticket = ticketService.getTicketById(id);
         QRCode qrCode = ticketService.getQRCodeByTicketId(id);
-        
+
         model.addAttribute("ticket", ticket);
         model.addAttribute("qrCode", qrCode);
         return "ticket/detail";

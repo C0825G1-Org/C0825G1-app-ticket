@@ -6,6 +6,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Repository
 public interface IBookingDetailRepository extends CrudRepository<BookingDetail, Long> {
@@ -29,5 +30,5 @@ public interface IBookingDetailRepository extends CrudRepository<BookingDetail, 
                      "WHERE bd.booking.status = 'SUCCESS'")
        Long countTotalTicketsSold();
 
-       java.util.List<BookingDetail> findByBooking(com.codegym.appticket.entity.Booking booking);
+      List<BookingDetail> findByBooking(com.codegym.appticket.entity.Booking booking);
 }

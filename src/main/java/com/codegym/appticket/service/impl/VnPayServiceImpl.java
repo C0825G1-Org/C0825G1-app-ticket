@@ -9,7 +9,15 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
 
 @Service
 public class VnPayServiceImpl implements IVnPayService {
@@ -20,8 +28,8 @@ public class VnPayServiceImpl implements IVnPayService {
         String vnp_Command = "pay";
         String orderType = "other";
         long amountValue = amount * 100;
-        String bankCode = ""; 
-        
+        String bankCode = "";
+
         String vnp_TxnRef = String.valueOf(orderId);
         String vnp_IpAddr = VnPayConfig.getIpAddress(request);
         String vnp_TmnCode = VnPayConfig.vnp_TmnCode;
@@ -32,7 +40,7 @@ public class VnPayServiceImpl implements IVnPayService {
         vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
         vnp_Params.put("vnp_Amount", String.valueOf(amountValue));
         vnp_Params.put("vnp_CurrCode", "VND");
-        
+
         if (bankCode != null && !bankCode.isEmpty()) {
             vnp_Params.put("vnp_BankCode", bankCode);
         }
@@ -47,11 +55,11 @@ public class VnPayServiceImpl implements IVnPayService {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
-        
+
         cld.add(Calendar.MINUTE, 15);
         String vnp_ExpireDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
-        
+
         List fieldNames = new ArrayList(vnp_Params.keySet());
         Collections.sort(fieldNames);
         StringBuilder hashData = new StringBuilder();
@@ -61,12 +69,12 @@ public class VnPayServiceImpl implements IVnPayService {
             String fieldName = (String) itr.next();
             String fieldValue = (String) vnp_Params.get(fieldName);
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                //Build hash data
+                // Build hash data
                 hashData.append(fieldName);
                 hashData.append('=');
                 try {
                     hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-                    //Build query
+                    // Build query
                     query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
                     query.append('=');
                     query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
@@ -104,7 +112,7 @@ public class VnPayServiceImpl implements IVnPayService {
         if (fields.containsKey("vnp_SecureHash")) {
             fields.remove("vnp_SecureHash");
         }
-        
+
         String signValue = VnPayConfig.hmacSHA512(VnPayConfig.vnp_HashSecret, hashAllFields(fields));
         if (signValue.equals(vnp_SecureHash)) {
             if ("00".equals(request.getParameter("vnp_ResponseCode"))) {
@@ -116,7 +124,7 @@ public class VnPayServiceImpl implements IVnPayService {
             return -1;
         }
     }
-    
+
     private String hashAllFields(Map fields) {
         List fieldNames = new ArrayList(fields.keySet());
         Collections.sort(fieldNames);

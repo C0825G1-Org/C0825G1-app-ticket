@@ -34,10 +34,12 @@ import com.codegym.appticket.repository.ITicketTypeRepository;
 
 import com.codegym.appticket.repository.IWardRepository;
 import com.codegym.appticket.repository.IEventOccurrenceRepository;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+
 import com.codegym.appticket.service.IEventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +49,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.codegym.appticket.repository.IUserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,12 +71,12 @@ public class EventService implements IEventService {
         private final ITicketTypeRepository ticketTypeRepository;
         private final IEventOccurrenceRepository eventOccurrenceRepository;
         private final AdminNotificationService adminNotificationService;
-        private final com.codegym.appticket.repository.IUserRepository userRepository;
+        private final IUserRepository userRepository;
 
         @Override
         @Transactional(readOnly = true)
-        public org.springframework.data.domain.Page<EventDTO> findAll(
-                        org.springframework.data.domain.Pageable pageable) {
+        public Page<EventDTO> findAll(
+                        Pageable pageable) {
                 return eventRepository.findByStatusNot(EventStatus.DELETED, pageable).map(this::convertToDTO);
         }
 
@@ -82,8 +87,8 @@ public class EventService implements IEventService {
         }
 
         @Override
-        public org.springframework.data.domain.Page<EventDTO> search(com.codegym.appticket.dto.event.EventSearchDTO dto,
-                        org.springframework.data.domain.Pageable pageable) {
+        public Page<EventDTO> search(EventSearchDTO dto,
+                        Pageable pageable) {
                 java.time.LocalDateTime start = dto.getStartDate() != null ? dto.getStartDate().atStartOfDay() : null;
                 java.time.LocalDateTime end = dto.getEndDate() != null
                                 ? dto.getEndDate().atTime(java.time.LocalTime.MAX)
@@ -124,18 +129,6 @@ public class EventService implements IEventService {
                                                 "Thời gian kết thúc phải sau thời gian bắt đầu ít nhất 30 phút");
                         }
 
-                        // Conflict Check
-                        locationRepository.findByWardCodeAndAddressDetail(occ.getWardCode(), occ.getAddressDetail())
-                                        .ifPresent(loc -> {
-                                                List<EventOccurrence> conflicts = eventOccurrenceRepository
-                                                                .findConflicts(loc.getId(), occ.getStartTime(),
-                                                                                occ.getEndTime());
-                                                if (conflicts.stream().anyMatch(c -> currentEventId == null
-                                                                || !c.getEvent().getId().equals(currentEventId))) {
-                                                        throw new RuntimeException(
-                                                                        "Xung đột lịch trình: Đã có sự kiện diễn ra tại địa điểm này trong khoảng thời gian đã chọn");
-                                                }
-                                        });
                 }
 
                 // 2. Validate Tickets
@@ -144,11 +137,6 @@ public class EventService implements IEventService {
                         if (!ticketNames.add(t.getName().toLowerCase().trim())) {
                                 throw new RuntimeException("Tên loại vé '" + t.getName() + "' bị trùng lặp");
                         }
-                        if (t.getPrice().compareTo(BigDecimal.ZERO) > 0
-                                        && t.getPrice().compareTo(new BigDecimal("10000")) < 0) {
-                                throw new RuntimeException("Giá vé phải bằng 0 hoặc tối thiểu 10.000 VNĐ");
-                        }
-                        // Manual 'Not Blank' check if needed, but DTO @NotBlank handles it.
                 }
         }
 
@@ -182,16 +170,16 @@ public class EventService implements IEventService {
 
                 // --- LOGIC: Auto-Approve & Organizer Assignment ---
                 // Get current user (Creator)
-                org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
+                Authentication auth = SecurityContextHolder
                                 .getContext().getAuthentication();
                 String currentEmail = auth.getName();
-                com.codegym.appticket.entity.User currentUser = userRepository.findByEmailAndNotDeleted(currentEmail);
+                User currentUser = userRepository.findByEmailAndNotDeleted(currentEmail);
                 event.setCreatedBy(currentUser);
 
                 // Determine Organizer
                 if (dto.getOrganizerId() != null) {
                         // Admin assigning specific organizer
-                        com.codegym.appticket.entity.User organizer = userRepository.findById(dto.getOrganizerId())
+                        User organizer = userRepository.findById(dto.getOrganizerId())
                                         .orElseThrow(() -> new RuntimeException(
                                                         "Không tìm thấy Organizer với ID: " + dto.getOrganizerId()));
                         event.setOrganizer(organizer);
@@ -333,7 +321,7 @@ public class EventService implements IEventService {
                 // --- LOGIC: Update Rules ---
                 // 1. Organizer Update (Admin only typically, or if allowed)
                 if (dto.getOrganizerId() != null) {
-                        com.codegym.appticket.entity.User organizer = userRepository.findById(dto.getOrganizerId())
+                        User organizer = userRepository.findById(dto.getOrganizerId())
                                         .orElseThrow(() -> new RuntimeException(
                                                         "Không tìm thấy Organizer với ID: " + dto.getOrganizerId()));
                         event.setOrganizer(organizer);

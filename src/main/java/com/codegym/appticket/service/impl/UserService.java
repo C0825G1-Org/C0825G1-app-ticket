@@ -3,17 +3,25 @@ package com.codegym.appticket.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.codegym.appticket.dto.user.UserDTO;
-import com.codegym.appticket.dto.user.*;
+import com.codegym.appticket.dto.user.UserCreateDTO;
+import com.codegym.appticket.dto.user.UserUpdateDTO;
+import com.codegym.appticket.dto.user.UserSearchDTO;
+import com.codegym.appticket.dto.user.UserStatsDTO;
+import com.codegym.appticket.dto.user.UserDetailDTO;
+import com.codegym.appticket.dto.user.UserLockHistoryDTO;
+import com.codegym.appticket.dto.user.UserProfileDTO;
 import com.codegym.appticket.entity.Role;
 import com.codegym.appticket.entity.User;
 import com.codegym.appticket.entity.Booking;
 import com.codegym.appticket.entity.BookingStatus;
 import com.codegym.appticket.entity.Event;
+import com.codegym.appticket.entity.UserLockHistory;
 import com.codegym.appticket.repository.IBookingDetailRepository;
 import com.codegym.appticket.repository.IBookingRepository;
 import com.codegym.appticket.repository.IEventRepository;
 import com.codegym.appticket.repository.IRoleRepository;
 import com.codegym.appticket.repository.IUserRepository;
+import com.codegym.appticket.repository.IUserLockHistoryRepository;
 import com.codegym.appticket.service.IUserService;
 import java.math.BigDecimal;
 import lombok.RequiredArgsConstructor;
@@ -62,7 +70,7 @@ public class UserService implements IUserService {
 
     @Override
     @Transactional(readOnly = true)
-    public java.util.List<UserDTO> findAll() {
+    public List<UserDTO> findAll() {
         return IUserRepository.findAll().stream()
                 .filter(u -> !Boolean.TRUE.equals(u.getIsDeleted()))
                 .map(this::toUserDTO)
@@ -99,18 +107,16 @@ public class UserService implements IUserService {
         return toUserDTO(savedUser);
     }
 
-
-
     @Override
     public void delete(Long id) {
-       throw new UnsupportedOperationException("Use deleteUser(Long id, String reason) instead. Reason is required.");
+        throw new UnsupportedOperationException("Use deleteUser(Long id, String reason) instead. Reason is required.");
     }
 
     @Override
     public void deleteUser(Long id, String reason) {
         User user = IUserRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user với ID: " + id));
-        
+
         if (user.getIsBlocked() == null || !user.getIsBlocked()) {
             throw new RuntimeException("Người dùng phải bị KHÓA trước khi có thể Xóa!");
         }
@@ -135,15 +141,13 @@ public class UserService implements IUserService {
         Pageable pageable = PageRequest.of(
                 searchDTO.getPage() != null ? searchDTO.getPage() : 0,
                 searchDTO.getSize() != null ? searchDTO.getSize() : 10,
-                Sort.by(Sort.Direction.DESC, "createdDate")
-        );
+                Sort.by(Sort.Direction.DESC, "createdDate"));
 
         Page<User> userPage = IUserRepository.searchUsers(
                 searchDTO.getKeyword(),
                 searchDTO.getRoleId(),
                 searchDTO.getStatus(),
-                pageable
-        );
+                pageable);
 
         return userPage.map(this::toUserDTO);
     }
@@ -159,8 +163,7 @@ public class UserService implements IUserService {
                 IUserRepository.countTotalUsers(),
                 IUserRepository.countActiveUsers(),
                 IUserRepository.countBlockedUsers(),
-                IUserRepository.countNewUsersThisMonth(startOfMonth)
-        );
+                IUserRepository.countNewUsersThisMonth(startOfMonth));
     }
 
     @Override
@@ -187,7 +190,7 @@ public class UserService implements IUserService {
         // Populate stats using repositories
         dto.setTicketCount(IBookingDetailRepository.countTicketsByUserId(id));
         dto.setEventCount(IEventRepository.countByCreatedBy(user));
-        
+
         BigDecimal totalSpent = IBookingDetailRepository.sumTotalSpentByUserId(id);
         if (totalSpent != null) {
             dto.setTotalSpent(String.format("%,.0fđ", totalSpent));
@@ -197,15 +200,16 @@ public class UserService implements IUserService {
 
         // Populate activities
         List<UserDetailDTO.ActivityDTO> activities = new ArrayList<>();
-        
+
         // 1. Get recent bookings (limit 10)
         Pageable limit10 = PageRequest.of(0, 10);
-        java.util.List<Booking> recentBookings = IBookingRepository.findByUserOrderByBookingTimeDesc(user, limit10);
+        List<Booking> recentBookings = IBookingRepository.findByUserOrderByBookingTimeDesc(user, limit10);
         if (recentBookings != null) {
             for (Booking booking : recentBookings) {
                 String description;
                 try {
-                    java.util.List<com.codegym.appticket.entity.BookingDetail> details = IBookingDetailRepository.findByBooking(booking);
+                    List<com.codegym.appticket.entity.BookingDetail> details = IBookingDetailRepository
+                            .findByBooking(booking);
                     if (details.isEmpty()) {
                         description = "Đặt vé #" + booking.getId();
                     } else {
@@ -220,41 +224,41 @@ public class UserService implements IUserService {
                 }
 
                 activities.add(new UserDetailDTO.ActivityDTO(
-                    "BOOKING",
-                    description + " - " + (booking.getStatus() == BookingStatus.SUCCESS ? "Thành công" : "Đang xử lý"),
-                    booking.getBookingTime()
-                ));
+                        "BOOKING",
+                        description + " - "
+                                + (booking.getStatus() == BookingStatus.SUCCESS ? "Thành công" : "Đang xử lý"),
+                        booking.getBookingTime()));
             }
         }
-        
+
         // 2. Get recent events created (limit 5)
         Pageable limit5 = PageRequest.of(0, 5);
-        java.util.List<Event> recentEvents = IEventRepository.findByCreatedByOrderByCreatedDateDesc(user, limit5);
+        List<Event> recentEvents = IEventRepository.findByCreatedByOrderByCreatedDateDesc(user, limit5);
         if (recentEvents != null) {
             for (Event event : recentEvents) {
                 activities.add(new UserDetailDTO.ActivityDTO(
-                    "EVENT_CREATED",
-                    "Tạo sự kiện: " + event.getTitle(),
-                    event.getCreatedDate()
-                ));
+                        "EVENT_CREATED",
+                        "Tạo sự kiện: " + event.getTitle(),
+                        event.getCreatedDate()));
             }
         }
-        
+
         // 3. Sort by date desc
         activities.sort((a, b) -> {
-            if (b.getTimestamp() == null || a.getTimestamp() == null) return 0;
+            if (b.getTimestamp() == null || a.getTimestamp() == null)
+                return 0;
             return b.getTimestamp().compareTo(a.getTimestamp());
         });
-        
+
         // 4. Limit total activities to 10
         if (activities.size() > 10) {
             activities = activities.subList(0, 10);
         }
-        
+
         dto.setActivities(activities);
 
         // Populate Lock History
-        List<com.codegym.appticket.entity.UserLockHistory> historyEntities = userLockHistoryRepository.findByUserOrderByTimestampDesc(user);
+        List<UserLockHistory> historyEntities = userLockHistoryRepository.findByUserOrderByTimestampDesc(user);
         List<UserLockHistoryDTO> historyDTOs = historyEntities.stream()
                 .map(h -> new UserLockHistoryDTO(h.getActionType(), h.getReason(), h.getTimestamp(), h.getCreatedBy()))
                 .collect(Collectors.toList());
@@ -283,11 +287,11 @@ public class UserService implements IUserService {
         if (dto.getRoleId() != null) {
             Role role = IRoleRepository.findById(dto.getRoleId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy role với ID: " + dto.getRoleId()));
-            
+
             if (role.getName().equals("ADMIN")) {
                 throw new RuntimeException("Không được phép tạo tài khoản quản trị viên hệ thống");
             }
-            
+
             Set<Role> roles = new HashSet<>();
             roles.add(role);
             user.setRoles(roles);
@@ -324,14 +328,14 @@ public class UserService implements IUserService {
         // Cập nhật email nếu thay đổi
         // Không cho phép cập nhật email
         // if (dto.getEmail() != null && !dto.getEmail().equals(user.getEmail())) {
-        //     if (IUserRepository.existsByEmail(dto.getEmail())) {
-        //         throw new RuntimeException("Email đã được sử dụng: " + dto.getEmail());
-        //     }
-        //     user.setEmail(dto.getEmail());
+        // if (IUserRepository.existsByEmail(dto.getEmail())) {
+        // throw new RuntimeException("Email đã được sử dụng: " + dto.getEmail());
         // }
-        
+        // user.setEmail(dto.getEmail());
+        // }
+
         // Removed password update logic per requirements
-        
+
         if (dto.getEnabled() != null) {
             user.setEnabled(dto.getEnabled());
         }
@@ -340,11 +344,11 @@ public class UserService implements IUserService {
         if (dto.getRoleId() != null) {
             Role role = IRoleRepository.findById(dto.getRoleId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy role với ID: " + dto.getRoleId()));
-            
+
             if (role.getName().equals("ADMIN")) {
                 throw new RuntimeException("Không được phép gán quyền quản trị viên hệ thống");
             }
-            
+
             Set<Role> roles = new HashSet<>();
             roles.add(role);
             user.setRoles(roles);
@@ -355,20 +359,20 @@ public class UserService implements IUserService {
     }
 
     @Autowired
-    private com.codegym.appticket.repository.IUserLockHistoryRepository userLockHistoryRepository;
+    private IUserLockHistoryRepository userLockHistoryRepository;
 
     @Override
     public void lockUser(Long id, String reason) {
         User user = IUserRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user với ID: " + id));
-        
+
         user.setIsBlocked(true);
         user.setLockedAt(LocalDateTime.now());
         user.setLockReason(reason);
         IUserRepository.save(user);
 
         // Log history
-        com.codegym.appticket.entity.UserLockHistory history = new com.codegym.appticket.entity.UserLockHistory();
+        UserLockHistory history = new UserLockHistory();
         history.setUser(user);
         history.setActionType("LOCK");
         history.setReason(reason);
@@ -387,17 +391,17 @@ public class UserService implements IUserService {
     public void unlockUser(Long id, String reason) {
         User user = IUserRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user với ID: " + id));
-        
+
         user.setIsBlocked(false);
         user.setLockedAt(null);
         user.setUnlockReason(reason);
-        // Clear lock reason? Maybe keep history? Requirements just say add reason. 
+        // Clear lock reason? Maybe keep history? Requirements just say add reason.
         // Keeping it is safer for history, or we overwrite new action reason.
-        
+
         IUserRepository.save(user);
 
         // Log history
-        com.codegym.appticket.entity.UserLockHistory history = new com.codegym.appticket.entity.UserLockHistory();
+        UserLockHistory history = new UserLockHistory();
         history.setUser(user);
         history.setActionType("UNLOCK");
         history.setReason(reason);
@@ -416,7 +420,7 @@ public class UserService implements IUserService {
     public void resetPassword(Long id, String newPassword) {
         User user = IUserRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user với ID: " + id));
-        
+
         user.setPassword(passwordEncoder.encode(newPassword));
         IUserRepository.save(user);
     }
@@ -433,7 +437,7 @@ public class UserService implements IUserService {
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setEnabled(user.getEnabled());
         dto.setCreatedDate(user.getCreatedDate());
-        
+
         // Lấy role đầu tiên để hiển thị trên form update (vì UI dùng single select)
         if (user.getRoles() != null && !user.getRoles().isEmpty()) {
             dto.setRoleId(user.getRoles().iterator().next().getId());
@@ -465,7 +469,7 @@ public class UserService implements IUserService {
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setAuthProvider(AuthenticationProvider.LOCAL);
         user.setCreatedDate(LocalDateTime.now());
-        
+
         // OTP Logic
         String otp = String.format("%06d", new Random().nextInt(999999));
         user.setOtpCode(otp);
@@ -485,8 +489,9 @@ public class UserService implements IUserService {
     }
 
     public boolean verifyOtp(String email, String otp) {
-        User user = IUserRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
-        
+        User user = IUserRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại"));
+
         if (user.getEnabled()) {
             return true; // Already verified
         }
@@ -565,13 +570,14 @@ public class UserService implements IUserService {
     public void updatePassword(String email, String newPassword) {
         User user = IUserRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Email không tồn tại"));
-        
+
         user.setPassword(passwordEncoder.encode(newPassword));
         // Clear OTP after successful reset
         user.setOtpCode(null);
         user.setOtpExpiry(null);
         IUserRepository.save(user);
     }
+
     @Override
     public void updateProfile(Long userId, UserProfileDTO dto) {
         User user = IUserRepository.findById(userId)
@@ -583,22 +589,23 @@ public class UserService implements IUserService {
         // Nếu email thay đổi, kiểm tra trùng lặp
         // Không cho phép cập nhật email
         // if (!user.getEmail().equals(dto.getEmail())) {
-        //     if (IUserRepository.existsByEmail(dto.getEmail())) {
-        //         throw new RuntimeException("Email đã được sử dụng: " + dto.getEmail());
-        //     }
-        //     user.setEmail(dto.getEmail());
-        //     // TODO: Có thể yêu cầu verify lại email nếu cần
+        // if (IUserRepository.existsByEmail(dto.getEmail())) {
+        // throw new RuntimeException("Email đã được sử dụng: " + dto.getEmail());
         // }
-        
+        // user.setEmail(dto.getEmail());
+        // // TODO: Có thể yêu cầu verify lại email nếu cần
+        // }
+
         IUserRepository.save(user);
     }
+
     @Override
     public UserDTO getUserByEmail(String email) {
         User user = IUserRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy user với email: " + email));
         return toUserDTO(user);
     }
-    
+
     @Override
     public List<Role> getManageableRoles() {
         return IRoleRepository.findAll().stream()
