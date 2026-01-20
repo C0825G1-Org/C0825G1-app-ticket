@@ -19,7 +19,7 @@ public class Booking extends Parent {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(name = "booking_time", insertable = false, updatable = false)
+    @Column(name = "booking_time")
     private java.time.LocalDateTime bookingTime;
 
     @Enumerated(EnumType.STRING)
