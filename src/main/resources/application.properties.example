@@ -1,20 +1,48 @@
 spring.application.name=app-ticket
-# Database - Cập nhật username/password MySQL của bạn
 spring.datasource.url=jdbc:mysql://localhost:3306/event_booking_db?createDatabaseIfNotExist=true
-spring.datasource.username=your_username
-spring.datasource.password=your_password
+spring.datasource.username=root
+spring.datasource.password=YourPassword
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-# JPA/Hibernate
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
-# Thymeleaf
 spring.thymeleaf.cache=false
-# Mail Configuration - Cấu hình Gmail SMTP
+
+# HikariCP Settings
+spring.datasource.hikari.maximum-pool-size=20
+spring.datasource.hikari.connection-timeout=30000
+spring.datasource.hikari.idle-timeout=600000
+spring.datasource.hikari.max-lifetime=1800000
+
+# Google OAuth2
+spring.security.oauth2.client.registration.google.client-id=YourClientId
+spring.security.oauth2.client.registration.google.client-secret=YourClientSecret
+spring.security.oauth2.client.registration.google.scope=email,profile
+
+# Mail Config
 spring.mail.host=smtp.gmail.com
 spring.mail.port=587
-spring.mail.username=your-email@gmail.com
-spring.mail.password=your-app-password-here
+spring.mail.username=YourEmail
+spring.mail.password=YourMailPassword
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
-spring.mail.properties.mail.smtp.starttls.required=true
+
+# Cloudinary Configuration
+cloudinary.cloud-name=YourCloudName
+cloudinary.api-key=YourApiKey
+cloudinary.api-secret=YourApiSecret
+
+spring.servlet.multipart.max-file-size=50MB
+spring.servlet.multipart.max-request-size=50MB
+
+# Tomcat Limits
+server.tomcat.max-http-form-post-size=100MB
+server.tomcat.max-swallow-size=-1
+server.tomcat.max-parameter-count=10000
+server.tomcat.max-file-count=10000
+
+# Prevent session serialization errors during dev
+server.servlet.session.persistent=false
+
+# TinyMCE
+tinymce.api-key=YourTinyMceKey

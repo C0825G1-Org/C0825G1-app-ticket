@@ -5,7 +5,7 @@
 
 <body>
     <div th:replace="~{common/layout :: user-layout(~{:: .booking-form})}">
-        <div class="booking-form container py-5">
+        <div class="booking-form container py-5" style="margin-top: 80px;">
             <div class="row justify-content-center">
                 <div class="col-md-8">
                     <div class="card shadow-sm border-0">
@@ -14,7 +14,19 @@
                             <p class="text-muted" th:text="${location}"><i class="bi bi-geo-alt"></i> Địa điểm</p>
                             <hr>
 
-                            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+                            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                                <span th:text="${error}"></span>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div th:if="${warning}" class="alert alert-warning alert-dismissible fade show"
+                                role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <span th:text="${warning}"></span>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
+                            </div>
 
                             <form th:action="@{/bookings/confirm}" method="post" id="bookingForm">
                                 <input type="hidden" name="eventId" th:value="${event.id}">
@@ -32,10 +44,15 @@
                                         <div style="width: 100px;">
                                             <input type="number" th:name="'ticket_' + ${tt.id}"
                                                 class="form-control ticket-qty"
-                                                th:value="${preSelectedQuantities != null and preSelectedQuantities.containsKey(tt.id) ? preSelectedQuantities.get(tt.id) : 0}"
-                                                min="0" th:max="${tt.quantity}">
+                                                th:value="${preSelectedQuantities != null and preSelectedQuantities.containsKey(tt.id) ? preSelectedQuantities.get(tt.id) : ''}"
+                                                placeholder="0" min="0" th:max="${tt.quantity}">
                                         </div>
                                     </div>
+                                </div>
+
+                                <div id="ticketCountError" class="alert alert-warning py-2 mb-3 d-none">
+                                    <i class="bi bi-exclamation-circle me-2"></i>
+                                    Vui lòng chọn ít nhất một vé để tiếp tục.
                                 </div>
 
                                 <div class="d-grid gap-2 mt-4">
@@ -45,17 +62,25 @@
                                 </div>
                             </form>
 
-                            <script>
+                            <script th:inline="javascript">
+                                /*<![CDATA[*/
                                 document.getElementById('bookingForm').addEventListener('submit', function (e) {
                                     let total = 0;
+                                    const errorDiv = document.getElementById('ticketCountError');
+
                                     document.querySelectorAll('.ticket-qty').forEach(input => {
                                         total += parseInt(input.value) || 0;
                                     });
+
                                     if (total <= 0) {
                                         e.preventDefault();
-                                        alert('Vui lòng chọn ít nhất một vé để tiếp tục.');
+                                        errorDiv.classList.remove('d-none');
+                                        errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    } else {
+                                        errorDiv.classList.add('d-none');
                                     }
                                 });
+                                /*]]>*/
                             </script>
                         </div>
                     </div>

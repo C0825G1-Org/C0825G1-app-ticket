@@ -1,8 +1,11 @@
 package com.codegym.appticket.service.impl;
 
 import com.codegym.appticket.config.VnPayConfig;
+import com.codegym.appticket.repository.BookingDetailRepository;
+import com.codegym.appticket.repository.BookingRepository;
 import com.codegym.appticket.service.IVnPayService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
@@ -20,7 +23,11 @@ import java.util.Map;
 import java.util.TimeZone;
 
 @Service
+@RequiredArgsConstructor
 public class VnPayServiceImpl implements IVnPayService {
+
+    private final BookingRepository bookingRepository;
+    private final BookingDetailRepository bookingDetailRepository;
 
     @Override
     public String createPaymentUrl(HttpServletRequest request, Long orderId, long amount) {
@@ -45,14 +52,32 @@ public class VnPayServiceImpl implements IVnPayService {
             vnp_Params.put("vnp_BankCode", bankCode);
         }
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + vnp_TxnRef);
+        
+        // Lấy thông tin booking
+        String orderInfo = "Thanh toan don hang #" + vnp_TxnRef;
+        try {
+            Long bookingId = Long.parseLong(vnp_TxnRef);
+            com.codegym.appticket.entity.Booking booking = bookingRepository.findById(bookingId).orElse(null);
+            if (booking != null) {
+                String userName = booking.getUser().getFullName();
+                java.util.List<com.codegym.appticket.entity.BookingDetail> details = bookingDetailRepository.findByBookingId(bookingId);
+                if (!details.isEmpty()) {
+                    String eventTitle = details.get(0).getTicketType().getEvent().getTitle();
+                    orderInfo = String.format("KH: %s thanh toan vé: %s", userName, eventTitle);
+                }
+            }
+        } catch (Exception e) {
+        }
+        
+        vnp_Params.put("vnp_OrderInfo", orderInfo);
         vnp_Params.put("vnp_OrderType", orderType);
         vnp_Params.put("vnp_Locale", "vn");
         vnp_Params.put("vnp_ReturnUrl", VnPayConfig.vnp_ReturnUrl);
         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
 
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        formatter.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 

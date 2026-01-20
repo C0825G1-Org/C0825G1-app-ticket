@@ -8,6 +8,8 @@ import com.codegym.appticket.repository.IRoleRepository;
 import com.codegym.appticket.repository.IUserRepository;
 import jakarta.persistence.NoResultException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -33,6 +35,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         OAuth2User user = super.loadUser(userRequest);
         CustomOAuth2User customUser = new CustomOAuth2User(user);
 
+//        SecurityContext context = SecurityContextHolder.getContext();
+//        context.setAuthentication();
         processOAuth2PostLogin(customUser);
 
         return customUser;
@@ -58,7 +62,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             }
             
             userRepository.save(newUser);
+        } else {
+             User user = existUser.get();
+             // Luôn đồng bộ tên từ Google để đảm bảo chính xác nhất
+             String googleName = oAuth2User.getName();
+             if (googleName != null && !googleName.equals(user.getFullName())) {
+                user.setFullName(googleName);
+                 userRepository.save(user);
+             }
         }
-        // Nếu user đã tồn tại -> Không làm gì cả, chỉ return về để Spring Security tự xử lý đăng nhập
     }
 }

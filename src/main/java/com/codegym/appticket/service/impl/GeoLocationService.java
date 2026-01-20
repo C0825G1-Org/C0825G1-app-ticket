@@ -5,20 +5,19 @@ import com.codegym.appticket.dto.home.IpApiResponse;
 import com.codegym.appticket.dto.home.LocationDTO;
 import com.codegym.appticket.repository.GeoLocationRepository;
 import com.codegym.appticket.service.IGeoLocationService;
+import com.codegym.appticket.util.VietnamProvinceCoordinates;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class GeoLocationService implements IGeoLocationService {
     private final WebClient ipApiWebClient;
     private final GeoLocationRepository geoLocationRepository;
-
-    public GeoLocationService(WebClient ipApiWebClient, GeoLocationRepository geoLocationRepository) {
-        this.ipApiWebClient = ipApiWebClient;
-        this.geoLocationRepository = geoLocationRepository;
-    }
+    private final VietnamProvinceCoordinates vietnamProvinceCoordinates;
 
     @Override
     public LocationDTO getLocationFromIP(String ipAddress) {
@@ -41,7 +40,16 @@ public class GeoLocationService implements IGeoLocationService {
     }
 
     @Override
-    public double[] getCoordinates(String location) {
-        return geoLocationRepository.getCoordinates(location);
+    public Double[] getCoordinates(String location) {
+        // Dùng map tọa độ Việt Nam (đơn giản, nhanh)
+        Double[] coords = vietnamProvinceCoordinates.getCoordinates(location);
+        
+        if (coords != null) {
+            log.info("Found coordinates for '{}': [{}, {}]", location, coords[0], coords[1]);
+            return coords;
+        }
+        
+        log.warn("Province '{}' not found in map", location);
+        return null;
     }
 }

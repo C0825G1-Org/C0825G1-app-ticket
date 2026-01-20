@@ -265,6 +265,41 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
     org.springframework.data.domain.Page<Event> findByOrganizerAndStatusNot(User organizer,
             com.codegym.appticket.entity.EventStatus status, Pageable pageable);
 
+    // --- Report Queries ---
+
+    // 1. Top Selling Events (by Ticket Quantity or Revenue)
+    @Query(value = """
+            SELECT
+                e.id AS id,
+                e.title AS title,
+                c.name AS categoryName,
+                SUM(bd.quantity) AS ticketsSold,
+                SUM(bd.quantity * tt.price) * 0.05 AS revenue
+            FROM events e
+            JOIN event_categories c ON c.id = e.category_id
+            JOIN ticket_types tt ON tt.event_id = e.id
+            JOIN booking_details bd ON bd.ticket_type_id = tt.id
+            JOIN bookings b ON b.id = bd.booking_id
+            WHERE b.status = 'SUCCESS'
+              AND e.status = 'APPROVED'
+              AND (b.booking_time BETWEEN :start AND :end)
+            GROUP BY e.id, e.title, c.name
+            ORDER BY revenue DESC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<com.codegym.appticket.dto.report.TopEventDTO> findTopSellingEvents(
+            @Param("start") LocalDateTime start, 
+            @Param("end") LocalDateTime end, 
+            @Param("limit") int limit);
+
+    // 2. Events Count by Category (Pie Chart)
+    @Query("SELECT e.category.name, COUNT(e) FROM Event e WHERE e.status = 'APPROVED' GROUP BY e.category.name")
+    List<Object[]> countEventsByCategory();
+
+    // 3. Count Events Created in Period
+    @Query("SELECT COUNT(e) FROM Event e WHERE e.createdDate BETWEEN :start AND :end AND e.status = 'APPROVED'")
+    long countNewEvents(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
     @Query(value = """
     SELECT 
         e.id AS id,
@@ -309,6 +344,33 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
         @Param("userLon") Double userLongitude,
         @Param("excludeLocation") String excludeLocation,
         @Param("limit") int limit
+    );
+
+    @Query(value = """
+    SELECT 
+        e.id AS id,
+        e.title AS title,
+        p.name AS location,
+        (SELECT em.media_url FROM event_media em 
+         WHERE em.event_id = e.id 
+         ORDER BY em.created_at ASC LIMIT 1) AS image,
+        c.name AS categoryName,
+        MIN(eo.start_time) AS eventDate
+    FROM events e
+    LEFT JOIN event_categories c ON c.id = e.category_id
+    LEFT JOIN event_occurrences eo ON eo.event_id = e.id
+    LEFT JOIN locations l ON l.id = eo.location_id
+    LEFT JOIN wards w ON w.code = l.ward_code
+    LEFT JOIN provinces p ON p.code = w.province_code
+    WHERE e.status = 'APPROVED'
+      AND p.name IN :nearbyProvinces
+    GROUP BY e.id, e.title, p.name, c.name
+    ORDER BY MIN(eo.start_time) ASC
+    LIMIT :limit
+    """, nativeQuery = true)
+    List<NearByEventDTO> findEventsByProvinces(
+            @Param("nearbyProvinces") List<String> nearbyProvinces,
+            @Param("limit") int limit
     );
 }
 

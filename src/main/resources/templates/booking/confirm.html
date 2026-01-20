@@ -12,6 +12,13 @@
                         <div class="card-body p-4 text-center">
                             <h3 class="mb-4">Xác nhận thông tin đặt vé</h3>
                             <div class="text-start mb-4">
+                                <p><strong>Khách hàng</strong> <span
+                                        th:text="${currentUser != null ? (currentUser.fullName != null && !currentUser.fullName.isEmpty() ? currentUser.fullName : currentUser.email) : 'Chưa đăng nhập'}"></span>
+                                </p>
+                                <p><strong>Số điện thoại:</strong> <span
+                                        th:text="${currentUser != null && currentUser.phoneNumber != null && !currentUser.phoneNumber.isEmpty() ? currentUser.phoneNumber : 'Chưa cập nhật'}"></span>
+                                </p>
+                                <hr>
                                 <p><strong>Sự kiện:</strong> <span th:text="${event.title}"></span></p>
                                 <p><strong>Địa điểm:</strong> <span th:text="${location}"></span></p>
                                 <hr>

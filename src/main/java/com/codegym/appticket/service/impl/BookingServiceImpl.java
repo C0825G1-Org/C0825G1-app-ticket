@@ -101,8 +101,6 @@ public class BookingServiceImpl implements IBookingService {
             }
         }
 
-        // Đã xóa gửi email ở đây, chuyển sang confirmBooking
-
         return booking;
     }
 
@@ -146,7 +144,7 @@ public class BookingServiceImpl implements IBookingService {
 
     @Override
     @Transactional
-    public void confirmBooking(Long bookingId) {
+    public void confirmBooking(Long bookingId, String transactionCode) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
@@ -154,10 +152,14 @@ public class BookingServiceImpl implements IBookingService {
             return;
 
         booking.setStatus(BookingStatus.SUCCESS);
+        if (transactionCode != null) {
+            booking.setTransactionCode(transactionCode);
+        }
         bookingRepository.save(booking);
 
         // Gửi email xác nhận
         emailService.sendBookingConfirmation(booking);
+        emailService.sendInvoiceWithPdf(booking);
     }
 
     @Override

@@ -20,7 +20,8 @@ import java.util.List;
 public interface IEventService {
         Page<EventDTO> findAll(Pageable pageable);
 
-        Page<HomeEventDTO> findAllEvent(int size, int page);
+
+    Page<HomeEventDTO> findAllEvent(int page, int size);
 
         Page<EventDTO> search(EventSearchDTO dto, Pageable pageable);
 
