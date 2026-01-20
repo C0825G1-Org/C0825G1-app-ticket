@@ -93,12 +93,14 @@ public class ReportService implements IReportService {
     }
 
     @Override
-    public ChartDataDTO getRevenueChart(LocalDate start, LocalDate end, PeriodType type) {
+    public ChartDataDTO getRevenueChart(LocalDate start, LocalDate end, PeriodType type, ComparisonType comparison) {
+        // 1. Fetch Current Data
         var startDateTime = start.atStartOfDay();
         var endDateTime = end.atTime(23, 59, 59);
         List<Object[]> rawData;
         List<String> labels = new ArrayList<>();
         List<Number> data = new ArrayList<>();
+        List<Number> prevData = new ArrayList<>();
 
         if (ChronoUnit.DAYS.between(start, end) > 31) {
             // Group by Month
@@ -110,20 +112,53 @@ public class ReportService implements IReportService {
             fillMissingDays(start, end, rawData, labels, data);
         }
 
+        // 2. Fetch Previous Data (If Needed)
+        if (comparison != null && comparison != ComparisonType.NONE) {
+            LocalDate prevStart, prevEnd;
+            if (comparison == ComparisonType.SAME_PERIOD_LAST_YEAR) {
+                prevStart = start.minusYears(1);
+                prevEnd = end.minusYears(1);
+            } else {
+                long duration = ChronoUnit.DAYS.between(start, end) + 1;
+                prevEnd = start.minusDays(1);
+                prevStart = prevEnd.minusDays(duration - 1);
+            }
+            
+            var prevStartDT = prevStart.atStartOfDay();
+            var prevEndDT = prevEnd.atTime(23, 59, 59);
+            List<Object[]> prevRawData;
+            List<String> prevLabels = new ArrayList<>(); // Dummy labels
+            
+            if (ChronoUnit.DAYS.between(prevStart, prevEnd) > 31) {
+                 prevRawData = bookingRepository.getRevenueStatsByMonth(prevStartDT, prevEndDT);
+                 fillMissingMonths(prevStart, prevEnd, prevRawData, prevLabels, prevData);
+            } else {
+                 prevRawData = bookingRepository.getRevenueStats(prevStartDT, prevEndDT);
+                 // IMPORTANT: Use Current Start/End to normalize size? No, simply fill.
+                 fillMissingDays(prevStart, prevEnd, prevRawData, prevLabels, prevData);
+            }
+        }
+
+
+
+
         return ChartDataDTO.builder()
                 .labels(labels)
                 .data(data)
                 .datasetLabel("Doanh thu (VND)")
+                .previousData(prevData.isEmpty() ? null : prevData)
+                .previousDatasetLabel(comparison == ComparisonType.SAME_PERIOD_LAST_YEAR ? "Cùng kỳ năm ngoái" : "Kỳ trước")
                 .build();
     }
 
     @Override
-    public ChartDataDTO getBookingChart(LocalDate start, LocalDate end, PeriodType type) {
+    public ChartDataDTO getBookingChart(LocalDate start, LocalDate end, PeriodType type, ComparisonType comparison) {
         var startDateTime = start.atStartOfDay();
         var endDateTime = end.atTime(23, 59, 59);
         List<Object[]> rawData;
         List<String> labels = new ArrayList<>();
         List<Number> data = new ArrayList<>();
+        List<Number> prevData = new ArrayList<>();
 
         if (ChronoUnit.DAYS.between(start, end) > 31) {
             rawData = bookingRepository.getBookingStatsByMonth(startDateTime, endDateTime);
@@ -133,38 +168,105 @@ public class ReportService implements IReportService {
             fillMissingDays(start, end, rawData, labels, data);
         }
 
+        if (comparison != null && comparison != ComparisonType.NONE) {
+            LocalDate prevStart, prevEnd;
+            if (comparison == ComparisonType.SAME_PERIOD_LAST_YEAR) {
+                prevStart = start.minusYears(1);
+                prevEnd = end.minusYears(1);
+            } else {
+                long duration = ChronoUnit.DAYS.between(start, end) + 1;
+                prevEnd = start.minusDays(1);
+                prevStart = prevEnd.minusDays(duration - 1);
+            }
+            var prevStartDT = prevStart.atStartOfDay();
+            var prevEndDT = prevEnd.atTime(23, 59, 59);
+            List<Object[]> prevRawData;
+            List<String> prevLabels = new ArrayList<>(); 
+            
+            if (ChronoUnit.DAYS.between(prevStart, prevEnd) > 31) {
+                 prevRawData = bookingRepository.getBookingStatsByMonth(prevStartDT, prevEndDT);
+                 fillMissingMonths(prevStart, prevEnd, prevRawData, prevLabels, prevData);
+            } else {
+                 prevRawData = bookingRepository.getBookingStats(prevStartDT, prevEndDT);
+                 fillMissingDays(prevStart, prevEnd, prevRawData, prevLabels, prevData);
+            }
+        }
+
+
         return ChartDataDTO.builder()
                 .labels(labels)
                 .data(data)
                 .datasetLabel("Số lượng Booking")
+                .previousData(prevData.isEmpty() ? null : prevData)
+                .previousDatasetLabel(comparison == ComparisonType.SAME_PERIOD_LAST_YEAR ? "Cùng kỳ năm ngoái" : "Kỳ trước")
                 .build();
     }
 
     @Override
-    public ChartDataDTO getEventCategoryChart() {
-        List<Object[]> rawData = eventRepository.countEventsByCategory();
-        List<String> labels = new ArrayList<>();
-        List<Number> data = new ArrayList<>();
-        
+    public ChartDataDTO getEventCategoryChart(LocalDate start, LocalDate end, ComparisonType comparison) {
+        var startDateTime = start.atStartOfDay();
+        var endDateTime = end.atTime(23, 59, 59);
+
+        // 1. Fetch Current Data
+        List<Object[]> rawData = eventRepository.countEventsByCategory(startDateTime, endDateTime);
+        Map<String, Number> currentMap = new HashMap<>();
         for (Object[] row : rawData) {
-            labels.add((String) row[0]);
-            data.add((Number) row[1]);
+             currentMap.put((String) row[0], (Number) row[1]);
+        }
+
+        // 2. Fetch Previous Data
+        Map<String, Number> prevMap = new HashMap<>();
+         if (comparison != null && comparison != ComparisonType.NONE) {
+            LocalDate prevStart, prevEnd;
+            if (comparison == ComparisonType.SAME_PERIOD_LAST_YEAR) {
+                prevStart = start.minusYears(1);
+                prevEnd = end.minusYears(1);
+            } else {
+                long duration = ChronoUnit.DAYS.between(start, end) + 1;
+                prevEnd = start.minusDays(1);
+                prevStart = prevEnd.minusDays(duration - 1);
+            }
+            List<Object[]> prevRawData = eventRepository.countEventsByCategory(prevStart.atStartOfDay(), prevEnd.atTime(23, 59, 59));
+             for (Object[] row : prevRawData) {
+                 prevMap.put((String) row[0], (Number) row[1]);
+            }
+        }
+
+        // 3. Union Labels
+        Set<String> allLabels = new HashSet<>();
+        allLabels.addAll(currentMap.keySet());
+        allLabels.addAll(prevMap.keySet());
+        List<String> sortedLabels = new ArrayList<>(allLabels);
+        Collections.sort(sortedLabels);
+
+        // 4. Fill Data
+        List<Number> data = new ArrayList<>();
+        List<Number> prevDataList = new ArrayList<>();
+
+        for (String label : sortedLabels) {
+            data.add(currentMap.getOrDefault(label, 0));
+            if (comparison != null && comparison != ComparisonType.NONE) {
+                prevDataList.add(prevMap.getOrDefault(label, 0));
+            }
         }
 
         return ChartDataDTO.builder()
-                .labels(labels)
+                .labels(sortedLabels)
                 .data(data)
                 .datasetLabel("Events per Category")
+                .previousData(prevDataList.isEmpty() ? null : prevDataList)
+                .previousDatasetLabel(comparison == ComparisonType.SAME_PERIOD_LAST_YEAR ? "Cùng kỳ năm ngoái" : "Kỳ trước")
                 .build();
     }
 
     @Override
-    public ChartDataDTO getUserGrowthChart(LocalDate start, LocalDate end, PeriodType type) {
+    public ChartDataDTO getUserGrowthChart(LocalDate start, LocalDate end, PeriodType type, ComparisonType comparison) {
         var startDateTime = start.atStartOfDay();
         var endDateTime = end.atTime(23, 59, 59);
         List<Object[]> rawData;
         List<String> labels = new ArrayList<>();
         List<Number> data = new ArrayList<>();
+        List<Number> prevData = new ArrayList<>();
 
         if (ChronoUnit.DAYS.between(start, end) > 31) {
             rawData = userRepository.getUserGrowthStatsByMonth(startDateTime, endDateTime);
@@ -174,10 +276,37 @@ public class ReportService implements IReportService {
             fillMissingDays(start, end, rawData, labels, data);
         }
 
+        // Previous Data
+         if (comparison != null && comparison != ComparisonType.NONE) {
+            LocalDate prevStart, prevEnd;
+            if (comparison == ComparisonType.SAME_PERIOD_LAST_YEAR) {
+                prevStart = start.minusYears(1);
+                prevEnd = end.minusYears(1);
+            } else {
+                long duration = ChronoUnit.DAYS.between(start, end) + 1;
+                prevEnd = start.minusDays(1);
+                prevStart = prevEnd.minusDays(duration - 1);
+            }
+            var prevStartDT = prevStart.atStartOfDay();
+            var prevEndDT = prevEnd.atTime(23, 59, 59);
+            List<Object[]> prevRawData;
+            List<String> prevLabels = new ArrayList<>(); 
+            
+            if (ChronoUnit.DAYS.between(prevStart, prevEnd) > 31) {
+                 prevRawData = userRepository.getUserGrowthStatsByMonth(prevStartDT, prevEndDT);
+                 fillMissingMonths(prevStart, prevEnd, prevRawData, prevLabels, prevData);
+            } else {
+                 prevRawData = userRepository.getUserGrowthStats(prevStartDT, prevEndDT);
+                 fillMissingDays(prevStart, prevEnd, prevRawData, prevLabels, prevData);
+            }
+        }
+
         return ChartDataDTO.builder()
                 .labels(labels)
                 .data(data)
                 .datasetLabel("User Growth")
+                .previousData(prevData.isEmpty() ? null : prevData)
+                .previousDatasetLabel(comparison == ComparisonType.SAME_PERIOD_LAST_YEAR ? "Cùng kỳ năm ngoái" : "Kỳ trước")
                 .build();
     }
 
@@ -383,10 +512,10 @@ public class ReportService implements IReportService {
             long daysDiff = ChronoUnit.DAYS.between(start, end);
             PeriodType periodType = (daysDiff > 31) ? PeriodType.MONTH : PeriodType.DAY;
             
-            ChartDataDTO revenueData = getRevenueChart(start, end, periodType);
-            ChartDataDTO bookingData = getBookingChart(start, end, periodType);
-            ChartDataDTO userData = getUserGrowthChart(start, end, periodType);
-            ChartDataDTO categoryData = getEventCategoryChart();
+            ChartDataDTO revenueData = getRevenueChart(start, end, periodType, comparison);
+            ChartDataDTO bookingData = getBookingChart(start, end, periodType, comparison);
+            ChartDataDTO userData = getUserGrowthChart(start, end, periodType, comparison);
+            ChartDataDTO categoryData = getEventCategoryChart(start, end, comparison);
 
             // 2. Create "Data" Sheet (Hidden)
             // Storing raw data in a separate sheet for charts to reference
@@ -401,7 +530,8 @@ public class ReportService implements IReportService {
             org.apache.poi.xssf.usermodel.XSSFSheet summarySheet = (org.apache.poi.xssf.usermodel.XSSFSheet) createSummarySheet(workbook, start, end);
             
             // 4. Create Native Charts on Summary Sheet
-            createNativeCharts(summarySheet, dataSheet, timeSeriesRows, categoryRows);
+            boolean hasComparison = revenueData.getPreviousData() != null && !revenueData.getPreviousData().isEmpty();
+            createNativeCharts(summarySheet, dataSheet, timeSeriesRows, categoryRows, hasComparison);
 
             // 5. Other Sheets
             createTopEventsSheet(workbook, start, end);
@@ -422,6 +552,11 @@ public class ReportService implements IReportService {
         header.createCell(1).setCellValue("Revenue");
         header.createCell(2).setCellValue("Bookings");
         header.createCell(3).setCellValue("New Users");
+        if (revenue.getPreviousData() != null && !revenue.getPreviousData().isEmpty()) {
+            header.createCell(4).setCellValue("Prev Revenue");
+            header.createCell(5).setCellValue("Prev Booking");
+            header.createCell(6).setCellValue("Prev Users");
+        }
 
         List<String> labels = revenue.getLabels();
         int rows = labels.size();
@@ -432,44 +567,63 @@ public class ReportService implements IReportService {
             row.createCell(1).setCellValue(revenue.getData().get(i).doubleValue());
             row.createCell(2).setCellValue(booking.getData().get(i).doubleValue());
             row.createCell(3).setCellValue(user.getData().get(i).doubleValue());
+            
+            if (revenue.getPreviousData() != null && !revenue.getPreviousData().isEmpty()) {
+                row.createCell(4).setCellValue(revenue.getPreviousData().get(i).doubleValue());
+                row.createCell(5).setCellValue(booking.getPreviousData().get(i).doubleValue());
+                row.createCell(6).setCellValue(user.getPreviousData().get(i).doubleValue());
+            }
         }
         return rows;
     }
 
     private int fillCategoryData(Sheet sheet, ChartDataDTO category) {
         Row header = sheet.getRow(0); // Assumed created
-        header.createCell(5).setCellValue("Category");
-        header.createCell(6).setCellValue("Count");
+        header.createCell(8).setCellValue("Category");
+        header.createCell(9).setCellValue("Count");
+        
+        boolean hasPrev = category.getPreviousData() != null && !category.getPreviousData().isEmpty();
+        if (hasPrev) {
+            header.createCell(10).setCellValue("Prev Count");
+        }
 
         List<String> labels = category.getLabels();
         int rows = labels.size();
 
         for (int i = 0; i < rows; i++) {
             Row row = sheet.getRow(i + 1) != null ? sheet.getRow(i + 1) : sheet.createRow(i + 1);
-            row.createCell(5).setCellValue(labels.get(i));
-            row.createCell(6).setCellValue(category.getData().get(i).doubleValue());
+            row.createCell(8).setCellValue(labels.get(i));
+            row.createCell(9).setCellValue(category.getData().get(i).doubleValue());
+            if (hasPrev) {
+                 row.createCell(10).setCellValue(category.getPreviousData().get(i).doubleValue());
+            }
         }
         return rows;
     }
 
-    private void createNativeCharts(org.apache.poi.xssf.usermodel.XSSFSheet summarySheet, org.apache.poi.xssf.usermodel.XSSFSheet dataSheet, int timeRows, int categoryRows) {
+    private void createNativeCharts(org.apache.poi.xssf.usermodel.XSSFSheet summarySheet, org.apache.poi.xssf.usermodel.XSSFSheet dataSheet, int timeRows, int categoryRows, boolean hasComparison) {
         org.apache.poi.xssf.usermodel.XSSFDrawing drawing = summarySheet.createDrawingPatriarch();
         
         // 1. Revenue Chart (Line) - Position: C8 to I20
-        createLineChart(drawing, dataSheet, "Revenue Stats", 0, 1, timeRows, 2, 8, 8, 20);
+        createLineChart(drawing, dataSheet, "Revenue Stats", 0, 1, hasComparison ? 4 : -1, timeRows, 2, 8, 8, 20);
 
         // 2. Booking Chart (Bar) - Position: J8 to P20
-        createBarChart(drawing, dataSheet, "Booking Stats", 0, 2, timeRows, 9, 8, 15, 20);
+        createBarChart(drawing, dataSheet, "Booking Stats", 0, 2, hasComparison ? 5 : -1, timeRows, 9, 8, 15, 20);
 
         // 3. Category Chart (Pie) - Position: C22 to I34
-        createPieChart(drawing, dataSheet, "Event Categories", 5, 6, categoryRows, 2, 22, 8, 34);
+        if (hasComparison) {
+             createPieChart(drawing, dataSheet, "Categories (Current)", 8, 9, categoryRows, 2, 22, 5, 34);
+             createPieChart(drawing, dataSheet, "Categories (Previous)", 8, 10, categoryRows, 6, 22, 9, 34);
+        } else {
+             createPieChart(drawing, dataSheet, "Event Categories", 8, 9, categoryRows, 2, 22, 8, 34);
+        }
         
         // 4. User Growth Chart (Line) - Position: J22 to P34
-        createLineChart(drawing, dataSheet, "User Growth", 0, 3, timeRows, 9, 22, 15, 34);
+        createLineChart(drawing, dataSheet, "User Growth", 0, 3, hasComparison ? 6 : -1, timeRows, 9, 22, 15, 34);
     }
 
     private void createLineChart(org.apache.poi.xssf.usermodel.XSSFDrawing drawing, org.apache.poi.xssf.usermodel.XSSFSheet dataSheet, 
-                                 String title, int xCol, int yCol, int rows,
+                                 String title, int xCol, int yCol, int prevYCol, int rows,
                                  int col1, int row1, int col2, int row2) {
         org.apache.poi.xssf.usermodel.XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, col1, row1, col2, row2);
         org.apache.poi.xddf.usermodel.chart.XDDFChart chart = drawing.createChart(anchor);
@@ -481,42 +635,61 @@ public class ReportService implements IReportService {
         legend.setPosition(org.apache.poi.xddf.usermodel.chart.LegendPosition.BOTTOM);
 
         // Data Sources
-        org.apache.poi.xddf.usermodel.chart.XDDFDataSource<String> xs = org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromStringCellRange(dataSheet, new org.apache.poi.ss.util.CellRangeAddress(1, rows, xCol, xCol));
-        org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource<Double> ys = org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromNumericCellRange(dataSheet, new org.apache.poi.ss.util.CellRangeAddress(1, rows, yCol, yCol));
-
-        // Axis
         org.apache.poi.xddf.usermodel.chart.XDDFCategoryAxis bottomAxis = chart.createCategoryAxis(org.apache.poi.xddf.usermodel.chart.AxisPosition.BOTTOM);
         org.apache.poi.xddf.usermodel.chart.XDDFValueAxis leftAxis = chart.createValueAxis(org.apache.poi.xddf.usermodel.chart.AxisPosition.LEFT);
         
-        // Data
         org.apache.poi.xddf.usermodel.chart.XDDFLineChartData data = (org.apache.poi.xddf.usermodel.chart.XDDFLineChartData) chart.createData(org.apache.poi.xddf.usermodel.chart.ChartTypes.LINE, bottomAxis, leftAxis);
-        org.apache.poi.xddf.usermodel.chart.XDDFLineChartData.Series series = (org.apache.poi.xddf.usermodel.chart.XDDFLineChartData.Series) data.addSeries(xs, ys);
-        series.setTitle(title, null);
-        series.setSmooth(true);
-        series.setMarkerStyle(org.apache.poi.xddf.usermodel.chart.MarkerStyle.NONE);
+        
+        // Series 1
+        org.apache.poi.xddf.usermodel.chart.XDDFDataSource<String> xs = org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromStringCellRange(dataSheet, new org.apache.poi.ss.util.CellRangeAddress(1, rows, xCol, xCol));
+        org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource<Double> ys = org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromNumericCellRange(dataSheet, new org.apache.poi.ss.util.CellRangeAddress(1, rows, yCol, yCol));
+        org.apache.poi.xddf.usermodel.chart.XDDFLineChartData.Series series1 = (org.apache.poi.xddf.usermodel.chart.XDDFLineChartData.Series) data.addSeries(xs, ys);
+        series1.setTitle(prevYCol != -1 ? "Current" : title, null);
+        series1.setSmooth(true);
+        series1.setMarkerStyle(org.apache.poi.xddf.usermodel.chart.MarkerStyle.NONE);
+
+        // Series 2 (Comparison)
+        if (prevYCol != -1) {
+             org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource<Double> ysPrev = org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromNumericCellRange(dataSheet, new org.apache.poi.ss.util.CellRangeAddress(1, rows, prevYCol, prevYCol));
+             org.apache.poi.xddf.usermodel.chart.XDDFLineChartData.Series series2 = (org.apache.poi.xddf.usermodel.chart.XDDFLineChartData.Series) data.addSeries(xs, ysPrev);
+             series2.setTitle("Previous", null);
+             series2.setSmooth(true);
+             series2.setMarkerStyle(org.apache.poi.xddf.usermodel.chart.MarkerStyle.NONE);
+             // Make it dashed? POI doesn't easily support line style modification in high-level API, but we can try basic properties if available.
+             // For now, different color is automatic.
+        }
 
         chart.plot(data);
     }
 
     private void createBarChart(org.apache.poi.xssf.usermodel.XSSFDrawing drawing, org.apache.poi.xssf.usermodel.XSSFSheet dataSheet, 
-                                String title, int xCol, int yCol, int rows,
+                                String title, int xCol, int yCol, int prevYCol, int rows,
                                 int col1, int row1, int col2, int row2) {
         org.apache.poi.xssf.usermodel.XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, col1, row1, col2, row2);
         org.apache.poi.xddf.usermodel.chart.XDDFChart chart = drawing.createChart(anchor);
         chart.setTitleText(title);
         chart.setTitleOverlay(false);
         
+        org.apache.poi.xddf.usermodel.chart.XDDFChartLegend legend = chart.getOrAddLegend();
+        legend.setPosition(org.apache.poi.xddf.usermodel.chart.LegendPosition.BOTTOM);
+
         org.apache.poi.xddf.usermodel.chart.XDDFCategoryAxis bottomAxis = chart.createCategoryAxis(org.apache.poi.xddf.usermodel.chart.AxisPosition.BOTTOM);
         org.apache.poi.xddf.usermodel.chart.XDDFValueAxis leftAxis = chart.createValueAxis(org.apache.poi.xddf.usermodel.chart.AxisPosition.LEFT);
-
-        org.apache.poi.xddf.usermodel.chart.XDDFDataSource<String> xs = org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromStringCellRange(dataSheet, new org.apache.poi.ss.util.CellRangeAddress(1, rows, xCol, xCol));
-        org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource<Double> ys = org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromNumericCellRange(dataSheet, new org.apache.poi.ss.util.CellRangeAddress(1, rows, yCol, yCol));
 
         org.apache.poi.xddf.usermodel.chart.XDDFBarChartData data = (org.apache.poi.xddf.usermodel.chart.XDDFBarChartData) chart.createData(org.apache.poi.xddf.usermodel.chart.ChartTypes.BAR, bottomAxis, leftAxis);
         data.setBarDirection(org.apache.poi.xddf.usermodel.chart.BarDirection.COL);
         
-        org.apache.poi.xddf.usermodel.chart.XDDFBarChartData.Series series = (org.apache.poi.xddf.usermodel.chart.XDDFBarChartData.Series) data.addSeries(xs, ys);
-        series.setTitle(title, null);
+        org.apache.poi.xddf.usermodel.chart.XDDFDataSource<String> xs = org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromStringCellRange(dataSheet, new org.apache.poi.ss.util.CellRangeAddress(1, rows, xCol, xCol));
+        org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource<Double> ys = org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromNumericCellRange(dataSheet, new org.apache.poi.ss.util.CellRangeAddress(1, rows, yCol, yCol));
+        
+        org.apache.poi.xddf.usermodel.chart.XDDFBarChartData.Series series1 = (org.apache.poi.xddf.usermodel.chart.XDDFBarChartData.Series) data.addSeries(xs, ys);
+        series1.setTitle(prevYCol != -1 ? "Current" : title, null);
+
+        if (prevYCol != -1) {
+            org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource<Double> ysPrev = org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromNumericCellRange(dataSheet, new org.apache.poi.ss.util.CellRangeAddress(1, rows, prevYCol, prevYCol));
+            org.apache.poi.xddf.usermodel.chart.XDDFBarChartData.Series series2 = (org.apache.poi.xddf.usermodel.chart.XDDFBarChartData.Series) data.addSeries(xs, ysPrev);
+            series2.setTitle("Previous", null);
+        }
         
         chart.plot(data);
     }

@@ -94,6 +94,14 @@
 
                                 <label class="form-label fw-bold small text-uppercase text-muted">So sánh với:</label>
                                 <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="compareType" id="compareNone"
+                                        value="none" th:checked="${compareType == 'none'}"
+                                        onchange="this.form.submit()">
+                                    <label class="form-check-label" for="compareNone">
+                                        Không so sánh
+                                    </label>
+                                </div>
+                                <div class="form-check">
                                     <input class="form-check-input" type="radio" name="compareType" id="comparePrevious"
                                         value="previous_period"
                                         th:checked="${compareType == 'previous_period' or compareType == null}"
@@ -247,7 +255,8 @@
                                         kiện
                                     </h5>
                                 </div>
-                                <div class="card-body d-flex align-items-center justify-content-center">
+                                <div class="card-body d-flex align-items-center justify-content-center"
+                                    id="categoryChartContainer">
                                     <canvas id="categoryChart" style="max-height: 280px;"></canvas>
                                 </div>
                             </div>
@@ -439,20 +448,41 @@
                         // Register global instances
                         window.reportCharts = {};
 
+                        // --- Helper to build datasets ---
+                        function buildDatasets(chartData, type, colorC, colorP) {
+                            const datasets = [{
+                                label: chartData.datasetLabel,
+                                data: chartData.data,
+                                borderColor: colorC,
+                                backgroundColor: type === 'line' ? colorC + '1A' : colorC, // 10% opacity for line fill
+                                borderWidth: type === 'line' ? 2 : 0,
+                                fill: type === 'line',
+                                tension: 0.3,
+                                borderRadius: type === 'bar' ? 4 : 0
+                            }];
+
+                            if (chartData.previousData && chartData.previousData.length > 0) {
+                                datasets.push({
+                                    label: chartData.previousDatasetLabel,
+                                    data: chartData.previousData,
+                                    borderColor: colorP || '#858796',
+                                    backgroundColor: type === 'line' ? (colorP || '#858796') + '1A' : (colorP || '#858796'),
+                                    borderWidth: type === 'line' ? 2 : 0,
+                                    borderDash: type === 'line' ? [5, 5] : [], // Dashed for previous line
+                                    fill: type === 'line',
+                                    tension: 0.3,
+                                    borderRadius: type === 'bar' ? 4 : 0
+                                });
+                            }
+                            return datasets;
+                        }
+
                         // 1. Revenue Chart (Line)
                         window.reportCharts.revenue = new Chart(document.getElementById('revenueChart'), {
                             type: 'line',
                             data: {
                                 labels: revenueChartData.labels,
-                                datasets: [{
-                                    label: revenueChartData.datasetLabel,
-                                    data: revenueChartData.data,
-                                    borderColor: '#0d6efd',
-                                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                                    borderWidth: 2,
-                                    fill: true,
-                                    tension: 0.4
-                                }]
+                                datasets: buildDatasets(revenueChartData, 'line', '#0d6efd', '#6c757d')
                             },
                             options: {
                                 ...commonOptions,
@@ -462,52 +492,108 @@
                             }
                         });
 
-                        // 2. Category Chart (Doughnut)
-                        window.reportCharts.category = new Chart(document.getElementById('categoryChart'), {
-                            type: 'doughnut',
-                            data: {
-                                labels: categoryChartData.labels,
-                                datasets: [{
-                                    data: categoryChartData.data,
-                                    backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'],
-                                    borderWidth: 1
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: { legend: { position: 'right' } }
-                            }
-                        });
+                        // 2. Category Chart (Dual Pie Logic)
+                        const catContainer = document.getElementById('categoryChartContainer');
+                        // Clear container if needed or handle existing canvas? 
+                        // Existing canvas id='categoryChart' is there.
+
+                        if (categoryChartData.previousData && categoryChartData.previousData.length > 0) {
+                            // Dual Charts Mode
+                            // Remove existing canvas to rebuild structure
+                            catContainer.innerHTML = '';
+
+                            // Container for Side-by-Side
+                            catContainer.className = "card-body d-flex align-items-center justify-content-center gap-2";
+
+                            // Chart 1 (Current)
+                            const div1 = document.createElement('div');
+                            div1.style.width = '50%';
+                            div1.style.height = '280px';
+                            div1.style.position = 'relative';
+                            const c1 = document.createElement('canvas');
+                            div1.appendChild(c1);
+
+                            // Chart 2 (Previous)
+                            const div2 = document.createElement('div');
+                            div2.style.width = '50%';
+                            div2.style.height = '280px';
+                            div2.style.position = 'relative';
+                            const c2 = document.createElement('canvas');
+                            div2.appendChild(c2);
+
+                            catContainer.appendChild(div1);
+                            catContainer.appendChild(div2);
+
+                            // Render Current
+                            new Chart(c1, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: categoryChartData.labels,
+                                    datasets: [{
+                                        data: categoryChartData.data,
+                                        backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'],
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    ...commonOptions,
+                                    plugins: { legend: { display: false }, title: { display: true, text: 'Kỳ này' } }
+                                }
+                            });
+
+                            // Render Previous
+                            new Chart(c2, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: categoryChartData.labels,
+                                    datasets: [{
+                                        data: categoryChartData.previousData,
+                                        backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'], // Same colors
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    ...commonOptions,
+                                    plugins: { legend: { display: false }, title: { display: true, text: categoryChartData.previousDatasetLabel } }
+                                }
+                            });
+
+                        } else {
+                            // Single Chart Mode (Default)
+                            window.reportCharts.category = new Chart(document.getElementById('categoryChart'), {
+                                type: 'doughnut',
+                                data: {
+                                    labels: categoryChartData.labels,
+                                    datasets: [{
+                                        data: categoryChartData.data,
+                                        backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'],
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { position: 'right' } }
+                                }
+                            });
+                        }
 
                         // 3. Booking Chart (Bar)
                         window.reportCharts.booking = new Chart(document.getElementById('bookingChart'), {
                             type: 'bar',
                             data: {
                                 labels: bookingChartData.labels,
-                                datasets: [{
-                                    label: bookingChartData.datasetLabel,
-                                    data: bookingChartData.data,
-                                    backgroundColor: '#20c997',
-                                    borderRadius: 4
-                                }]
+                                datasets: buildDatasets(bookingChartData, 'bar', '#20c997', '#6c757d')
                             },
                             options: commonOptions
                         });
 
-                        // 4. User Growth Chart (Area)
+                        // 4. User Growth Chart (Line)
                         window.reportCharts.user = new Chart(document.getElementById('userChart'), {
                             type: 'line',
                             data: {
                                 labels: userChartData.labels,
-                                datasets: [{
-                                    label: userChartData.datasetLabel,
-                                    data: userChartData.data,
-                                    borderColor: '#d63384',
-                                    backgroundColor: 'rgba(214, 51, 132, 0.1)',
-                                    fill: true,
-                                    tension: 0.3
-                                }]
+                                datasets: buildDatasets(userChartData, 'line', '#d63384', '#6c757d')
                             },
                             options: commonOptions
                         });
