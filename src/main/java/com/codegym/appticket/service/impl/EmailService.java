@@ -27,11 +27,6 @@ public class EmailService {
              + "<body style='margin: 0; padding: 0; background-color: #f8f9fa; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif;'>"
              + "    <table role='presentation' border='0' cellpadding='0' cellspacing='0' width='100%'>"
              + "        <tr>"
-             + "            <td style='padding: 20px 0; text-align: center; background-color: #0d6efd;'>"
-             + "                <h1 style='margin: 0; color: #ffffff; font-size: 24px; font-weight: bold;'>AppTicket</h1>"
-             + "            </td>"
-             + "        </tr>"
-             + "        <tr>"
              + "            <td style='padding: 40px 20px;'>"
              + "                <table role='presentation' border='0' cellpadding='0' cellspacing='0' width='100%' style='max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;'>"
              + "                    <tr>"
@@ -46,7 +41,6 @@ public class EmailService {
              + "        <tr>"
              + "            <td style='padding: 20px; text-align: center; color: #6c757d; font-size: 14px;'>"
              + "                <p style='margin: 0;'>&copy; 2026 AppTicket. All rights reserved.</p>"
-             + "                <p style='margin: 5px 0 0;'>Đây là email tự động, vui lòng không trả lời.</p>"
              + "            </td>"
              + "        </tr>"
              + "    </table>"
@@ -104,33 +98,33 @@ public class EmailService {
     @Async
     public void sendLockNotification(String toEmail, String fullName, String reason) throws MessagingException, UnsupportedEncodingException {
         sendAdminActionEmail(toEmail, fullName, "Thông báo: Tài khoản bị khóa", 
-            "Tài khoản của bạn đã bị KHÓA", reason, "#ffc107", "Tạm khóa"); // Warning color
+            "Tài khoản của bạn đã bị KHÓA", reason, "#ffc107", "Tạm khóa", true); // Include warning
     }
 
     @Async
     public void sendUnlockNotification(String toEmail, String fullName, String reason) throws MessagingException, UnsupportedEncodingException {
         sendAdminActionEmail(toEmail, fullName, "Thông báo: Tài khoản được mở khóa", 
-            "Tài khoản của bạn đã được MỞ KHÓA", reason, "#198754", "Mở khóa"); // Success color
+            "Tài khoản của bạn đã được MỞ KHÓA", reason, "#198754", "Mở khóa", false); // No warning
     }
 
     @Async
     public void sendDeleteNotification(String toEmail, String fullName, String reason) throws MessagingException, UnsupportedEncodingException {
         sendAdminActionEmail(toEmail, fullName, "Thông báo: Tài khoản bị xóa", 
-            "Tài khoản của bạn đã bị XÓA", reason, "#dc3545", "Xóa vĩnh viễn"); // Danger color
+            "Tài khoản của bạn đã bị XÓA", reason, "#dc3545", "Xóa vĩnh viễn", false); // No warning
     }
 
     @Async
     public void sendAutoDeleteNotification(String toEmail, String fullName) throws MessagingException, UnsupportedEncodingException {
         String reason = "Bạn đã không phản hồi lại email thông báo khóa tài khoản trước đó, hoặc phản hồi không hợp lệ trong thời gian quy định.";
         sendAdminActionEmail(toEmail, fullName, "Thông báo: Tài khoản tự động bị xóa", 
-            "Tài khoản bị XÓA TỰ ĐỘNG", reason, "#dc3545", "Xóa tự động");
+            "Tài khoản bị XÓA TỰ ĐỘNG", reason, "#dc3545", "Xóa tự động", false); // No warning
     }
 
-    private void sendAdminActionEmail(String toEmail, String fullName, String subject, String title, String reason, String colorCode, String badgeText) throws MessagingException, UnsupportedEncodingException {
+    private void sendAdminActionEmail(String toEmail, String fullName, String subject, String title, String reason, String colorCode, String badgeText, boolean includeWarning) throws MessagingException, UnsupportedEncodingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        helper.setFrom("rockmanx97dn@gmail.com", "AppTicket Admin");
+        helper.setFrom("triphung15@gmail.com", "AppTicket Admin");
         helper.setTo(toEmail);
 
         String body = "<p style='color: #555; margin-bottom: 20px;'>Xin chào <b>" + fullName + "</b>,</p>"
@@ -141,8 +135,11 @@ public class EmailService {
                     + "<div style='background-color: #fff3cd; border: 1px solid #ffecb5; color: #664d03; padding: 20px; border-radius: 8px; margin-bottom: 25px;'>"
                     + "    <p style='margin: 0; font-weight: bold;'>Lý do:</p>"
                     + "    <p style='margin: 5px 0 0;'>" + reason + "</p>"
-                    + "</div>"
-                    + "<p style='color: #555; font-size: 14px; line-height: 1.6;'>Vui lòng phản hồi email này trong vòng <strong>30 ngày</strong> nếu bạn có thắc mắc. Sau thời gian này, quyết định sẽ là cuối cùng.</p>";
+                    + "</div>";
+
+        if (includeWarning) {
+            body += "<p style='color: #555; font-size: 14px; line-height: 1.6;'>Vui lòng phản hồi email này trong vòng <strong>30 ngày</strong> nếu bạn có thắc mắc. Sau thời gian này, tài khoản của bạn sẽ bị xóa vĩnh viễn.</p>";
+        }
 
         helper.setSubject(subject);
         helper.setText(getEmailTemplate(subject, body), true);
