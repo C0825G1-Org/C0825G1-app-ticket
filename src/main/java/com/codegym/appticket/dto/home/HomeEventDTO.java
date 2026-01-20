@@ -7,6 +7,7 @@ public interface HomeEventDTO {
     String getTitle();
     String getDescription();
     String getLocation();
+    Integer getLocationCount();
     String getMediaUrl();
     String getCategoryName();
     LocalDateTime getStartTime();

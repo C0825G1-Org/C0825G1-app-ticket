@@ -44,6 +44,13 @@
         .ticket-card {
             position: sticky;
             top: 100px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .ticket-list {
+            max-height: 400px;
+            overflow-y: auto;
         }
     </style>
 </head>
@@ -105,6 +112,50 @@
             <div class="row">
                 <!-- Left Column: Event Description -->
                 <div class="col-lg-8 mb-4">
+                    <div th:if="${occurrences != null and !occurrences.isEmpty()}" class="mb-5">
+                        <h3 class="fw-bold mb-4">Thời gian & Địa điểm</h3>
+                        <div class="row g-3">
+                            <div th:each="occurrence : ${occurrences}" class="col-12">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-body p-4">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-6 mb-3 mb-md-0">
+                                                <div class="d-flex align-items-start">
+                                                    <i class="bi bi-calendar-event text-primary fs-4 me-3"></i>
+                                                    <div>
+                                                        <h6 class="fw-bold mb-1">Thời gian</h6>
+                                                        <p class="text-muted mb-0"
+                                                            th:text="${occurrence.startTime != null ? #temporals.format(occurrence.startTime, 'dd/MM/yyyy • HH:mm') : 'TBA'}">
+                                                            25/01/2026 • 15:45
+                                                        </p>
+                                                        <small class="text-muted" th:if="${occurrence.endTime != null}"
+                                                            th:text="'Kết thúc: ' + ${#temporals.format(occurrence.endTime, 'dd/MM/yyyy • HH:mm')}">
+                                                            Kết thúc: 22:00
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="d-flex align-items-start">
+                                                    <i class="bi bi-geo-alt-fill text-danger fs-4 me-3"></i>
+                                                    <div>
+                                                        <h6 class="fw-bold mb-1">Địa điểm</h6>
+                                                        <p class="text-muted mb-0" th:text="${occurrence.location}">
+                                                            Tỉnh Đồng Nai, Xã Long Tân
+                                                        </p>
+                                                        <small class="text-muted" th:if="${occurrence.addressDetail}"
+                                                            th:text="${occurrence.addressDetail}">
+                                                            123 Đường ABC
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="mb-5">
                         <h3 class="fw-bold mb-4">Giới thiệu sự kiện</h3>
                         <div class="text-muted lh-lg" th:utext="${event.description}">
@@ -116,55 +167,78 @@
                 <!-- Right Column: Ticket Selection -->
                 <div class="col-lg-4">
                     <div class="ticket-card card shadow-lg rounded-4 border-0">
-                        <div class="card-body p-4">
-                            <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="fw-bold mb-0">Chọn vé</h5>
                                 <span class="badge bg-success rounded-pill px-3">Còn vé</span>
                             </div>
 
                             <form id="ticketForm">
-                                <div th:each="ticket : ${ticketTypes}"
-                                    class="border border-2 border-light rounded-3 p-3 mb-3">
-                                    <div class="d-flex justify-content-between align-items-start mb-3">
-                                        <div class="flex-grow-1">
-                                            <h6 class="fw-bold mb-1" th:text="${ticket.name}">Vé Phổ thông (GA)</h6>
-                                            <small class="text-muted">
-                                                Còn <span th:text="${ticket.availableQuantity}">100</span> vé
-                                            </small>
-                                        </div>
-                                        <div class="text-end">
-                                            <div class="fw-bold text-danger fs-5"
-                                                th:text="${#numbers.formatInteger(ticket.price, 0, 'COMMA')} + 'đ'">
-                                                500.000đ
+                                <!-- Occurrence Selection -->
+                                <div th:if="${occurrences != null and occurrences.size() > 1}" class="mb-3">
+                                    <label class="form-label fw-semibold small">
+                                        <i class="bi bi-calendar-event text-primary me-1"></i>
+                                        Chọn thời gian & địa điểm
+                                    </label>
+                                    <select class="form-select form-select-sm" id="occurrenceSelect" required>
+                                        <option value="">-- Chọn buổi diễn ra --</option>
+                                        <option th:each="occurrence : ${occurrences}" th:value="${occurrence.id}"
+                                            th:text="${(occurrence.startTime != null ? #temporals.format(occurrence.startTime, 'dd/MM/yyyy HH:mm') : 'TBA') + ' - ' + (occurrence.location ?: 'Chưa cập nhật')}">
+                                            25/01/2026 15:45 - Tỉnh Đồng Nai
+                                        </option>
+                                    </select>
+                                    <small class="text-muted d-block mt-1">Vui lòng chọn buổi diễn ra</small>
+                                </div>
+
+                                <!-- Hidden input for single occurrence -->
+                                <input th:if="${occurrences != null and occurrences.size() == 1}" type="hidden"
+                                    id="occurrenceSelect" th:value="${occurrences[0].id}">
+
+                                <!-- Ticket List with Scroll -->
+                                <div class="ticket-list mb-3">
+                                    <div th:each="ticket : ${ticketTypes}"
+                                        class="border border-2 border-light rounded-3 p-2 mb-2">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div class="flex-grow-1">
+                                                <h6 class="fw-bold mb-1 small" th:text="${ticket.name}">Vé Phổ thông
+                                                    (GA)</h6>
+                                                <small class="text-muted">
+                                                    Còn <span th:text="${ticket.availableQuantity}">100</span> vé
+                                                </small>
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="fw-bold text-danger"
+                                                    th:text="${#numbers.formatInteger(ticket.price, 0, 'COMMA')} + 'đ'">
+                                                    500.000đ
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted fw-semibold">Số lượng:</small>
-                                        <div class="d-flex align-items-center gap-3">
-                                            <button type="button"
-                                                class="qty-btn btn btn-sm btn-outline-secondary rounded-circle p-0 minus-btn"
-                                                th:data-ticket-id="${ticket.id}" th:data-price="${ticket.price}">
-                                                <i class="bi bi-dash"></i>
-                                            </button>
-                                            <span class="fw-bold fs-5 qty-display"
-                                                th:id="'qty-' + ${ticket.id}">0</span>
-                                            <button type="button"
-                                                class="qty-btn btn btn-sm btn-outline-secondary rounded-circle p-0 plus-btn"
-                                                th:data-ticket-id="${ticket.id}" th:data-price="${ticket.price}"
-                                                th:data-max="${ticket.availableQuantity}">
-                                                <i class="bi bi-plus"></i>
-                                            </button>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted fw-semibold">Số lượng:</small>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <button type="button"
+                                                    class="qty-btn btn btn-sm btn-outline-secondary rounded-circle p-0 minus-btn"
+                                                    th:data-ticket-id="${ticket.id}" th:data-price="${ticket.price}">
+                                                    <i class="bi bi-dash"></i>
+                                                </button>
+                                                <span class="fw-bold qty-display" th:id="'qty-' + ${ticket.id}">0</span>
+                                                <button type="button"
+                                                    class="qty-btn btn btn-sm btn-outline-secondary rounded-circle p-0 plus-btn"
+                                                    th:data-ticket-id="${ticket.id}" th:data-price="${ticket.price}"
+                                                    th:data-max="${ticket.availableQuantity}">
+                                                    <i class="bi bi-plus"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <hr class="my-4">
+                                <hr class="my-3">
 
-                                <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <span class="fw-bold fs-5">Tổng cộng:</span>
-                                    <span class="fs-3 fw-bold text-primary" id="totalPrice">0đ</span>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="fw-bold">Tổng cộng:</span>
+                                    <span class="fs-4 fw-bold text-primary" id="totalPrice">0đ</span>
                                 </div>
 
                                 <button type="submit" class="btn btn-primary btn-lg w-100 rounded-3 fw-semibold"
@@ -244,6 +318,16 @@
         document.getElementById('ticketForm').addEventListener('submit', function (e) {
             e.preventDefault();
 
+            // Get occurrence ID
+            const occurrenceSelect = document.getElementById('occurrenceSelect');
+            const occurrenceId = occurrenceSelect ? occurrenceSelect.value : null;
+
+            // Validate occurrence selection (if multiple occurrences exist)
+            if (occurrenceSelect && occurrenceSelect.tagName === 'SELECT' && !occurrenceId) {
+                alert('Vui lòng chọn thời gian và địa điểm diễn ra sự kiện');
+                return;
+            }
+
             // Get event ID from URL
             const pathParts = window.location.pathname.split('/');
             const eventId = pathParts[pathParts.length - 1];
@@ -257,6 +341,11 @@
                     params.append('ticket_' + ticketId, quantity);
                     hasTickets = true;
                 }
+            }
+
+            // Add occurrence ID if available
+            if (occurrenceId) {
+                params.append('occurrence', occurrenceId);
             }
 
             if (hasTickets) {

@@ -21,7 +21,7 @@ body {
 .hero-section {
     padding-top: 120px;
     padding-bottom: 80px;
-    background: linear-gradient(180deg, rgba(248, 250, 252, 0) 0%, #f8fafc 100%),
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(219, 39, 119, 0.15) 100%),
     url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
     background-size: cover;
     background-position: center;
@@ -29,11 +29,17 @@ body {
     min-height: 600px;
 }
 
+.hero-section h1 {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .gradient-text {
     background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    text-shadow: none;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
 }
 
 .btn-gradient {
