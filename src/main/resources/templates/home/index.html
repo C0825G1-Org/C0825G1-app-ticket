@@ -126,7 +126,7 @@
                             <!-- Event Card -->
                             <!-- Chưa fix -->
                             <div class="position-relative text-white" style="min-height: 500px; cursor: pointer;"
-                                th:onclick="'window.location.href=\'/events/' + ${event.id} + '\''">
+                                th:onclick="'window.location.href=\'/event/' + ${event.id} + '\''">
 
                                 <!-- Background Image -->
                                 <img th:src="${(event.image != null and !event.image.isEmpty()) ? event.image : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200'}"
