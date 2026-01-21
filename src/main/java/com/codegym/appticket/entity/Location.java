@@ -1,10 +1,12 @@
 package com.codegym.appticket.entity;
 
+import com.codegym.appticket.listener.LocationEntityListener;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
 @Table(name = "locations")
+@EntityListeners(LocationEntityListener.class)
 @Getter
 @Setter
 @NoArgsConstructor

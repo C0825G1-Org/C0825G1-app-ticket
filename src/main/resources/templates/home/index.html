@@ -31,10 +31,6 @@
                 Khám phá & Đặt vé <br>
                 <span class="gradient-text">Sự kiện Đẳng cấp</span>
             </h1>
-            <p class="lead text-dark mb-5 mx-auto" style="max-width: 700px; opacity: 0.8;">
-                Hàng ngàn sự kiện âm nhạc, hội thảo, thể thao đang chờ đón bạn. Trải nghiệm đặt vé dễ dàng, check-in
-                nhanh chóng.
-            </p>
 
             <!-- Search Widget -->
             <div class="search-widget mx-auto text-start" style="max-width: 900px;">
@@ -65,6 +61,7 @@
                             </select>
                         </div>
                     </div>
+
                     <div class="col-lg-3">
                         <div class="input-group">
                             <span class="input-group-text bg-white border-end-0 rounded-start-4 ps-3">
@@ -86,7 +83,13 @@
                 </form>
             </div>
 
-            <!--            <div class="mt-4 text-muted small fw-medium">-->
+            <p class="lead fw-medium mt-4 mx-auto" style="max-width: 700px;">
+                Hàng ngàn sự kiện âm nhạc, hội thảo, thể thao đang chờ đón bạn. Trải nghiệm đặt vé dễ dàng, check-in
+                nhanh chóng.
+            </p>
+
+
+            <!--            <div class=" mt-4 text-muted small fw-medium">-->
             <!--                Phổ biến: <a href="#" class="text-decoration-underline text-dark mx-1">Sơn Tùng M-TP</a> <a href="#"-->
             <!--                    class="text-decoration-underline text-dark mx-1">Ed Sheeran</a>-->
             <!--            </div>-->
@@ -189,7 +192,7 @@
                                                 <!--Chưa fix-->
                                                 <button
                                                     class="btn btn-warning btn-lg px-5 py-3 rounded-pill fw-bold mt-3"
-                                                    th:onclick="'event.stopPropagation(); window.location.href=\'/bookings/book/' + ${event.id} + '\''">
+                                                    th:onclick="'event.stopPropagation(); window.location.href=\'/event/' + ${event.id} + '\''">
                                                     <i class="bi bi-ticket-perforated me-2"></i>
                                                     Đặt vé ngay
                                                 </button>

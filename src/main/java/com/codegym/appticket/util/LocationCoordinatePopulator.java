@@ -5,38 +5,40 @@ import com.codegym.appticket.repository.ILocationRepository;
 import com.codegym.appticket.service.IGeoLocationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 /**
  * Utility to populate latitude and longitude for existing locations
- * Run this once after adding the new columns to the locations table
+ * 
+ * Note: New locations are automatically populated via LocationEntityListener
+ * This utility is only for manually updating existing locations if needed
  */
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class LocationCoordinatePopulator implements CommandLineRunner {
+public class LocationCoordinatePopulator {
     
     private final ILocationRepository locationRepository;
     private final IGeoLocationService geoLocationService;
     
-    @Override
-    public void run(String... args) {
-        populateLocationCoordinates();
-    }
-    
-    public void populateLocationCoordinates() {
+    /**
+     * Manual trigger method - can be called from services if needed
+     * @return number of locations updated
+     */
+    public int populateLocationCoordinates() {
         log.info("Starting to populate location coordinates...");
         
         List<Location> locations = locationRepository.findAll();
         int updated = 0;
         int failed = 0;
+        int skipped = 0;
         
         for (Location location : locations) {
             // Skip if already has coordinates
             if (location.getLatitude() != null && location.getLongitude() != null) {
+                skipped++;
                 continue;
             }
             
@@ -65,6 +67,8 @@ public class LocationCoordinatePopulator implements CommandLineRunner {
             }
         }
         
-        log.info("Location coordinate population completed. Updated: {}, Failed: {}", updated, failed);
+        log.info("Location coordinate population completed. Updated: {}, Skipped: {}, Failed: {}", 
+                updated, skipped, failed);
+        return updated;
     }
 }

@@ -3,6 +3,7 @@ package com.codegym.appticket.controller;
 
 import com.codegym.appticket.dto.home.HomeEventDTO;
 import com.codegym.appticket.dto.home.NearByEventDTO;
+import com.codegym.appticket.dto.home.NearByEventWithOccurrencesDTO;
 import com.codegym.appticket.dto.home.TrendingEventDTO;
 import com.codegym.appticket.dto.home.UpComingEventDTO;
 import com.codegym.appticket.repository.IEventRepository;
@@ -197,7 +198,7 @@ public class HomeController {
         return "error/403";
     }
 
-    private List<NearByEventDTO> getNearbyEvents(String location, int limit) {
+    private List<NearByEventWithOccurrencesDTO> getNearbyEvents(String location, int limit) {
         if (location == null || location.trim().isEmpty() || location.equals("Toàn quốc")) {
             return List.of();
         }
@@ -213,7 +214,7 @@ public class HomeController {
             log.warn("Geocoding failed for location: {}", location);
             return List.of();
         }
-        return eventService.findNearbyEvents(
+        return eventService.findNearbyEventsGrouped(
                 coordinates[0], coordinates[1], location, limit
         );
     }

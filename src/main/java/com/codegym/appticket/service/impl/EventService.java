@@ -8,6 +8,7 @@ import com.codegym.appticket.dto.event.EventUpdateDTO;
 import com.codegym.appticket.dto.event.TicketTypeDTO;
 import com.codegym.appticket.dto.home.HomeEventDTO;
 import com.codegym.appticket.dto.home.NearByEventDTO;
+import com.codegym.appticket.dto.home.NearByEventWithOccurrencesDTO;
 import com.codegym.appticket.dto.home.TrendingEventDTO;
 import com.codegym.appticket.dto.home.UpComingEventDTO;
 import com.codegym.appticket.dto.event.EventOccurrenceDTO;
@@ -50,7 +51,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -69,6 +72,7 @@ public class EventService implements IEventService {
     private final IEventOccurrenceRepository eventOccurrenceRepository;
     private final AdminNotificationService adminNotificationService;
     private final com.codegym.appticket.repository.IUserRepository userRepository;
+    private final com.codegym.appticket.util.ProvinceNameMapper provinceNameMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -608,7 +612,17 @@ public class EventService implements IEventService {
             // Sắp xếp trong Java sử dụng Pageable
             Sort sortOrder = Sort.by(Sort.Direction.ASC, "id");
             Pageable pageable = PageRequest.of(page, size, sortOrder);
-            return eventRepository.searchHomeEvents(searchText, categoryId, location, pageable);
+            
+            // Convert location string to list of variants
+            List<String> locationVariants = new ArrayList<>();
+            int hasLocationFilter = 0; // 0 = false, 1 = true (MySQL compatible)
+            
+            if (location != null && !location.trim().isEmpty()) {
+                locationVariants = provinceNameMapper.getProvinceVariants(location);
+                hasLocationFilter = locationVariants.isEmpty() ? 0 : 1;
+            }
+            
+            return eventRepository.searchHomeEvents(searchText, categoryId, locationVariants, hasLocationFilter, pageable);
     }
 
     private Location getOrCreateLocation(EventOccurrenceDTO occDTO) {
@@ -673,7 +687,69 @@ public class EventService implements IEventService {
 
     @Override
     public List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, String excludeLocation, int limit) {
-        return eventRepository.findNearbyEvents(userLatitude, userLongitude, excludeLocation, limit);
+        // Convert exclude location to variants list
+        List<String> excludeLocationVariants = new ArrayList<>();
+        int hasExcludeFilter = 0;
+        
+        if (excludeLocation != null && !excludeLocation.trim().isEmpty()) {
+            excludeLocationVariants = provinceNameMapper.getProvinceVariants(excludeLocation);
+            hasExcludeFilter = excludeLocationVariants.isEmpty() ? 0 : 1;
+        }
+        
+        return eventRepository.findNearbyEvents(userLatitude, userLongitude, excludeLocationVariants, hasExcludeFilter, limit);
+    }
+
+    @Override
+    public List<NearByEventWithOccurrencesDTO> findNearbyEventsGrouped(Double userLatitude, Double userLongitude, String excludeLocation, int limit) {
+        // Convert exclude location to variants list
+        List<String> excludeLocationVariants = new ArrayList<>();
+        int hasExcludeFilter = 0;
+        
+        if (excludeLocation != null && !excludeLocation.trim().isEmpty()) {
+            excludeLocationVariants = provinceNameMapper.getProvinceVariants(excludeLocation);
+            hasExcludeFilter = excludeLocationVariants.isEmpty() ? 0 : 1;
+        }
+        
+        // Get all nearby event occurrences from repository
+        List<NearByEventDTO> allOccurrences = eventRepository.findNearbyEvents(userLatitude, userLongitude, excludeLocationVariants, hasExcludeFilter, limit * 3);
+        
+        // Group occurrences by event ID using LinkedHashMap to preserve order
+        Map<Long, NearByEventWithOccurrencesDTO> eventMap = new LinkedHashMap<>();
+        
+        for (NearByEventDTO occurrence : allOccurrences) {
+            Long eventId = occurrence.getId();
+            
+            // Get or create the grouped event DTO
+            NearByEventWithOccurrencesDTO groupedEvent = eventMap.get(eventId);
+            
+            if (groupedEvent == null) {
+                // First occurrence for this event - create new grouped DTO
+                groupedEvent = new NearByEventWithOccurrencesDTO();
+                groupedEvent.setId(eventId);
+                groupedEvent.setTitle(occurrence.getTitle());
+                groupedEvent.setLocation(occurrence.getLocation());
+                groupedEvent.setImage(occurrence.getImage());
+                groupedEvent.setCategoryName(occurrence.getCategoryName());
+                groupedEvent.setDistance(occurrence.getDistance()); // Distance to nearest occurrence
+                groupedEvent.setOccurrences(new ArrayList<>());
+                
+                eventMap.put(eventId, groupedEvent);
+            }
+            
+            // Add this occurrence to the event's occurrence list
+            NearByEventWithOccurrencesDTO.OccurrenceInfo occInfo = new NearByEventWithOccurrencesDTO.OccurrenceInfo();
+            occInfo.setOccurrenceId(occurrence.getOccurrenceId());
+            occInfo.setEventDate(occurrence.getEventDate());
+            occInfo.setAddressDetail(occurrence.getAddressDetail());
+            occInfo.setDistance(occurrence.getDistance());
+            
+            groupedEvent.getOccurrences().add(occInfo);
+        }
+        
+        // Convert map values to list and limit to requested number of unique events
+        return eventMap.values().stream()
+                .limit(limit)
+                .collect(Collectors.toList());
     }
 
         @Override
