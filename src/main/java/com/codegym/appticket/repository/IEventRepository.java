@@ -162,6 +162,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
     Page<HomeEventDTO> findAllEvent(Pageable pageable);
 
     // Search events with filters, returns HomeEventDTO for display
+    // Note: locationVariants should never be null - pass empty list if no location filter
     @Query(value = """
                 SELECT
                     e.id AS id,
@@ -187,12 +188,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 WHERE e.status = 'APPROVED'
                   AND (:searchText IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :searchText, '%')))
                   AND (:categoryId IS NULL OR e.category_id = :categoryId)
-                  AND (:location IS NULL OR 
-                       p.name LIKE CONCAT('%', :location, '%') OR
-                       (:location = 'Hồ Chí Minh' AND (p.name LIKE '%TP.HCM%' OR p.name LIKE '%HCM%' OR p.name LIKE '%Hồ Chí Minh%' OR p.name LIKE '%Thành phố Hồ Chí Minh%')) OR
-                       (:location = 'Hà Nội' AND (p.name LIKE '%Hà Nội%' OR p.name LIKE '%Ha Noi%' OR p.name LIKE '%Hanoi%' OR p.name LIKE '%Thành phố Hà Nội%')) OR
-                       (:location = 'Đà Nẵng' AND (p.name LIKE '%Đà Nẵng%' OR p.name LIKE '%Da Nang%' OR p.name LIKE '%Danang%' OR p.name LIKE '%Thành phố Đà Nẵng%'))
-                      )
+                  AND (:hasLocationFilter = 0 OR p.name IN :locationVariants)
                 GROUP BY e.id, e.title, e.description, c.name
                 ORDER BY MIN(eo.start_time) ASC
             """, countQuery = """
@@ -205,17 +201,13 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 WHERE e.status = 'APPROVED'
                   AND (:searchText IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :searchText, '%')))
                   AND (:categoryId IS NULL OR e.category_id = :categoryId)
-                  AND (:location IS NULL OR 
-                       p.name LIKE CONCAT('%', :location, '%') OR
-                       (:location = 'Hồ Chí Minh' AND (p.name LIKE '%TP.HCM%' OR p.name LIKE '%HCM%' OR p.name LIKE '%Hồ Chí Minh%' OR p.name LIKE '%Thành phố Hồ Chí Minh%')) OR
-                       (:location = 'Hà Nội' AND (p.name LIKE '%Hà Nội%' OR p.name LIKE '%Ha Noi%' OR p.name LIKE '%Hanoi%' OR p.name LIKE '%Thành phố Hà Nội%')) OR
-                       (:location = 'Đà Nẵng' AND (p.name LIKE '%Đà Nẵng%' OR p.name LIKE '%Da Nang%' OR p.name LIKE '%Danang%' OR p.name LIKE '%Thành phố Đà Nẵng%'))
-                      )
+                  AND (:hasLocationFilter = 0 OR p.name IN :locationVariants)
             """, nativeQuery = true)
     Page<HomeEventDTO> searchHomeEvents(
             @Param("searchText") String searchText,
             @Param("categoryId") Long categoryId,
-            @Param("location") String location,
+            @Param("locationVariants") List<String> locationVariants,
+            @Param("hasLocationFilter") int hasLocationFilter,
             Pageable pageable);
 
     // Get event detail by ID
@@ -351,12 +343,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
       AND l.latitude IS NOT NULL
       AND l.longitude IS NOT NULL
       AND eo.start_time > NOW()
-      AND NOT (
-          (:excludeLocation = 'Hồ Chí Minh' AND (p.name LIKE '%TP.HCM%' OR p.name LIKE '%HCM%' OR p.name LIKE '%Hồ Chí Minh%' OR p.name LIKE '%Thành phố Hồ Chí Minh%')) OR
-          (:excludeLocation = 'Hà Nội' AND (p.name LIKE '%Hà Nội%' OR p.name LIKE '%Ha Noi%' OR p.name LIKE '%Hanoi%' OR p.name LIKE '%Thành phố Hà Nội%')) OR
-          (:excludeLocation = 'Đà Nẵng' AND (p.name LIKE '%Đà Nẵng%' OR p.name LIKE '%Da Nang%' OR p.name LIKE '%Danang%' OR p.name LIKE '%Thành phố Đà Nẵng%')) OR
-          (p.name LIKE CONCAT('%', :excludeLocation, '%'))
-      )
+      AND (:hasExcludeFilter = 0 OR p.name NOT IN :excludeLocationVariants)
     HAVING distance < 160
     ORDER BY distance ASC
     LIMIT :limit
@@ -364,7 +351,8 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
     List<NearByEventDTO> findNearbyEvents(
         @Param("userLat") Double userLatitude,
         @Param("userLon") Double userLongitude,
-        @Param("excludeLocation") String excludeLocation,
+        @Param("excludeLocationVariants") List<String> excludeLocationVariants,
+        @Param("hasExcludeFilter") int hasExcludeFilter,
         @Param("limit") int limit
     );
 
