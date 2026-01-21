@@ -331,7 +331,7 @@
                 <tr th:each="detail, stat : ${details}">
                     <td class="text-center" th:text="${stat.count}">1</td>
                     <td
-                        th:text="${detail.ticketType.event != null ? detail.ticketType.event.title + ' - ' + detail.ticketType.name : detail.ticketType.name}">
+                        th:text="${detail.ticketType.eventOccurrence.event != null ? detail.ticketType.eventOccurrence.event.title + ' - ' + detail.ticketType.name : detail.ticketType.name}">
                         Vé Sự kiện</td>
                     <td class="text-center">Vé</td>
                     <td class="text-center" th:text="${detail.quantity}">2</td>
