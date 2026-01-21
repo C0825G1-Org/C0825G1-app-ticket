@@ -14,8 +14,23 @@ import java.util.Set;
 @Component
 public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
 
+    private final org.springframework.security.web.savedrequest.RequestCache requestCache = new org.springframework.security.web.savedrequest.HttpSessionRequestCache();
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+        // 1. Check for Saved Request (e.g. user accessed /events/create but was forced to login)
+        org.springframework.security.web.savedrequest.SavedRequest savedRequest = requestCache.getRequest(request, response);
+        
+        if (savedRequest != null) {
+            String targetUrl = savedRequest.getRedirectUrl();
+            // Optional: Prevent redirecting to login/register pages if they somehow got saved
+            if (!targetUrl.contains("/login") && !targetUrl.contains("/register")) {
+                response.sendRedirect(targetUrl);
+                return;
+            }
+        }
+
+        // 2. Default Role-based Validation
         Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities());
 
         if (roles.contains("ADMIN")) {

@@ -165,7 +165,7 @@
                                     <td class="px-4 py-3">
                                         <span class="badge rounded-pill px-3"
                                             th:classappend="${event.status.name() == 'PENDING' ? 'bg-warning-subtle text-warning' : (event.status.name() == 'APPROVED' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger')}"
-                                            th:text="${event.status}">Status</span>
+                                            th:text="${event.status.name() == 'PENDING' ? 'Chờ duyệt' : (event.status.name() == 'APPROVED' ? 'Đã duyệt' : 'Từ chối')}">Status</span>
                                     </td>
                                     <td class="px-4 py-3 text-end">
                                     <td class="px-4 py-3 text-end">

@@ -48,7 +48,7 @@
                             </div>
                         </div>
 
-                        <form id="createEventForm">
+                        <form id="createEventForm" method="POST">
 
                             <!-- STEP 1: EVENT INFO -->
                             <div id="step-info">
@@ -237,284 +237,123 @@
                             </div>
 
                         </form>
-
                         <!-- Shared Cloudinary Logic -->
                         <script src="/js/cloudinary-upload.js"></script>
 
                         <script>
-                            document.addEventListener('DOMContentLoaded', function () {
-                                // Cấu hình Toast thông báo của SweetAlert2
-                                const Toast = Swal.mixin({
-                                    toast: true,
-                                    position: 'top-end',
-                                    showConfirmButton: false,
-                                    timer: 3000,
-                                    timerProgressBar: true,
-                                    didOpen: (toast) => {
-                                        toast.onmouseenter = Swal.stopTimer;
-                                        toast.onmouseleave = Swal.resumeTimer;
+                            // --- GLOBAL DEFINITIONS & API CONFIG ---
+                            const API_BASE = 'https://provinces.open-api.vn/api';
+                            const locationCache = { provinces: null, districts: {}, wards: {} };
+
+                            async function fetchProvinces() {
+                                if (locationCache.provinces) return locationCache.provinces;
+                                try {
+                                    const response = await fetch(`${API_BASE}/p/`);
+                                    const data = await response.json();
+                                    locationCache.provinces = data;
+                                    return data;
+                                } catch (e) { console.error('Error fetching provinces:', e); return []; }
+                            }
+
+                            // Global helper functions
+                            window.previewFile = function (input, imgId, placeholderId) {
+                                const file = input.files[0];
+                                const img = document.getElementById(imgId);
+                                const placeholder = document.getElementById(placeholderId);
+                                if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = function (e) {
+                                        img.src = e.target.result;
+                                        img.style.display = 'block';
+                                        img.style.objectFit = 'contain';
+                                        if (placeholder) placeholder.style.display = 'none';
                                     }
-                                });
+                                    reader.readAsDataURL(file);
+                                }
+                            };
 
-                                // Logic dùng chung cho Cloudinary
-                                // Khởi tạo TinyMCE (Trình soạn thảo văn bản)
-                                tinymce.init({
-                                    selector: '#description',
-                                    height: 300,
-                                    plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help wordcount',
-                                    toolbar: 'undo redo | formatselect | ' +
-                                        'bold italic backcolor | alignleft aligncenter ' +
-                                        'alignright alignjustify | bullist numlist outdent indent | ' +
-                                        'removeformat | help',
-                                    content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
-                                });
-
-                                document.getElementById('createEventForm').addEventListener('submit', async function (e) {
-                                    e.preventDefault();
-
-                                    // Đồng bộ dữ liệu từ TinyMCE trước khi submit
-                                    if (tinymce.get('description')) {
-                                        tinymce.get('description').save();
-                                    }
-
-                                    // 1. Validate phía Client (Kiểm tra lại cho chắc chắn)
-                                    const galleryInput = document.getElementById('galleryFiles');
-                                    const maxFiles = 10;
-                                    if (galleryInput.files.length > maxFiles) {
-                                        Toast.fire({
-                                            icon: 'warning',
-                                            title: `Bạn chỉ được phép tải lên tối đa ${maxFiles} ảnh/video trong thư viện.`
-                                        });
-                                        return;
-                                    }
-
-                                    // 2. Chuẩn bị tải lên
-                                    const submitBtn = this.querySelector('button[type="submit"]');
-                                    const originalBtnText = submitBtn.innerHTML;
-                                    const resetButton = setButtonLoading(submitBtn, 'Đang tải file lên Cloudinary...');
-
-                                    try {
-                                        const bannerFile = document.getElementById('bannerFile').files[0];
-                                        const logoFile = document.getElementById('logoFile').files[0];
-                                        const ticketMapFile = document.getElementById('ticketMapFile').files[0];
-                                        const galleryFiles = document.getElementById('galleryFiles').files;
-
-                                        // Tải lên đồng thời
-                                        const uploadPromises = [];
-
-                                        if (bannerFile) uploadPromises.push(uploadToCloudinary(bannerFile).then(url => document.getElementById('bannerUrl').value = url));
-                                        if (logoFile) uploadPromises.push(uploadToCloudinary(logoFile).then(url => document.getElementById('logoUrl').value = url));
-                                        if (ticketMapFile) uploadPromises.push(uploadToCloudinary(ticketMapFile).then(url => document.getElementById('ticketMapUrl').value = url));
-
-                                        if (galleryFiles.length > 0) {
-                                            const galleryContainer = document.getElementById('galleryUrlsContainer');
-                                            galleryContainer.innerHTML = ''; // Clear previous
-                                            for (let i = 0; i < galleryFiles.length; i++) {
-                                                uploadPromises.push(
-                                                    uploadToCloudinary(galleryFiles[i]).then(url => {
-                                                        const input = document.createElement('input');
-                                                        input.type = 'hidden';
-                                                        input.name = 'galleryUrls';
-                                                        input.value = url;
-                                                        galleryContainer.appendChild(input);
-                                                    })
-                                                );
+                            window.previewGallery = function (input, gridId) {
+                                const grid = document.getElementById(gridId);
+                                grid.innerHTML = '';
+                                if (input.files) {
+                                    Array.from(input.files).forEach(file => {
+                                        const item = document.createElement('div');
+                                        item.className = 'gallery-item';
+                                        const reader = new FileReader();
+                                        reader.onload = function (e) {
+                                            if (file.type.startsWith('video/')) {
+                                                const video = document.createElement('video');
+                                                video.src = e.target.result;
+                                                video.controls = false;
+                                                item.appendChild(video);
+                                            } else {
+                                                const img = document.createElement('img');
+                                                img.src = e.target.result;
+                                                item.appendChild(img);
                                             }
                                         }
-
-                                        await Promise.all(uploadPromises);
-
-                                        // 3. Gửi xuống Backend (dưới dạng form-urlencoded)
-                                        setButtonLoading(submitBtn, 'Đang tạo sự kiện...');
-
-                                        const formData = new FormData(this);
-                                        const searchParams = new URLSearchParams();
-
-                                        for (const [key, value] of formData) {
-                                            // Bỏ qua các object File để an toàn
-                                            if (value instanceof File) continue;
-                                            searchParams.append(key, value);
-                                        }
-
-                                        // Lấy CSRF Token
-                                        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-                                        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
-
-                                        const headers = {
-                                            [csrfHeader]: csrfToken
-                                        };
-
-                                        const response = await fetch('/user/events/create', {
-                                            method: 'POST',
-                                            headers: headers,
-                                            body: searchParams // Sends application/x-www-form-urlencoded
-                                        });
-                                        const data = await response.json();
-
-                                        if (data.status === 'success') {
-                                            Toast.fire({
-                                                icon: 'success',
-                                                title: 'Tạo sự kiện thành công!'
-                                            });
-                                            setTimeout(() => {
-                                                window.location.href = data.redirectUrl;
-                                            }, 1500);
-                                        } else if (data.status === 'validation_error') {
-                                            // Xóa cũ
-                                            document.querySelectorAll('.error-message').forEach(el => {
-                                                if (!el.id.includes('error-')) el.remove(); // Chỉ xoá dynamic, giữ lại static nếu cần hoặc clear text
-                                                else el.textContent = '';
-                                            });
-                                            document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-
-                                            for (const [field, message] of Object.entries(data.errors)) {
-                                                // 1. Thử tìm placeholder tĩnh (cho field chính)
-                                                const errorDiv = document.getElementById('error-' + field);
-                                                if (errorDiv) {
-                                                    errorDiv.textContent = message;
-                                                    // Highlight input liên quan nếu có (đoán)
-                                                    const input = document.querySelector(`[name="${field}"]`);
-                                                    if (input) input.classList.add('is-invalid');
-                                                } else {
-                                                    // 2. Xử lý dynamic fields (ticketTypes[0].name, eventOccurrences[0].startTime...)
-                                                    const input = document.querySelector(`[name="${field}"]`);
-                                                    if (input) {
-                                                        input.classList.add('is-invalid');
-
-                                                        // Tạo hoặc cập nhật div lỗi ngay sau input
-                                                        let dynamicError = input.nextElementSibling;
-                                                        if (!dynamicError || !dynamicError.classList.contains('error-message')) {
-                                                            dynamicError = document.createElement('div');
-                                                            dynamicError.className = 'text-danger small error-message';
-                                                            input.parentNode.insertBefore(dynamicError, input.nextSibling);
-                                                        }
-                                                        dynamicError.textContent = message;
-                                                    }
-                                                }
-                                            }
-                                            Toast.fire({
-                                                icon: 'error',
-                                                title: 'Vui lòng kiểm tra lại thông tin nhập.'
-                                            });
-                                        } else {
-                                            Toast.fire({
-                                                icon: 'error',
-                                                title: 'Lỗi: ' + data.message
-                                            });
-                                        }
-
-                                    } catch (error) {
-                                        console.error('Error:', error);
-                                        Toast.fire({
-                                            icon: 'error',
-                                            title: 'Đã xảy ra lỗi: ' + error.message
-                                        });
-                                    } finally {
-                                        submitBtn.innerHTML = originalBtnText; // Restore text
-                                        submitBtn.disabled = false;
-                                    }
-                                });
-
-                                // Cung cấp các hàm global cho HTML gọi
-                                // Khởi tạo loại vé (Thêm 1 dòng đầu tiên)
-                                const ticketContainer = document.getElementById('ticketTypesContainer');
-
-                                window.addTicketType = function () {
-                                    const index = document.querySelectorAll('.ticket-type-row').length;
-                                    // const visibleRows = Array.from(document.querySelectorAll('.ticket-type-row')).filter(r => r.style.display !== 'none').length;
-
-                                    const newRow = document.createElement('div');
-                                    newRow.className = 'row g-3 mb-3 ticket-type-row';
-                                    newRow.innerHTML = `
-                    <div class="col-md-4">
-                        <label class="form-label fw-medium">Tên vé <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="ticketTypes[${index}].name" placeholder="VD: VIP" required>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-medium">Giá vé (VNĐ) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" name="ticketTypes[${index}].price" min="0" placeholder="0" required>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-medium">Số lượng <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" name="ticketTypes[${index}].quantity" min="1" placeholder="100" required>
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="button" class="btn btn-outline-danger w-100" onclick="removeRow(this, 'loại vé')">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
-                `;
-                                    ticketContainer.appendChild(newRow);
-                                };
-
-                                // Khởi tạo với 1 loại vé
-                                addTicketType();
-
-                                window.reindexTicketTypes = function () {
-                                    const rows = Array.from(document.querySelectorAll('.ticket-type-row'));
-                                    rows.forEach((row, idx) => {
-                                        row.querySelector('input[name$=".name"]').name = `ticketTypes[${idx}].name`;
-                                        row.querySelector('input[name$=".price"]').name = `ticketTypes[${idx}].price`;
-                                        row.querySelector('input[name$=".quantity"]').name = `ticketTypes[${idx}].quantity`;
+                                        reader.readAsDataURL(file);
+                                        grid.appendChild(item);
                                     });
-                                };
-
-                                // Logic xử lý Thời gian & Địa điểm
-                                // Cache dữ liệu API để giảm request
-                                const locationCache = {
-                                    provinces: null,
-                                    districts: {}, // keyed by provinceCode
-                                    wards: {}      // keyed by districtCode
-                                };
-
-                                const API_BASE = 'https://provinces.open-api.vn/api/v2';
-
-                                async function fetchProvinces() {
-                                    if (locationCache.provinces) return locationCache.provinces;
-                                    try {
-                                        const response = await fetch(`${API_BASE}/p/`);
-                                        const data = await response.json();
-                                        locationCache.provinces = data;
-                                        return data;
-                                    } catch (e) {
-                                        console.error('Error fetching provinces:', e);
-                                        return [];
-                                    }
                                 }
+                            };
 
-                                async function fetchDistricts(provinceCode) {
-                                    if (locationCache.districts[provinceCode]) return locationCache.districts[provinceCode];
-                                    try {
-                                        const response = await fetch(`${API_BASE}/p/${provinceCode}?depth=2`);
-                                        const data = await response.json();
-                                        locationCache.districts[provinceCode] = data.districts;
-                                        return data.districts;
-                                    } catch (e) {
-                                        console.error('Error fetching districts:', e);
-                                        return [];
-                                    }
+                            window.removeRow = function (btn, type) {
+                                if (type === 'lịch trình') {
+                                    const item = btn.closest('.event-occurrence-item');
+                                    if (item) item.remove();
+                                    window.reindexEventOccurrences();
+                                } else if (type === 'loại vé') {
+                                    const item = btn.closest('.ticket-type-row');
+                                    if (item) item.remove();
+                                    window.reindexTicketTypes();
                                 }
+                            };
 
-                                async function fetchWards(districtCode) {
-                                    if (locationCache.wards[districtCode]) return locationCache.wards[districtCode];
-                                    try {
-                                        const response = await fetch(`${API_BASE}/d/${districtCode}?depth=2`);
-                                        const data = await response.json();
-                                        locationCache.wards[districtCode] = data.wards;
-                                        return data.wards;
-                                    } catch (e) {
-                                        console.error('Error fetching wards:', e);
-                                        return [];
-                                    }
-                                }
+                            window.addTicketType = function () {
+                                const container = document.getElementById('ticketTypesContainer');
+                                if (!container) return;
+                                const index = document.querySelectorAll('.ticket-type-row').length;
+                                const newRow = document.createElement('div');
+                                newRow.className = 'row g-3 mb-3 ticket-type-row';
+                                newRow.innerHTML = `
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-medium">Tên vé <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="ticketTypes[${index}].name" placeholder="VD: VIP" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-medium">Giá vé (VNĐ) <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" name="ticketTypes[${index}].price" min="0" placeholder="0" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-medium">Số lượng <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" name="ticketTypes[${index}].quantity" min="1" placeholder="100" required>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button type="button" class="btn btn-outline-danger w-100" onclick="removeRow(this, 'loại vé')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                `;
+                                container.appendChild(newRow);
+                            };
 
-                                window.addEventOccurrence = async function () {
-                                    const container = document.getElementById('eventOccurrencesContainer');
-                                    const idx = document.querySelectorAll('.event-occurrence-item').length;
+                            window.reindexTicketTypes = function () {
+                                const rows = Array.from(document.querySelectorAll('.ticket-type-row'));
+                                rows.forEach((row, idx) => {
+                                    row.querySelector('input[name$=".name"]').name = `ticketTypes[${idx}].name`;
+                                    row.querySelector('input[name$=".price"]').name = `ticketTypes[${idx}].price`;
+                                    row.querySelector('input[name$=".quantity"]').name = `ticketTypes[${idx}].quantity`;
+                                });
+                            };
 
-                                    const item = document.createElement('div');
-                                    item.className = 'card mb-3 border bg-light event-occurrence-item';
-                                    item.innerHTML = `
+                            window.addEventOccurrence = async function () {
+                                const container = document.getElementById('eventOccurrencesContainer');
+                                if (!container) return;
+                                const idx = document.querySelectorAll('.event-occurrence-item').length;
+                                const item = document.createElement('div');
+                                item.className = 'card mb-3 border bg-light event-occurrence-item';
+                                item.innerHTML = `
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between mb-2">
                                             <h6 class="fw-bold text-muted">Lịch trình #${idx + 1}</h6>
@@ -532,8 +371,6 @@
                                                 <input type="datetime-local" class="form-control" name="eventOccurrences[${idx}].endTime" required>
                                             </div>
                                             <div class="col-12"><hr class="my-1"></div>
-                                            
-                                            <!-- Location Selects -->
                                             <div class="col-md-6">
                                                 <label class="form-label small fw-medium">Tỉnh/Thành phố <span class="text-danger">*</span></label>
                                                 <select class="form-select province-select" name="eventOccurrences[${idx}].provinceCode" required data-index="${idx}" onchange="onProvinceChange(this, ${idx})">
@@ -548,7 +385,6 @@
                                                 </select>
                                                 <input type="hidden" name="eventOccurrences[${idx}].wardName" class="ward-name">
                                             </div>
-
                                             <div class="col-12">
                                                 <label class="form-label small fw-medium">Địa chỉ chi tiết <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" name="eventOccurrences[${idx}].addressDetail" placeholder="Số nhà, Tên đường..." required>
@@ -560,178 +396,227 @@
                                         </div>
                                     </div>
                                 `;
-                                    container.appendChild(item);
+                                container.appendChild(item);
 
-                                    // Tải danh sách Tỉnh/Thành phố
-                                    const provinceSelect = item.querySelector('.province-select');
-                                    const provinces = await fetchProvinces();
-                                    provinces.forEach(p => {
-                                        const option = document.createElement('option');
-                                        option.value = p.code;
-                                        option.textContent = p.name;
-                                        provinceSelect.appendChild(option);
-                                    });
-                                };
+                                const provinceSelect = item.querySelector('.province-select');
+                                const provinces = await fetchProvinces();
+                                provinces.forEach(p => {
+                                    const option = document.createElement('option');
+                                    option.value = p.code;
+                                    option.textContent = p.name;
+                                    provinceSelect.appendChild(option);
+                                });
+                            };
 
-                                // Global Functions for Preview
-                                window.previewFile = function (input, imgId, placeholderId) {
-                                    const file = input.files[0];
-                                    const img = document.getElementById(imgId);
-                                    const placeholder = document.getElementById(placeholderId);
+                            window.onProvinceChange = async function (select, idx) {
+                                const provinceCode = select.value;
+                                const provinceName = select.options[select.selectedIndex].text;
+                                const row = select.closest('.row');
+                                row.querySelector('.province-name').value = provinceName;
+                                const wardSelect = row.querySelector('.ward-select');
+                                wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                                wardSelect.disabled = true;
 
-                                    if (file) {
-                                        const reader = new FileReader();
-                                        reader.onload = function (e) {
-                                            img.src = e.target.result;
-                                            img.style.display = 'block';
-                                            img.style.objectFit = 'contain';
-                                            if (placeholder) placeholder.style.display = 'none';
-                                        }
-                                        reader.readAsDataURL(file);
-                                    }
-                                };
+                                if (provinceCode) {
+                                    try {
+                                        // Robust Ward Fetching with Depth=3
+                                        const responseDepth3 = await fetch(`${API_BASE}/p/${provinceCode}?depth=3`);
+                                        const dataDepth3 = await responseDepth3.json();
+                                        const districtsWithWards = dataDepth3.districts || [];
 
-                                window.previewGallery = function (input, gridId) {
-                                    const grid = document.getElementById(gridId);
-                                    grid.innerHTML = '';
-                                    if (input.files) {
-                                        Array.from(input.files).forEach(file => {
-                                            const item = document.createElement('div');
-                                            item.className = 'gallery-item';
-                                            const reader = new FileReader();
-                                            reader.onload = function (e) {
-                                                if (file.type.startsWith('video/')) {
-                                                    const video = document.createElement('video');
-                                                    video.src = e.target.result;
-                                                    video.controls = false;
-                                                    item.appendChild(video);
-                                                } else {
-                                                    const img = document.createElement('img');
-                                                    img.src = e.target.result;
-                                                    item.appendChild(img);
-                                                }
+                                        let allWards = [];
+                                        districtsWithWards.forEach(d => {
+                                            if (d.wards && Array.isArray(d.wards)) {
+                                                allWards = allWards.concat(d.wards);
                                             }
-                                            reader.readAsDataURL(file);
-                                            grid.appendChild(item);
                                         });
+                                        allWards.sort((a, b) => a.name.localeCompare(b.name));
+
+                                        allWards.forEach(w => {
+                                            const option = document.createElement('option');
+                                            option.value = w.code;
+                                            option.textContent = w.name;
+                                            wardSelect.appendChild(option);
+                                        });
+                                        wardSelect.disabled = false;
+                                    } catch (e) { console.error('Error fetching wards:', e); }
+                                }
+                            };
+
+                            window.onWardChange = function (select, idx) {
+                                const wardName = select.options[select.selectedIndex].text;
+                                const row = select.closest('.row');
+                                row.querySelector('.ward-name').value = wardName;
+                            };
+
+                            window.reindexEventOccurrences = function () {
+                                const items = document.querySelectorAll('.event-occurrence-item');
+                                items.forEach((item, idx) => {
+                                    item.querySelector('.fw-bold.text-muted').innerText = `Lịch trình #${idx + 1}`;
+                                    const provSel = item.querySelector('.province-select');
+                                    provSel.name = `eventOccurrences[${idx}].provinceCode`;
+                                    provSel.setAttribute('onchange', `onProvinceChange(this, ${idx})`);
+                                    item.querySelector('.province-name').name = `eventOccurrences[${idx}].provinceName`;
+                                    const wardSel = item.querySelector('.ward-select');
+                                    wardSel.name = `eventOccurrences[${idx}].wardCode`;
+                                    wardSel.setAttribute('onchange', `onWardChange(this, ${idx})`);
+                                    item.querySelector('.ward-name').name = `eventOccurrences[${idx}].wardName`;
+                                    item.querySelector('input[name$=".startTime"]').name = `eventOccurrences[${idx}].startTime`;
+                                    item.querySelector('input[name$=".endTime"]').name = `eventOccurrences[${idx}].endTime`;
+                                    item.querySelector('input[name$=".addressDetail"]').name = `eventOccurrences[${idx}].addressDetail`;
+                                    item.querySelector('input[name$=".mapLink"]').name = `eventOccurrences[${idx}].mapLink`;
+                                });
+                            };
+
+                            window.showStep = function (step) {
+                                document.getElementById('step-info').classList.toggle('d-none', step !== 1);
+                                document.getElementById('step-media').classList.toggle('d-none', step !== 2);
+                                document.getElementById('step-indicator-1').classList.toggle('active', step >= 1);
+                                document.getElementById('step-indicator-2').classList.toggle('active', step >= 2);
+                                window.scrollTo(0, 0);
+                            };
+
+                            window.nextStep = function () {
+                                const stepInfo = document.getElementById('step-info');
+                                const inputs = stepInfo.querySelectorAll('input:not([disabled]), select:not([disabled]), textarea:not([disabled])');
+                                let isValid = true;
+                                for (const input of inputs) {
+                                    if (!input.checkValidity()) {
+                                        input.reportValidity();
+                                        isValid = false;
+                                        break;
                                     }
-                                };
+                                }
+                                if (isValid) showStep(2);
+                            };
 
-                                window.removeRow = function (btn, type) {
-                                    btn.closest('.row').remove();
-                                    if (type === 'lịch trình') {
-                                        window.reindexEventOccurrences();
-                                    } else if (type === 'loại vé') {
-                                        window.reindexTicketTypes();
+                            window.prevStep = function () { showStep(1); };
+
+
+                            document.addEventListener('DOMContentLoaded', function () {
+                                // SweetAlert Toast Config
+                                const Toast = Swal.mixin({
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false,
+                                    timer: 3000,
+                                    timerProgressBar: true,
+                                    didOpen: (toast) => {
+                                        toast.onmouseenter = Swal.stopTimer;
+                                        toast.onmouseleave = Swal.resumeTimer;
                                     }
-                                };
+                                });
 
-                                // API Config (Used from closure or global)
-                                // const API_BASE = 'https://provinces.open-api.vn/api/v2'; // Already defined above
-
-                                window.onProvinceChange = async function (select, idx) {
-                                    const provinceCode = select.value;
-                                    const provinceName = select.options[select.selectedIndex].text;
-                                    const row = select.closest('.row');
-
-                                    // Gán tên vào hidden field
-                                    row.querySelector('.province-name').value = provinceName;
-
-                                    // Reset Phường/Xã
-                                    const wardSelect = row.querySelector('.ward-select');
-                                    wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
-                                    wardSelect.disabled = true;
-
-                                    if (provinceCode) {
-                                        // Use depth=2 to get wards directly
-                                        try {
-                                            const response = await fetch(`${API_BASE}/p/${provinceCode}?depth=2`);
-                                            const data = await response.json();
-                                            const wards = data.wards || [];
-
-                                            wards.forEach(w => {
-                                                const option = document.createElement('option');
-                                                option.value = w.code;
-                                                option.textContent = w.name;
-                                                wardSelect.appendChild(option);
-                                            });
-                                            wardSelect.disabled = false;
-                                        } catch (e) {
-                                            console.error('Error fetching wards:', e);
-                                        }
-                                    }
-                                };
-
-                                window.onWardChange = function (select, idx) {
-                                    const wardName = select.options[select.selectedIndex].text;
-                                    const row = select.closest('.row');
-                                    row.querySelector('.ward-name').value = wardName;
-                                };
-
-
-                                // Logic xử lý Thời gian & Địa điểm 
-                                window.reindexEventOccurrences = function () {
-                                    const items = document.querySelectorAll('.event-occurrence-item');
-                                    items.forEach((item, idx) => {
-                                        item.querySelector('.fw-bold.text-muted').innerText = `Lịch trình #${idx + 1}`;
-
-                                        // Cập nhật tên và chỉ số onchange
-                                        const provSel = item.querySelector('.province-select');
-                                        provSel.name = `eventOccurrences[${idx}].provinceCode`;
-                                        provSel.setAttribute('onchange', `onProvinceChange(this, ${idx})`);
-                                        item.querySelector('.province-name').name = `eventOccurrences[${idx}].provinceName`;
-
-                                        // Removed district select reindexing
-
-                                        const wardSel = item.querySelector('.ward-select');
-                                        wardSel.name = `eventOccurrences[${idx}].wardCode`;
-                                        wardSel.setAttribute('onchange', `onWardChange(this, ${idx})`);
-                                        item.querySelector('.ward-name').name = `eventOccurrences[${idx}].wardName`;
-
-                                        item.querySelector('input[name$=".startTime"]').name = `eventOccurrences[${idx}].startTime`;
-                                        item.querySelector('input[name$=".endTime"]').name = `eventOccurrences[${idx}].endTime`;
-                                        item.querySelector('input[name$=".addressDetail"]').name = `eventOccurrences[${idx}].addressDetail`;
-                                        item.querySelector('input[name$=".mapLink"]').name = `eventOccurrences[${idx}].mapLink`;
+                                // TinyMCE Init
+                                if (typeof tinymce !== 'undefined') {
+                                    tinymce.init({
+                                        selector: '#description',
+                                        height: 300,
+                                        plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help wordcount',
+                                        toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+                                        content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
                                     });
                                 }
 
-                                // Các hàm điều hướng Wizard
-                                window.showStep = function (step) {
-                                    document.getElementById('step-info').classList.toggle('d-none', step !== 1);
-                                    document.getElementById('step-media').classList.toggle('d-none', step !== 2);
+                                // Form Submit Logic
+                                document.getElementById('createEventForm').addEventListener('submit', async function (e) {
+                                    e.preventDefault();
+                                    if (typeof tinymce !== 'undefined' && tinymce.get('description')) {
+                                        tinymce.get('description').save();
+                                    }
+                                    const galleryInput = document.getElementById('galleryFiles');
+                                    if (galleryInput.files.length > 10) {
+                                        Toast.fire({ icon: 'warning', title: 'Tối đa 10 file.' });
+                                        return;
+                                    }
+                                    const submitBtn = this.querySelector('button[type="submit"]');
+                                    const originalBtnText = submitBtn.innerHTML;
+                                    setButtonLoading(submitBtn, 'Đang xử lý...');
 
-                                    document.getElementById('step-indicator-1').classList.toggle('active', step >= 1);
-                                    document.getElementById('step-indicator-2').classList.toggle('active', step >= 2);
-
-                                    // Scroll lên đầu trang
-                                    window.scrollTo(0, 0);
-                                };
-
-                                window.nextStep = function () {
-                                    // Validate thông tin Bước 1
-                                    const stepInfo = document.getElementById('step-info');
-                                    const inputs = stepInfo.querySelectorAll('input:not([disabled]), select:not([disabled]), textarea:not([disabled])');
-                                    let isValid = true;
-
-                                    for (const input of inputs) {
-                                        if (!input.checkValidity()) {
-                                            input.reportValidity();
-                                            isValid = false;
-                                            break; // Focus vào lỗi đầu tiên
+                                    try {
+                                        const bannerFile = document.getElementById('bannerFile').files[0];
+                                        const logoFile = document.getElementById('logoFile').files[0];
+                                        const ticketMapFile = document.getElementById('ticketMapFile').files[0];
+                                        const galleryFiles = document.getElementById('galleryFiles').files;
+                                        const uploadPromises = [];
+                                        if (bannerFile) uploadPromises.push(uploadToCloudinary(bannerFile).then(url => document.getElementById('bannerUrl').value = url));
+                                        if (logoFile) uploadPromises.push(uploadToCloudinary(logoFile).then(url => document.getElementById('logoUrl').value = url));
+                                        if (ticketMapFile) uploadPromises.push(uploadToCloudinary(ticketMapFile).then(url => document.getElementById('ticketMapUrl').value = url));
+                                        if (galleryFiles.length > 0) {
+                                            const galleryContainer = document.getElementById('galleryUrlsContainer');
+                                            galleryContainer.innerHTML = '';
+                                            for (let i = 0; i < galleryFiles.length; i++) {
+                                                uploadPromises.push(uploadToCloudinary(galleryFiles[i]).then(url => {
+                                                    const input = document.createElement('input');
+                                                    input.type = 'hidden';
+                                                    input.name = 'galleryUrls';
+                                                    input.value = url;
+                                                    galleryContainer.appendChild(input);
+                                                }));
+                                            }
                                         }
+                                        await Promise.all(uploadPromises);
+
+                                        // Submit to backend
+                                        setButtonLoading(submitBtn, 'Đang tạo...');
+                                        const formData = new FormData(this);
+                                        const searchParams = new URLSearchParams();
+                                        for (const [key, value] of formData) {
+                                            if (value instanceof File) continue;
+                                            searchParams.append(key, value);
+                                        }
+                                        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                                        const response = await fetch('/user/events/create', {
+                                            method: 'POST',
+                                            headers: { [csrfHeader]: csrfToken },
+                                            body: searchParams
+                                        });
+                                        const data = await response.json();
+
+                                        if (data.status === 'success') {
+                                            Toast.fire({ icon: 'success', title: 'Tạo thành công!' });
+                                            setTimeout(() => window.location.href = data.redirectUrl, 1500);
+                                        } else if (data.status === 'validation_error') {
+                                            document.querySelectorAll('.error-message').forEach(el => !el.id.includes('error-') ? el.remove() : el.textContent = '');
+                                            document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                                            for (const [field, message] of Object.entries(data.errors)) {
+                                                const errorDiv = document.getElementById('error-' + field);
+                                                if (errorDiv) {
+                                                    errorDiv.textContent = message;
+                                                    const input = document.querySelector(`[name="${field}"]`);
+                                                    if (input) input.classList.add('is-invalid');
+                                                } else {
+                                                    const input = document.querySelector(`[name="${field}"]`);
+                                                    if (input) {
+                                                        input.classList.add('is-invalid');
+                                                        let dynamicError = input.nextElementSibling;
+                                                        if (!dynamicError || !dynamicError.classList.contains('error-message')) {
+                                                            dynamicError = document.createElement('div');
+                                                            dynamicError.className = 'text-danger small error-message';
+                                                            input.parentNode.insertBefore(dynamicError, input.nextSibling);
+                                                        }
+                                                        dynamicError.textContent = message;
+                                                    }
+                                                }
+                                            }
+                                            Toast.fire({ icon: 'error', title: 'Kiểm tra lại thông tin.' });
+                                        } else {
+                                            Toast.fire({ icon: 'error', title: data.message });
+                                        }
+                                    } catch (e) {
+                                        console.error(e);
+                                        Toast.fire({ icon: 'error', title: e.message });
+                                    } finally {
+                                        submitBtn.innerHTML = originalBtnText;
+                                        submitBtn.disabled = false;
                                     }
+                                });
 
-                                    if (isValid) {
-                                        showStep(2);
-                                    }
-                                };
-
-                                window.prevStep = function () {
-                                    showStep(1);
-                                };
-
-                                // Initialize Wizard
+                                // Initialize
                                 showStep(1);
+                                addTicketType();
+                                addEventOccurrence();
                             });
 
 

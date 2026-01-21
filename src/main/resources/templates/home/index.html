@@ -124,7 +124,7 @@
                     <!-- Carousel Inner (Slides) -->
                     <div class="carousel-inner rounded-4 shadow-lg overflow-hidden">
                         <div th:each="event, iterStat : ${trendingEvents}"
-                            th:class="${iterStat.index == 0} ? 'carousel-item active' : 'carousel-item'">
+                            th:class="${iterStat.index == 0 ? 'carousel-item active' : 'carousel-item'}">
 
                             <!-- Event Card -->
                             <!-- Chưa fix -->
@@ -132,7 +132,7 @@
                                 th:onclick="'window.location.href=\'/event/' + ${event.id} + '\''">
 
                                 <!-- Background Image -->
-                                <img th:src="${event.image != null and !event.image.isEmpty()} ? ${event.image} : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200'"
+                                <img th:src="${(event.image != null and !event.image.isEmpty()) ? event.image : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200'}"
                                     class="d-block w-100 h-100 object-fit-cover position-absolute top-0 start-0"
                                     th:alt="${event.title}" style="filter: brightness(0.5);">
 
@@ -248,7 +248,7 @@
 
                         <!-- Event Image -->
                         <div class="position-relative overflow-hidden">
-                            <img th:src="${event.image != null and !event.image.isEmpty()} ? ${event.image} : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800'"
+                            <img th:src="${(event.image != null and !event.image.isEmpty()) ? event.image : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800'}"
                                 class="card-img-top" th:alt="${event.title}"
                                 style="height: 200px; object-fit: cover; transition: transform 0.3s ease;">
 
@@ -278,7 +278,7 @@
                         <div class="card-body p-4 d-flex flex-column">
                             <!-- Title -->
                             <h5 class="card-title fw-bold mb-3"
-                                style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;"
+                                style="display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;"
                                 th:text="${event.title}">
                                 EDM Symphony Night
                             </h5>

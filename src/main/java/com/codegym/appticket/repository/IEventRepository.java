@@ -304,9 +304,9 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
             @Param("end") LocalDateTime end, 
             @Param("limit") int limit);
 
-    // 2. Events Count by Category (Pie Chart)
-    @Query("SELECT e.category.name, COUNT(e) FROM Event e WHERE e.status = 'APPROVED' GROUP BY e.category.name")
-    List<Object[]> countEventsByCategory();
+    // 2. Events Count by Category (Pie Chart) - In Period
+    @Query("SELECT e.category.name, COUNT(e) FROM Event e WHERE e.status = 'APPROVED' AND e.createdDate BETWEEN :start AND :end GROUP BY e.category.name")
+    List<Object[]> countEventsByCategory(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     // 3. Count Events Created in Period
     @Query("SELECT COUNT(e) FROM Event e WHERE e.createdDate BETWEEN :start AND :end AND e.status = 'APPROVED'")

@@ -7,77 +7,90 @@
     <div th:replace="~{common/layout :: user-layout(~{:: .ticket-detail})}">
         <div class="ticket-detail container py-5">
             <div class="row justify-content-center">
-                <div class="col-md-8">
+                <div class="col-md-10">
                     <div class="card shadow border-0 overflow-hidden">
                         <div class="bg-primary p-4 text-white">
                             <h3 class="mb-0">Thông tin vé điện tử</h3>
-                            <small th:text="'Mã vé: ' + ${ticket.ticketCode}"></small>
+                            <p class="mb-0" th:text="${event.title}"></p>
                         </div>
                         <div class="card-body p-4">
-                            <div class="row">
-                                <div class="col-md-7">
-                                    <h4 class="text-primary mb-3"
-                                        th:text="${ticket.bookingDetail.ticketType.event.title}">Tên sự kiện</h4>
+                            <div class="row mb-4">
+                                <div class="col-md-8">
+                                    <h4 class="text-primary mb-3" th:text="${event.title}">Tên sự kiện</h4>
                                     <p class="mb-2"><i class="bi bi-geo-alt me-2"></i><span
-                                            th:text="${ticket.bookingDetail.ticketType.event.location}"></span></p>
+                                            th:text="${event.location}"></span></p>
                                     <p class="mb-2"><i class="bi bi-calendar-event me-2"></i><span>Sự kiện sắp diễn
                                             ra</span></p>
-                                    <hr>
-                                    <div class="mb-3">
-                                        <label class="text-muted small d-block">Loại vé</label>
-                                        <strong th:text="${ticket.bookingDetail.ticketType.name}"></strong>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="text-muted small d-block">Trạng thái vé</label>
-                                        <span th:if="${ticket.used}" class="badge bg-secondary">Đã sử dụng</span>
-                                        <span
-                                            th:if="${!ticket.used && ticket.bookingDetail.booking.status.name() == 'SUCCESS'}"
-                                            class="badge bg-success">Hợp lệ - Chưa sử dụng</span>
-                                        <span th:if="${ticket.bookingDetail.booking.status.name() == 'CANCELLED'}"
-                                            class="badge bg-danger">Đã bị hủy</span>
-                                    </div>
                                 </div>
-                                <div class="col-md-5 text-center d-flex align-items-center justify-content-center">
-                                    <div
-                                        th:if="${!ticket.used && ticket.bookingDetail.booking.status.name() == 'SUCCESS'}">
-                                        <div class="p-3 border rounded bg-white shadow-sm">
-                                            <!-- Hiển thị mã QR trực tiếp -->
-                                            <img th:src="'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + ${qrCode != null ? qrCode.getQrData() : ticket.ticketCode}"
-                                                alt="Mã QR Check-in" class="img-fluid mb-2">
-                                            <div class="mt-2">
-                                                <small class="text-muted d-block">Mã QR Check-in</small>
-                                                <button type="button" class="btn btn-sm btn-link text-decoration-none"
-                                                    onclick="window.print()">
-                                                    <i class="bi bi-printer"></i> In vé
-                                                </button>
+                                <div class="col-md-4 text-end">
+                                    <label class="text-muted small d-block">Ngày đặt</label>
+                                    <strong
+                                        th:text="${#temporals.format(tickets[0].bookingDetail.booking.bookingTime, 'dd/MM/yyyy HH:mm')}"></strong>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <h5 class="mb-4">Danh sách vé (<span th:text="${tickets.size()}"></span>)</h5>
+
+                            <div class="row row-cols-1 row-cols-md-2 g-4">
+                                <div class="col" th:each="ticket : ${tickets}">
+                                    <div class="card h-100 border shadow-sm">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between mb-3">
+                                                <div>
+                                                    <label class="text-muted small d-block">Mã vé</label>
+                                                    <code th:text="${ticket.ticketCode}"></code>
+                                                </div>
+                                                <div class="text-end">
+                                                    <span th:if="${ticket.used}" class="badge bg-secondary">Đã sử
+                                                        dụng</span>
+                                                    <span
+                                                        th:if="${!ticket.used && ticket.bookingDetail.booking.status.name() == 'SUCCESS'}"
+                                                        class="badge bg-success">Hợp lệ</span>
+                                                    <span
+                                                        th:if="${ticket.bookingDetail.booking.status.name() == 'CANCELLED'}"
+                                                        class="badge bg-danger">Đã bị hủy</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="text-muted small d-block">Loại vé</label>
+                                                <strong th:text="${ticket.bookingDetail.ticketType.name}"></strong>
+                                            </div>
+
+                                            <div class="text-center py-3 bg-light rounded"
+                                                th:if="${!ticket.used && ticket.bookingDetail.booking.status.name() == 'SUCCESS'}">
+                                                <img th:src="'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + ${qrCodeMap.get(ticket.id) != null ? qrCodeMap.get(ticket.id).getQrData() : ticket.ticketCode}"
+                                                    alt="Mã QR Check-in" class="img-fluid mb-2"
+                                                    style="max-width: 150px;">
+                                                <p class="small text-muted mb-0">Quét mã để check-in</p>
+                                            </div>
+
+                                            <div class="text-center py-3 bg-light rounded"
+                                                th:if="${ticket.bookingDetail.booking.status.name() == 'PENDING'}">
+                                                <i class="bi bi-hourglass-split text-warning"
+                                                    style="font-size: 3rem;"></i>
+                                                <p class="text-warning small mb-0">Vui lòng thanh toán để hiển thị mã QR
+                                                </p>
+                                            </div>
+
+                                            <div class="text-center py-3 bg-light rounded"
+                                                th:if="${ticket.used || ticket.bookingDetail.booking.status.name() == 'CANCELLED'}">
+                                                <i class="bi bi-slash-circle text-muted" style="font-size: 3rem;"></i>
+                                                <p class="text-muted small mb-0">Mã QR đã bị vô hiệu hóa</p>
                                             </div>
                                         </div>
                                     </div>
-                                    <div
-                                        th:if="${ticket.used || ticket.bookingDetail.booking.status.name() == 'CANCELLED'}">
-                                        <i class="bi bi-slash-circle text-muted" style="font-size: 5rem;"></i>
-                                        <p class="text-muted mt-2">Mã QR đã bị vô hiệu hóa</p>
-                                    </div>
                                 </div>
                             </div>
 
-                            <div class="mt-4 border-top pt-4">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <label class="text-muted small d-block">Tên khách hàng</label>
-                                        <strong th:text="${ticket.bookingDetail.booking.user.fullName}"></strong>
-                                    </div>
-                                    <div class="text-end">
-                                        <label class="text-muted small d-block">Ngày đặt</label>
-                                        <strong
-                                            th:text="${#temporals.format(ticket.bookingDetail.booking.bookingTime, 'dd/MM/yyyy HH:mm')}"></strong>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mt-5 text-center">
+                            <div class="mt-5 text-center d-print-none">
                                 <a th:href="@{/tickets/my-tickets}" class="btn btn-outline-secondary">Quay lại danh
                                     sách</a>
+                                <button type="button" class="btn btn-primary ms-2" onclick="window.print()">
+                                    <i class="bi bi-printer me-2"></i> In tất cả vé
+                                </button>
                             </div>
                         </div>
                     </div>

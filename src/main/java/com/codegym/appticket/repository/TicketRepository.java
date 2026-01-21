@@ -11,4 +11,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
     @org.springframework.data.jpa.repository.Query("SELECT t FROM Ticket t WHERE t.bookingDetail.booking.id = :bookingId")
     java.util.List<Ticket> findByBookingId(Long bookingId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT t FROM Ticket t WHERE t.bookingDetail.booking.user.id = :userId AND t.bookingDetail.ticketType.event.id = :eventId")
+    java.util.List<Ticket> findByUserIdAndEventId(Long userId, Long eventId);
 }

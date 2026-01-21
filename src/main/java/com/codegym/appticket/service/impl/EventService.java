@@ -201,6 +201,11 @@ public class EventService implements IEventService {
             org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
                             .getContext().getAuthentication();
             String currentEmail = auth.getName();
+            if (auth.getPrincipal() instanceof com.codegym.appticket.config.CustomOAuth2User) {
+                currentEmail = ((com.codegym.appticket.config.CustomOAuth2User) auth.getPrincipal()).getEmail();
+            } else if (auth.getPrincipal() instanceof com.codegym.appticket.dto.user.UserInfoUserDetails) {
+                 currentEmail = ((com.codegym.appticket.dto.user.UserInfoUserDetails) auth.getPrincipal()).getUsername();
+            }
             com.codegym.appticket.entity.User currentUser = userRepository.findByEmailAndNotDeleted(currentEmail);
             event.setCreatedBy(currentUser);
 
@@ -409,16 +414,21 @@ public class EventService implements IEventService {
                                             .orElse(null);
                     }
 
-                    if (target == null) {
-                            target = new EventOccurrence();
-                            target.setEvent(event);
-                            currentOccurrences.add(target);
-                    }
+                        boolean isNew = false;
+                        if (target == null) {
+                                target = new EventOccurrence();
+                                target.setEvent(event);
+                                isNew = true;
+                        }
 
-                    target.setStartTime(occDTO.getStartTime());
-                    target.setEndTime(occDTO.getEndTime());
-                    target.setLocation(getOrCreateLocation(occDTO));
-            }
+                        target.setStartTime(occDTO.getStartTime());
+                        target.setEndTime(occDTO.getEndTime());
+                        target.setLocation(getOrCreateLocation(occDTO));
+
+                        if (isNew) {
+                                currentOccurrences.add(target);
+                        }
+                }
 
             // Cập nhật các loại vé: Cập nhật thông minh (Cập nhật hiện có, Tạo mới, Xóa đã
             // bỏ)
@@ -612,16 +622,16 @@ public class EventService implements IEventService {
             // Sắp xếp trong Java sử dụng Pageable
             Sort sortOrder = Sort.by(Sort.Direction.ASC, "id");
             Pageable pageable = PageRequest.of(page, size, sortOrder);
-            
+
             // Convert location string to list of variants
             List<String> locationVariants = new ArrayList<>();
             int hasLocationFilter = 0; // 0 = false, 1 = true (MySQL compatible)
-            
+
             if (location != null && !location.trim().isEmpty()) {
                 locationVariants = provinceNameMapper.getProvinceVariants(location);
                 hasLocationFilter = locationVariants.isEmpty() ? 0 : 1;
             }
-            
+
             return eventRepository.searchHomeEvents(searchText, categoryId, locationVariants, hasLocationFilter, pageable);
     }
 
@@ -690,12 +700,12 @@ public class EventService implements IEventService {
         // Convert exclude location to variants list
         List<String> excludeLocationVariants = new ArrayList<>();
         int hasExcludeFilter = 0;
-        
+
         if (excludeLocation != null && !excludeLocation.trim().isEmpty()) {
             excludeLocationVariants = provinceNameMapper.getProvinceVariants(excludeLocation);
             hasExcludeFilter = excludeLocationVariants.isEmpty() ? 0 : 1;
         }
-        
+
         return eventRepository.findNearbyEvents(userLatitude, userLongitude, excludeLocationVariants, hasExcludeFilter, limit);
     }
 
@@ -704,24 +714,24 @@ public class EventService implements IEventService {
         // Convert exclude location to variants list
         List<String> excludeLocationVariants = new ArrayList<>();
         int hasExcludeFilter = 0;
-        
+
         if (excludeLocation != null && !excludeLocation.trim().isEmpty()) {
             excludeLocationVariants = provinceNameMapper.getProvinceVariants(excludeLocation);
             hasExcludeFilter = excludeLocationVariants.isEmpty() ? 0 : 1;
         }
-        
+
         // Get all nearby event occurrences from repository
         List<NearByEventDTO> allOccurrences = eventRepository.findNearbyEvents(userLatitude, userLongitude, excludeLocationVariants, hasExcludeFilter, limit * 3);
-        
+
         // Group occurrences by event ID using LinkedHashMap to preserve order
         Map<Long, NearByEventWithOccurrencesDTO> eventMap = new LinkedHashMap<>();
-        
+
         for (NearByEventDTO occurrence : allOccurrences) {
             Long eventId = occurrence.getId();
-            
+
             // Get or create the grouped event DTO
             NearByEventWithOccurrencesDTO groupedEvent = eventMap.get(eventId);
-            
+
             if (groupedEvent == null) {
                 // First occurrence for this event - create new grouped DTO
                 groupedEvent = new NearByEventWithOccurrencesDTO();
@@ -732,20 +742,20 @@ public class EventService implements IEventService {
                 groupedEvent.setCategoryName(occurrence.getCategoryName());
                 groupedEvent.setDistance(occurrence.getDistance()); // Distance to nearest occurrence
                 groupedEvent.setOccurrences(new ArrayList<>());
-                
+
                 eventMap.put(eventId, groupedEvent);
             }
-            
+
             // Add this occurrence to the event's occurrence list
             NearByEventWithOccurrencesDTO.OccurrenceInfo occInfo = new NearByEventWithOccurrencesDTO.OccurrenceInfo();
             occInfo.setOccurrenceId(occurrence.getOccurrenceId());
             occInfo.setEventDate(occurrence.getEventDate());
             occInfo.setAddressDetail(occurrence.getAddressDetail());
             occInfo.setDistance(occurrence.getDistance());
-            
+
             groupedEvent.getOccurrences().add(occInfo);
         }
-        
+
         // Convert map values to list and limit to requested number of unique events
         return eventMap.values().stream()
                 .limit(limit)
