@@ -63,14 +63,33 @@ public class HomeController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "6") int size,
             @RequestParam(required = false) String location,
+            @RequestParam(required = false) String searchText,
+            @RequestParam(required = false) String categoryName,
+            @RequestParam(required = false) String sort,
             Model model) {
 
-        // Show all approved events without filters
-        Page<HomeEventDTO> events = eventService.findAllEvent(page, size);
+        // Convert categoryName to categoryId if provided
+        Long categoryId = null;
+        if (categoryName != null && !categoryName.trim().isEmpty()) {
+            categoryId = eventCategoryService.findAll().stream()
+                    .filter(cat -> cat.getName().equalsIgnoreCase(categoryName.trim()))
+                    .map(com.codegym.appticket.entity.EventCategory::getId)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        // Use search method if any filter is provided
+        Page<HomeEventDTO> events;
+        if (searchText != null || categoryId != null || location != null) {
+            events = eventService.searchHomeEvents(searchText, categoryId, location, page, size, sort);
+        } else {
+            // Show all approved events without filters
+            events = eventService.findAllEvent(page, size);
+        }
 
         model.addAttribute("categories", eventCategoryService.findAll());
         model.addAttribute("events", events);
-        model.addAttribute("nearbyEvents", getNearbyEvents(null, 6));
+        model.addAttribute("nearbyEvents", getNearbyEvents(location, 6));
 
         return "home/event";
     }

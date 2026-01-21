@@ -19,9 +19,12 @@
             <div class="col-6 col-lg-2">
                 <h6 class="fw-bold mb-3">Sự kiện</h6>
                 <ul class="list-unstyled text-muted small d-flex flex-column gap-2">
-                    <li><a th:href="@{/events}" class="text-decoration-none text-muted">Âm nhạc</a></li>
-                    <li><a th:href="@{/events}" class="text-decoration-none text-muted">Thể thao</a></li>
-                    <li><a th:href="@{/events}" class="text-decoration-none text-muted">Hội thảo</a></li>
+                    <li><a th:href="@{/events(searchText='',categoryName='Âm nhạc')}"
+                            class="text-decoration-none text-muted">Âm nhạc</a></li>
+                    <li><a th:href="@{/events(searchText='',categoryName='Thể thao')}"
+                            class="text-decoration-none text-muted">Thể thao</a></li>
+                    <li><a th:href="@{/events(searchText='',categoryName='Hội thảo')}"
+                            class="text-decoration-none text-muted">Hội thảo</a></li>
                 </ul>
             </div>
             <div class="col-6 col-lg-2">
