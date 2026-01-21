@@ -7,7 +7,7 @@ import com.codegym.appticket.dto.event.EventMediaDTO;
 import com.codegym.appticket.dto.event.EventOccurrenceDTO;
 import com.codegym.appticket.dto.event.EventSearchDTO;
 import com.codegym.appticket.dto.event.EventUpdateDTO;
-import com.codegym.appticket.dto.event.TicketTypeDTO;
+
 import com.codegym.appticket.entity.EventStatus;
 import com.codegym.appticket.entity.MediaPurpose;
 
@@ -166,12 +166,6 @@ public class AdminEventController {
                 updateDTO.setEventOccurrences(new ArrayList<>(eventDTO.getEventOccurrences()));
             } else {
                 updateDTO.getEventOccurrences().add(new EventOccurrenceDTO());
-            }
-
-            if (eventDTO.getTicketTypes() != null && !eventDTO.getTicketTypes().isEmpty()) {
-                updateDTO.setTicketTypes(new ArrayList<>(eventDTO.getTicketTypes()));
-            } else {
-                updateDTO.getTicketTypes().add(TicketTypeDTO.builder().quantity(1).build());
             }
 
             if (eventDTO.getEventMedias() != null) {

@@ -33,6 +33,4 @@ public class EventDTO {
     @Builder.Default
     private List<EventMediaDTO> eventMedias = new ArrayList<>();
 
-    @Builder.Default
-    private List<TicketTypeDTO> ticketTypes = new ArrayList<>();
 }

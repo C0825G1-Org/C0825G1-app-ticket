@@ -75,11 +75,11 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                     SUM(bd.quantity) AS totalTickets
                 FROM events e
                 LEFT JOIN event_categories c ON c.id = e.category_id
-                LEFT JOIN event_occurrences eo ON eo.event_id = e.id
+                JOIN event_occurrences eo ON eo.event_id = e.id
                 LEFT JOIN locations l ON l.id = eo.location_id
                 LEFT JOIN wards w ON w.code = l.ward_code
                 LEFT JOIN provinces p ON p.code = w.province_code
-                JOIN ticket_types tt ON tt.event_id = e.id
+                JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
                 JOIN booking_details bd ON bd.ticket_type_id = tt.id
                 JOIN bookings b ON b.id = bd.booking_id
                 WHERE b.status = 'SUCCESS'
@@ -110,7 +110,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 LEFT JOIN locations l ON l.id = eo.location_id
                 LEFT JOIN wards w ON w.code = l.ward_code
                 LEFT JOIN provinces p ON p.code = w.province_code
-                LEFT JOIN ticket_types tt ON tt.event_id = e.id
+                LEFT JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
                 WHERE eo.start_time > NOW()
                   AND e.status = 'APPROVED'
                 GROUP BY e.id, e.title, e.description, p.name, c.name
@@ -151,7 +151,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 LEFT JOIN locations l ON l.id = eo.location_id
                 LEFT JOIN wards w ON w.code = l.ward_code
                 LEFT JOIN provinces p ON p.code = w.province_code
-                LEFT JOIN ticket_types tt ON tt.event_id = e.id
+                LEFT JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
                 WHERE e.status = 'APPROVED'
                 GROUP BY e.id, e.title, e.description, p.name, c.name
                 ORDER BY MIN(eo.start_time) ASC
@@ -183,7 +183,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 LEFT JOIN locations l ON l.id = eo.location_id
                 LEFT JOIN wards w ON w.code = l.ward_code
                 LEFT JOIN provinces p ON p.code = w.province_code
-                LEFT JOIN ticket_types tt ON tt.event_id = e.id
+                LEFT JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
                 WHERE e.status = 'APPROVED'
                   AND (:searchText IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :searchText, '%')))
                   AND (:categoryId IS NULL OR e.category_id = :categoryId)
@@ -245,19 +245,27 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
     EventDetailDTO findEventDetailById(@Param("eventId") Long eventId);
 
     // Get ticket types for an event
+    // Get ticket types for an event, detailed with occurrence info
     @Query(value = """
                 SELECT
                     tt.id AS id,
                     tt.name AS name,
                     tt.price AS price,
-                    (tt.quantity - COALESCE(SUM(bd.quantity), 0)) AS availableQuantity
+                    (tt.quantity - COALESCE(SUM(bd.quantity), 0)) AS availableQuantity,
+                    eo.id AS occurrenceId,
+                    eo.start_time AS startTime,
+                    p.name AS location
                 FROM ticket_types tt
+                JOIN event_occurrences eo ON tt.event_occurrence_id = eo.id
                 LEFT JOIN booking_details bd ON bd.ticket_type_id = tt.id
                 LEFT JOIN bookings b ON b.id = bd.booking_id AND b.status = 'SUCCESS'
-                WHERE tt.event_id = :eventId
-                GROUP BY tt.id, tt.name, tt.price, tt.quantity
+                LEFT JOIN locations l ON l.id = eo.location_id
+                LEFT JOIN wards w ON w.code = l.ward_code
+                LEFT JOIN provinces p ON p.code = w.province_code
+                WHERE eo.event_id = :eventId
+                GROUP BY tt.id, tt.name, tt.price, tt.quantity, eo.id, eo.start_time, p.name
                 HAVING availableQuantity > 0
-                ORDER BY tt.price ASC
+                ORDER BY eo.start_time ASC, tt.price ASC
             """, nativeQuery = true)
     List<TicketTypeDTO> findTicketTypesByEventId(@Param("eventId") Long eventId);
 
@@ -280,7 +288,8 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 SUM(bd.quantity * tt.price) * 0.05 AS revenue
             FROM events e
             JOIN event_categories c ON c.id = e.category_id
-            JOIN ticket_types tt ON tt.event_id = e.id
+            JOIN event_occurrences eo ON eo.event_id = e.id
+            JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
             JOIN booking_details bd ON bd.ticket_type_id = tt.id
             JOIN bookings b ON b.id = bd.booking_id
             WHERE b.status = 'SUCCESS'

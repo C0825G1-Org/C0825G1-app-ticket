@@ -122,23 +122,7 @@
                                 </div>
                             </div>
 
-                            <!-- Ticket Types (New) -->
-                            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                                <div
-                                    class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                                    <h5 class="fw-bold mb-0">
-                                        <i class="bi bi-ticket-perforated text-primary me-2"></i>
-                                        Loại vé
-                                    </h5>
-                                    <button type="button" class="btn btn-sm btn-outline-primary"
-                                        onclick="addTicketType()">
-                                        <i class="bi bi-plus-lg"></i> Thêm loại vé
-                                    </button>
-                                </div>
-                                <div class="card-body p-4" id="ticketTypesContainer">
-                                    <!-- Template Row Removed - Handled by JS -->
-                                </div>
-                            </div>
+
 
                             <!-- Next Button for Step 1 -->
                             <div class="d-flex justify-content-end mb-5">
@@ -421,49 +405,7 @@
                                 }
                             });
 
-                            // Cung cấp các hàm global cho HTML gọi
-                            // Khởi tạo loại vé (Thêm 1 dòng đầu tiên)
-                            const ticketContainer = document.getElementById('ticketTypesContainer');
 
-                            window.addTicketType = function () {
-                                const index = document.querySelectorAll('.ticket-type-row').length;
-                                // const visibleRows = Array.from(document.querySelectorAll('.ticket-type-row')).filter(r => r.style.display !== 'none').length;
-
-                                const newRow = document.createElement('div');
-                                newRow.className = 'row g-3 mb-3 ticket-type-row';
-                                newRow.innerHTML = `
-                    <div class="col-md-4">
-                        <label class="form-label fw-medium">Tên vé <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="ticketTypes[${index}].name" placeholder="VD: VIP" required>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-medium">Giá vé (VNĐ) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" name="ticketTypes[${index}].price" min="0" placeholder="0" required>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-medium">Số lượng <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" name="ticketTypes[${index}].quantity" min="1" placeholder="100" required>
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="button" class="btn btn-outline-danger w-100" onclick="removeRow(this, 'loại vé')">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
-                `;
-                                ticketContainer.appendChild(newRow);
-                            };
-
-                            // Khởi tạo với 1 loại vé
-                            addTicketType();
-
-                            window.reindexTicketTypes = function () {
-                                const rows = Array.from(document.querySelectorAll('.ticket-type-row'));
-                                rows.forEach((row, idx) => {
-                                    row.querySelector('input[name$=".name"]').name = `ticketTypes[${idx}].name`;
-                                    row.querySelector('input[name$=".price"]').name = `ticketTypes[${idx}].price`;
-                                    row.querySelector('input[name$=".quantity"]').name = `ticketTypes[${idx}].quantity`;
-                                });
-                            };
 
                             // Logic xử lý Thời gian & Địa điểm
                             // Cache dữ liệu API để giảm request
@@ -514,6 +456,18 @@
                                 }
                             }
 
+                            window.removeRow = function (btn, type) {
+                                if (type === 'occurrence') {
+                                    const item = btn.closest('.event-occurrence-item');
+                                    if (item) item.remove();
+                                    window.reindexEventOccurrences();
+                                } else if (type === 'ticket') {
+                                    const row = btn.closest('.ticket-type-row');
+                                    if (row) row.remove();
+                                    window.reindexEventOccurrences();
+                                }
+                            };
+
                             window.addEventOccurrence = async function () {
                                 const container = document.getElementById('eventOccurrencesContainer');
                                 const idx = document.querySelectorAll('.event-occurrence-item').length;
@@ -524,7 +478,7 @@
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between mb-2">
                                             <h6 class="fw-bold text-muted">Lịch trình #${idx + 1}</h6>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this, 'lịch trình')">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this, 'occurrence')">
                                                 <i class="bi bi-trash"></i> Xóa
                                             </button>
                                         </div>
@@ -563,12 +517,27 @@
                                                 <label class="form-label small fw-medium">Link Bản đồ (Tùy chọn)</label>
                                                 <input type="text" class="form-control" name="eventOccurrences[${idx}].mapLink" placeholder="https://maps.google.com/...">
                                             </div>
+
+                                            <!-- Nested Ticket Types -->
+                                            <div class="col-12 mt-3">
+                                                <div class="card inner-card border-0 bg-white">
+                                                    <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center px-0">
+                                                        <h6 class="fw-bold mb-0 text-primary">Các loại vé cho lịch trình này</h6>
+                                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addTicketType(${idx})">
+                                                            <i class="bi bi-plus"></i> Thêm vé
+                                                        </button>
+                                                    </div>
+                                                    <div class="card-body px-0" id="ticket-container-${idx}">
+                                                        <!-- Tickets will be added here -->
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 `;
                                 container.appendChild(item);
 
-                                // Tải danh sách Tỉnh/Thành phố
+                                // Load Provinces
                                 const provinceSelect = item.querySelector('.province-select');
                                 const provinces = await fetchProvinces();
                                 provinces.forEach(p => {
@@ -577,86 +546,64 @@
                                     option.textContent = p.name;
                                     provinceSelect.appendChild(option);
                                 });
+
+                                // Add default ticket type
+                                addTicketType(idx);
                             };
 
-                            // Global Functions for Preview
-                            window.previewFile = function (input, imgId, placeholderId) {
-                                const file = input.files[0];
-                                const img = document.getElementById(imgId);
-                                const placeholder = document.getElementById(placeholderId);
+                            window.addTicketType = function (occIdx) {
+                                const container = document.getElementById(`ticket-container-${occIdx}`);
+                                const ticketIdx = container.querySelectorAll('.ticket-type-row').length;
 
-                                if (file) {
-                                    const reader = new FileReader();
-                                    reader.onload = function (e) {
-                                        img.src = e.target.result;
-                                        img.style.display = 'block';
-                                        img.style.objectFit = 'contain';
-                                        if (placeholder) placeholder.style.display = 'none';
-                                    }
-                                    reader.readAsDataURL(file);
-                                }
+                                const row = document.createElement('div');
+                                row.className = 'row g-2 mb-2 ticket-type-row align-items-end';
+                                row.innerHTML = `
+                                    <div class="col-md-5">
+                                        <label class="form-label small text-muted">Tên vé</label>
+                                        <input type="text" class="form-control form-control-sm" 
+                                               name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].name" 
+                                               placeholder="VD: VIP" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small text-muted">Giá (VNĐ)</label>
+                                        <input type="number" class="form-control form-control-sm" 
+                                               name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].price" 
+                                               min="0" placeholder="0" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small text-muted">Số lượng</label>
+                                        <input type="number" class="form-control form-control-sm" 
+                                               name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].quantity" 
+                                               min="1" placeholder="100" required>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="removeRow(this, 'ticket')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                `;
+                                container.appendChild(row);
                             };
 
-                            window.previewGallery = function (input, gridId) {
-                                const grid = document.getElementById(gridId);
-                                grid.innerHTML = '';
-                                if (input.files) {
-                                    Array.from(input.files).forEach(file => {
-                                        const item = document.createElement('div');
-                                        item.className = 'gallery-item';
-                                        const reader = new FileReader();
-                                        reader.onload = function (e) {
-                                            if (file.type.startsWith('video/')) {
-                                                const video = document.createElement('video');
-                                                video.src = e.target.result;
-                                                video.controls = false;
-                                                item.appendChild(video);
-                                            } else {
-                                                const img = document.createElement('img');
-                                                img.src = e.target.result;
-                                                item.appendChild(img);
-                                            }
-                                        }
-                                        reader.readAsDataURL(file);
-                                        grid.appendChild(item);
-                                    });
-                                }
-                            };
-
-                            window.removeRow = function (btn, type) {
-                                if (type === 'lịch trình') {
-                                    const item = btn.closest('.event-occurrence-item');
-                                    if (item) item.remove();
-                                    window.reindexEventOccurrences();
-                                } else if (type === 'loại vé') {
-                                    const item = btn.closest('.ticket-type-row');
-                                    if (item) item.remove();
-                                    window.reindexTicketTypes();
-                                }
-                            };
-
-                            // API Config (Used from closure or global)
-                            // const API_BASE = 'https://provinces.open-api.vn/api/v2'; // Already defined above
-
+                            // Logic xử lý Thời gian & Địa điểm 
                             window.onProvinceChange = async function (select, idx) {
                                 const provinceCode = select.value;
                                 const provinceName = select.options[select.selectedIndex].text;
                                 const row = select.closest('.row');
-
-                                // Gán tên vào hidden field
                                 row.querySelector('.province-name').value = provinceName;
-
-                                // Reset Phường/Xã
                                 const wardSelect = row.querySelector('.ward-select');
                                 wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
                                 wardSelect.disabled = true;
 
                                 if (provinceCode) {
-                                    // Use depth=2 to get wards directly
                                     try {
+                                        // API v2 with depth=2 returns wards directly (flattened)
                                         const response = await fetch(`${API_BASE}/p/${provinceCode}?depth=2`);
                                         const data = await response.json();
                                         const wards = data.wards || [];
+
+                                        // Sort alphabetically
+                                        wards.sort((a, b) => a.name.localeCompare(b.name));
 
                                         wards.forEach(w => {
                                             const option = document.createElement('option');
@@ -677,30 +624,42 @@
                                 row.querySelector('.ward-name').value = wardName;
                             };
 
-
-                            // Logic xử lý Thời gian & Địa điểm 
                             window.reindexEventOccurrences = function () {
                                 const items = document.querySelectorAll('.event-occurrence-item');
                                 items.forEach((item, idx) => {
                                     item.querySelector('.fw-bold.text-muted').innerText = `Lịch trình #${idx + 1}`;
 
-                                    // Cập nhật tên và chỉ số onchange
+                                    // Fields
                                     const provSel = item.querySelector('.province-select');
                                     provSel.name = `eventOccurrences[${idx}].provinceCode`;
                                     provSel.setAttribute('onchange', `onProvinceChange(this, ${idx})`);
-                                    item.querySelector('.province-name').name = `eventOccurrences[${idx}].provinceName`;
-
-                                    // Removed district select reindexing
 
                                     const wardSel = item.querySelector('.ward-select');
                                     wardSel.name = `eventOccurrences[${idx}].wardCode`;
                                     wardSel.setAttribute('onchange', `onWardChange(this, ${idx})`);
+
+                                    item.querySelector('.province-name').name = `eventOccurrences[${idx}].provinceName`;
                                     item.querySelector('.ward-name').name = `eventOccurrences[${idx}].wardName`;
 
                                     item.querySelector('input[name$=".startTime"]').name = `eventOccurrences[${idx}].startTime`;
                                     item.querySelector('input[name$=".endTime"]').name = `eventOccurrences[${idx}].endTime`;
                                     item.querySelector('input[name$=".addressDetail"]').name = `eventOccurrences[${idx}].addressDetail`;
                                     item.querySelector('input[name$=".mapLink"]').name = `eventOccurrences[${idx}].mapLink`;
+
+                                    // Reindex tickets container ID and button
+                                    const ticketContainer = item.querySelector('[id^="ticket-container-"]');
+                                    ticketContainer.id = `ticket-container-${idx}`;
+
+                                    const addTicketBtn = item.querySelector('button[onclick^="addTicketType"]');
+                                    addTicketBtn.setAttribute('onclick', `addTicketType(${idx})`);
+
+                                    // Reindex tickets inside
+                                    const tickets = ticketContainer.querySelectorAll('.ticket-type-row');
+                                    tickets.forEach((tRow, tIdx) => {
+                                        tRow.querySelector('input[name$=".name"]').name = `eventOccurrences[${idx}].ticketTypes[${tIdx}].name`;
+                                        tRow.querySelector('input[name$=".price"]').name = `eventOccurrences[${idx}].ticketTypes[${tIdx}].price`;
+                                        tRow.querySelector('input[name$=".quantity"]').name = `eventOccurrences[${idx}].ticketTypes[${tIdx}].quantity`;
+                                    });
                                 });
                             }
 

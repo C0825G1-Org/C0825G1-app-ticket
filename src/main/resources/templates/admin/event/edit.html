@@ -100,7 +100,6 @@
                                 </div>
                             </div>
 
-                            <!-- Event Occurrences -->
                             <div class="card border-0 shadow-sm rounded-4 mb-4">
                                 <div
                                     class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
@@ -123,7 +122,7 @@
                                                 <input type="hidden" th:name="|eventOccurrences[${stat.index}].id|"
                                                     th:value="${occ.id}">
                                                 <button type="button" class="btn btn-sm btn-outline-danger"
-                                                    onclick="this.closest('.event-occurrence-item').remove(); reindexEventOccurrences();">
+                                                    onclick="removeRow(this, 'occurrence')">
                                                     <i class="bi bi-trash"></i> Xóa
                                                 </button>
                                             </div>
@@ -196,53 +195,66 @@
                                                         th:value="${occ.mapLink}"
                                                         placeholder="https://maps.google.com/...">
                                                 </div>
+
+                                                <!-- Nested Ticket Types -->
+                                                <div class="col-12 mt-3">
+                                                    <div class="card inner-card border-0 bg-white">
+                                                        <div
+                                                            class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center px-0">
+                                                            <h6 class="fw-bold mb-0 text-primary">Các loại vé</h6>
+                                                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                                                th:onclick="|addTicketType(${stat.index})|">
+                                                                <i class="bi bi-plus"></i> Thêm vé
+                                                            </button>
+                                                        </div>
+                                                        <div class="card-body px-0"
+                                                            th:id="|ticket-container-${stat.index}|">
+                                                            <div class="row g-2 mb-2 ticket-type-row align-items-end"
+                                                                th:each="ticket, tStat : ${occ.ticketTypes}">
+                                                                <div class="col-md-5">
+                                                                    <input type="hidden"
+                                                                        th:field="*{eventOccurrences[__${stat.index}__].ticketTypes[__${tStat.index}__].id}">
+                                                                    <label class="form-label small text-muted">Tên
+                                                                        vé</label>
+                                                                    <input type="text"
+                                                                        class="form-control form-control-sm"
+                                                                        th:field="*{eventOccurrences[__${stat.index}__].ticketTypes[__${tStat.index}__].name}"
+                                                                        required>
+                                                                </div>
+                                                                <div class="col-md-3">
+                                                                    <label class="form-label small text-muted">Giá
+                                                                        (VNĐ)</label>
+                                                                    <input type="number"
+                                                                        class="form-control form-control-sm"
+                                                                        th:field="*{eventOccurrences[__${stat.index}__].ticketTypes[__${tStat.index}__].price}"
+                                                                        min="0" required>
+                                                                </div>
+                                                                <div class="col-md-3">
+                                                                    <label class="form-label small text-muted">Số
+                                                                        lượng</label>
+                                                                    <input type="number"
+                                                                        class="form-control form-control-sm"
+                                                                        th:field="*{eventOccurrences[__${stat.index}__].ticketTypes[__${tStat.index}__].quantity}"
+                                                                        min="1" required>
+                                                                </div>
+                                                                <div class="col-md-1">
+                                                                    <button type="button"
+                                                                        class="btn btn-sm btn-outline-danger w-100"
+                                                                        onclick="removeRow(this, 'ticket')">
+                                                                        <i class="bi bi-trash"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Ticket Types -->
-                            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                                <div
-                                    class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                                    <h5 class="fw-bold mb-0"><i
-                                            class="bi bi-ticket-perforated text-primary me-2"></i>Loại vé</h5>
-                                    <button type="button" class="btn btn-sm btn-outline-primary"
-                                        onclick="addTicketType()">
-                                        <i class="bi bi-plus-lg"></i> Thêm loại vé
-                                    </button>
-                                </div>
-                                <div class="card-body p-4" id="ticketTypesContainer">
-                                    <div class="row g-3 mb-3 ticket-type-row" th:each="ticket, stat : *{ticketTypes}">
-                                        <div class="col-md-4">
-                                            <input type="hidden" th:field="*{ticketTypes[__${stat.index}__].id}">
-                                            <label class="form-label fw-medium">Tên vé <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="text" class="form-control"
-                                                th:field="*{ticketTypes[__${stat.index}__].name}" required>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label class="form-label fw-medium">Giá vé (VNĐ) <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="number" class="form-control"
-                                                th:field="*{ticketTypes[__${stat.index}__].price}" min="0" required>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label class="form-label fw-medium">Số lượng <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="number" class="form-control"
-                                                th:field="*{ticketTypes[__${stat.index}__].quantity}" min="1" required>
-                                        </div>
-                                        <div class="col-md-2 d-flex align-items-end">
-                                            <button type="button" class="btn btn-outline-danger w-100"
-                                                onclick="this.closest('.ticket-type-row').remove(); reindexTicketTypes();">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+
 
                             <!-- Next Button for Step 1 -->
                             <div class="d-flex justify-content-end mb-5">
@@ -381,6 +393,18 @@
                             });
 
                             // Global Preview Functions
+                            window.removeRow = function (btn, type) {
+                                if (type === 'occurrence') {
+                                    const item = btn.closest('.event-occurrence-item');
+                                    if (item) item.remove();
+                                    window.reindexEventOccurrences();
+                                } else if (type === 'ticket') {
+                                    const row = btn.closest('.ticket-type-row');
+                                    if (row) row.remove();
+                                    window.reindexEventOccurrences();
+                                }
+                            };
+
                             window.previewFile = function (input, imgId, placeholderId) {
                                 const file = input.files[0];
                                 const img = document.getElementById(imgId);
@@ -600,7 +624,7 @@
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between mb-2">
                                         <h6 class="fw-bold text-muted">Lịch trình #${idx + 1}</h6>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.event-occurrence-item').remove(); reindexEventOccurrences();">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this, 'occurrence')">
                                             <i class="bi bi-trash"></i> Xóa
                                         </button>
                                     </div>
@@ -638,6 +662,21 @@
                                             <label class="form-label small fw-medium">Link Bản đồ (Tùy chọn)</label>
                                             <input type="text" class="form-control" name="eventOccurrences[${idx}].mapLink" placeholder="https://maps.google.com/...">
                                         </div>
+
+                                        <!-- Nested Ticket Types -->
+                                        <div class="col-12 mt-3">
+                                            <div class="card inner-card border-0 bg-white">
+                                                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center px-0">
+                                                    <h6 class="fw-bold mb-0 text-primary">Các loại vé</h6>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addTicketType(${idx})">
+                                                        <i class="bi bi-plus"></i> Thêm vé
+                                                    </button>
+                                                </div>
+                                                <div class="card-body px-0" id="ticket-container-${idx}">
+                                                    <!-- Tickets will be added here -->
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             `;
@@ -651,44 +690,67 @@
                                 o.textContent = p.name;
                                 ps.appendChild(o);
                             });
+
+                            // Add default ticket
+                            addTicketType(idx);
                         };
 
-                        window.onProvinceChange = async function (select, idx) {
-                            const provinceCode = select.value;
-                            const provinceName = select.options[select.selectedIndex].text;
-                            const row = select.closest('.row');
-                            row.querySelector('.province-name').value = provinceName;
+                        window.addTicketType = function (occIdx) {
+                            const container = document.getElementById(`ticket-container-${occIdx}`);
+                            if (!container) return; // Should not happen
+                            const ticketIdx = container.querySelectorAll('.ticket-type-row').length;
 
-                            const wardSelect = row.querySelector('.ward-select');
-                            wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
-                            wardSelect.disabled = true;
-
-                            if (provinceCode) {
-                                // Use depth=2 to get wards directly
-                                const response = await fetch(`${API_BASE}/p/${provinceCode}?depth=2`);
-                                const data = await response.json();
-                                const wards = data.wards || [];
-
-                                wards.forEach(w => {
-                                    const option = document.createElement('option');
-                                    option.value = w.code;
-                                    option.textContent = w.name;
-                                    wardSelect.appendChild(option);
-                                });
-                                wardSelect.disabled = false;
-                            }
+                            const row = document.createElement('div');
+                            row.className = 'row g-2 mb-2 ticket-type-row align-items-end';
+                            row.innerHTML = `
+                                <div class="col-md-5">
+                                    <label class="form-label small text-muted">Tên vé</label>
+                                    <input type="text" class="form-control form-control-sm" 
+                                           name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].name" 
+                                           placeholder="VD: VIP" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small text-muted">Giá (VNĐ)</label>
+                                    <input type="number" class="form-control form-control-sm" 
+                                           name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].price" 
+                                           min="0" placeholder="0" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small text-muted">Số lượng</label>
+                                    <input type="number" class="form-control form-control-sm" 
+                                           name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].quantity" 
+                                           min="1" placeholder="100" required>
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="removeRow(this, 'ticket')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            `;
+                            container.appendChild(row);
                         };
 
-                        window.onWardChange = function (select) {
-                            const t = select.options[select.selectedIndex].text;
-                            select.closest('.row').querySelector('.ward-name').value = t;
+                        // Stub for reindexTicketTypes if called from remove button (though better to handle in reindexEventOccurrences)
+                        window.reindexTicketTypes = function () {
+                            // This is now integrated into reindexEventOccurrences or handled by specific button logic
+                            // But since the button calls reindexEventOccurrences or logic inside it, we might not need this standalone.
+                            // Actually the remove button in edit.html (Thymeleaf part) calls remove(); reindexTicketTypes();
+                            // We changed the HTML to call reindexTicketTypes(). Wait, better to call reindexEventOccurrences() which should handle everything.
+                            window.reindexEventOccurrences();
                         };
+
+                        // ... (onProvinceChange, onWardChange, etc.)
 
                         window.reindexEventOccurrences = function () {
-                            // ... (existing reindex logic, add district logic)
                             const items = document.querySelectorAll('.event-occurrence-item');
                             items.forEach((item, idx) => {
                                 item.querySelector('.fw-bold.text-muted').innerText = `Lịch trình #${idx + 1}`;
+
+                                // ID mapping if exists
+                                const idInput = item.querySelector('input[name$=".id"]');
+                                if (idInput && idInput.name.includes("eventOccurrences")) {
+                                    idInput.name = `eventOccurrences[${idx}].id`;
+                                }
 
                                 const p = item.querySelector('.province-select');
                                 p.name = `eventOccurrences[${idx}].provinceCode`;
@@ -704,11 +766,27 @@
                                 item.querySelector('input[name$=".endTime"]').name = `eventOccurrences[${idx}].endTime`;
                                 item.querySelector('input[name$=".addressDetail"]').name = `eventOccurrences[${idx}].addressDetail`;
                                 item.querySelector('input[name$=".mapLink"]').name = `eventOccurrences[${idx}].mapLink`;
+
+                                // Ticket Container
+                                const ticketContainer = item.querySelector('[id^="ticket-container-"]');
+                                if (ticketContainer) {
+                                    ticketContainer.id = `ticket-container-${idx}`;
+
+                                    const addTicketBtn = item.querySelector('button[onclick^="addTicketType"]');
+                                    if (addTicketBtn) addTicketBtn.setAttribute('onclick', `addTicketType(${idx})`);
+
+                                    const tickets = ticketContainer.querySelectorAll('.ticket-type-row');
+                                    tickets.forEach((tRow, tIdx) => {
+                                        const tIdInput = tRow.querySelector('input[name$=".id"]');
+                                        if (tIdInput) tIdInput.name = `eventOccurrences[${idx}].ticketTypes[${tIdx}].id`;
+
+                                        tRow.querySelector('input[name$=".name"]').name = `eventOccurrences[${idx}].ticketTypes[${tIdx}].name`;
+                                        tRow.querySelector('input[name$=".price"]').name = `eventOccurrences[${idx}].ticketTypes[${tIdx}].price`;
+                                        tRow.querySelector('input[name$=".quantity"]').name = `eventOccurrences[${idx}].ticketTypes[${tIdx}].quantity`;
+                                    });
+                                }
                             });
                         };
-
-                        function addTicketType() { /* ... existing ... */ }
-                        function reindexTicketTypes() { /* ... existing ... */ }
                         function removeGalleryItem(btn) { /* ... existing ... */ }
 
                         // RESTORATION LOGIC

@@ -153,7 +153,7 @@ public class UserEventController {
                 eventDTO.getEventMedias().stream().filter(m -> m.getMediaPurpose().name().equals("GALLERY"))
                         .map(m -> m.getMediaUrl()).collect(java.util.stream.Collectors.toList()));
         updateDTO.setEventOccurrences(eventDTO.getEventOccurrences());
-        updateDTO.setTicketTypes(eventDTO.getTicketTypes());
+
         updateDTO.setOrganizerId(eventDTO.getOrganizerId()); // Keep implementation simple
 
         model.addAttribute("eventUpdateDTO", updateDTO);
@@ -262,16 +262,17 @@ public class UserEventController {
         try {
             EventDTO eventDTO = eventService.findById(id);
             User currentUser = getCurrentUser();
-            if (currentUser == null) return ResponseEntity.status(401).body("Unauthorized");
-            
+            if (currentUser == null)
+                return ResponseEntity.status(401).body("Unauthorized");
+
             if (!eventDTO.getOrganizerId().equals(currentUser.getId())) {
-                 return ResponseEntity.status(403).body("Bạn không có quyền hủy sự kiện này.");
+                return ResponseEntity.status(403).body("Bạn không có quyền hủy sự kiện này.");
             }
 
             eventService.cancel(id, reason);
             return ResponseEntity.ok(Map.of("message", "Đã hủy sự kiện thành công!", "status", "success"));
         } catch (Exception e) {
-             return ResponseEntity.internalServerError().body(Map.of("message", e.getMessage(), "status", "error"));
+            return ResponseEntity.internalServerError().body(Map.of("message", e.getMessage(), "status", "error"));
         }
     }
 }

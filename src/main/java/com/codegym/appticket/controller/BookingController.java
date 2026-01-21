@@ -6,9 +6,7 @@ import com.codegym.appticket.entity.TicketType;
 import com.codegym.appticket.service.IBookingService;
 import com.codegym.appticket.service.IVnPayService;
 import com.codegym.appticket.entity.Location;
-import jakarta.servlet.http.HttpServletRequest;
-import com.codegym.appticket.entity.User;
-import com.codegym.appticket.entity.Ticket;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -33,9 +31,9 @@ public class BookingController {
     // 1. Trang Form đặt vé
     @GetMapping("/book/{eventId}")
     public String showForm(@PathVariable Long eventId,
-                          @RequestParam Map<String, String> params,
-                          Model model,
-                          RedirectAttributes redirectAttributes) {
+            @RequestParam Map<String, String> params,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         String email = getCurrentUserEmail();
         Event event;
         List<TicketType> ticketTypes;
@@ -94,7 +92,7 @@ public class BookingController {
     private String getCurrentUserEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() ||
-            authentication instanceof AnonymousAuthenticationToken) {
+                authentication instanceof AnonymousAuthenticationToken) {
             return null;
         }
 
@@ -117,9 +115,9 @@ public class BookingController {
     // 2. Trang Xác nhận đặt vé
     @PostMapping("/confirm")
     public String confirm(@RequestParam Long eventId,
-                          @RequestParam Map<String, String> params,
-                          Model model,
-                          RedirectAttributes redirectAttributes) {
+            @RequestParam Map<String, String> params,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         String email = getCurrentUserEmail();
 
         Event event = bookingService.getEventById(eventId);
@@ -134,7 +132,8 @@ public class BookingController {
                         TicketType tt = bookingService.getTicketTypesByEventId(eventId).stream()
                                 .filter(t -> t.getId().equals(ticketTypeId))
                                 .findFirst().orElse(null);
-                        if (tt != null) selectedTickets.put(tt, quantity);
+                        if (tt != null)
+                            selectedTickets.put(tt, quantity);
                     }
                 }
             }
@@ -175,9 +174,9 @@ public class BookingController {
     // 3. Xử lý Lưu đặt vé
     @PostMapping("/save")
     public String save(@RequestParam Long eventId,
-                       @RequestParam Map<String, String> params,
-                       RedirectAttributes redirectAttributes,
-                       jakarta.servlet.http.HttpServletRequest request) {
+            @RequestParam Map<String, String> params,
+            RedirectAttributes redirectAttributes,
+            jakarta.servlet.http.HttpServletRequest request) {
         String userEmail = getCurrentUserEmail();
 
         if (userEmail == null) {
@@ -224,7 +223,8 @@ public class BookingController {
 
         // Lấy thông tin sự kiện từ vé đầu tiên (vì 1 booking thường cho 1 sự kiện)
         if (!tickets.isEmpty()) {
-            model.addAttribute("event", tickets.get(0).getBookingDetail().getTicketType().getEvent());
+            model.addAttribute("event",
+                    tickets.get(0).getBookingDetail().getTicketType().getEventOccurrence().getEvent());
         }
 
         model.addAttribute("booking", booking);

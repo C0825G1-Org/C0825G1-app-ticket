@@ -52,7 +52,7 @@ public class VnPayServiceImpl implements IVnPayService {
             vnp_Params.put("vnp_BankCode", bankCode);
         }
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-        
+
         // Lấy thông tin booking
         String orderInfo = "Thanh toan don hang #" + vnp_TxnRef;
         try {
@@ -60,15 +60,16 @@ public class VnPayServiceImpl implements IVnPayService {
             com.codegym.appticket.entity.Booking booking = bookingRepository.findById(bookingId).orElse(null);
             if (booking != null) {
                 String userName = booking.getUser().getFullName();
-                java.util.List<com.codegym.appticket.entity.BookingDetail> details = bookingDetailRepository.findByBookingId(bookingId);
+                java.util.List<com.codegym.appticket.entity.BookingDetail> details = bookingDetailRepository
+                        .findByBookingId(bookingId);
                 if (!details.isEmpty()) {
-                    String eventTitle = details.get(0).getTicketType().getEvent().getTitle();
+                    String eventTitle = details.get(0).getTicketType().getEventOccurrence().getEvent().getTitle();
                     orderInfo = String.format("KH: %s thanh toan vé: %s", userName, eventTitle);
                 }
             }
         } catch (Exception e) {
         }
-        
+
         vnp_Params.put("vnp_OrderInfo", orderInfo);
         vnp_Params.put("vnp_OrderType", orderType);
         vnp_Params.put("vnp_Locale", "vn");
@@ -85,7 +86,7 @@ public class VnPayServiceImpl implements IVnPayService {
         String vnp_ExpireDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
 
-        List fieldNames = new ArrayList(vnp_Params.keySet());
+        List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
         Collections.sort(fieldNames);
         StringBuilder hashData = new StringBuilder();
         StringBuilder query = new StringBuilder();

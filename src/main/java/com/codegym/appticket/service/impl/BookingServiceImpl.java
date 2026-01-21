@@ -21,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -46,7 +45,7 @@ public class BookingServiceImpl implements IBookingService {
 
     @Override
     public List<TicketType> getTicketTypesByEventId(Long eventId) {
-        return ticketTypeRepository.findByEventId(eventId);
+        return ticketTypeRepository.findByEventOccurrence_Event_Id(eventId);
     }
 
     @Override

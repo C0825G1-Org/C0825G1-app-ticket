@@ -40,10 +40,6 @@ public class EventUpdateDTO {
     @Builder.Default
     private List<EventMediaDTO> eventMedias = new ArrayList<>();
 
-    @Valid
-    @Builder.Default
-    private List<TicketTypeDTO> ticketTypes = new ArrayList<>();
-
     // Media URLs (Uploaded from Frontend)
     private String bannerUrl;
     private String logoUrl;

@@ -213,9 +213,11 @@ public class UserService implements IUserService {
                     if (details.isEmpty()) {
                         description = "Đặt vé #" + booking.getId();
                     } else {
-                        String eventName = details.get(0).getTicketType().getEvent().getTitle();
+                        String eventName = details.get(0).getTicketType().getEventOccurrence().getEvent().getTitle();
                         String ticketInfo = details.stream()
-                                .map(d -> d.getQuantity() + " " + d.getTicketType().getName())
+                                .map(d -> d.getQuantity() + " "
+                                        + d.getTicketType().getEventOccurrence().getEvent().getTitle() + " - "
+                                        + d.getTicketType().getName())
                                 .collect(Collectors.joining(", "));
                         description = "Đặt vé " + eventName + " (" + ticketInfo + ")";
                     }

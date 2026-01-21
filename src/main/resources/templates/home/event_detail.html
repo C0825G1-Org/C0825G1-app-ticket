@@ -123,42 +123,50 @@
                             </div>
 
                             <form id="ticketForm">
-                                <div th:each="ticket : ${ticketTypes}"
-                                    class="border border-2 border-light rounded-3 p-3 mb-3">
-                                    <div class="d-flex justify-content-between align-items-start mb-3">
-                                        <div class="flex-grow-1">
-                                            <h6 class="fw-bold mb-1" th:text="${ticket.name}">Vé Phổ thông (GA)</h6>
-                                            <small class="text-muted">
-                                                Còn <span th:text="${ticket.availableQuantity}">100</span> vé
-                                            </small>
+                                <th:block th:each="ticket, stat : ${ticketTypes}">
+                                    <!-- Header: Show only if first item OR occurrenceId changed -->
+                                    <div th:if="${stat.first or ticket.occurrenceId != ticketTypes[stat.index - 1].occurrenceId}"
+                                        class="fw-bold text-muted small text-uppercase mb-2 mt-3"
+                                        th:text="${#temporals.format(ticket.startTime, 'HH:mm dd/MM')} + ' - ' + ${ticket.location}">
+                                        LỊCH TRÌNH
+                                    </div>
+
+                                    <div class="border border-2 border-light rounded-3 p-3 mb-3">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <div class="flex-grow-1">
+                                                <h6 class="fw-bold mb-1" th:text="${ticket.name}">Vé Phổ thông (GA)</h6>
+                                                <small class="text-muted">
+                                                    Còn <span th:text="${ticket.availableQuantity}">100</span> vé
+                                                </small>
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="fw-bold text-danger fs-5"
+                                                    th:text="${#numbers.formatInteger(ticket.price, 0, 'COMMA')} + 'đ'">
+                                                    500.000đ
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="text-end">
-                                            <div class="fw-bold text-danger fs-5"
-                                                th:text="${#numbers.formatInteger(ticket.price, 0, 'COMMA')} + 'đ'">
-                                                500.000đ
+
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted fw-semibold">Số lượng:</small>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <button type="button"
+                                                    class="qty-btn btn btn-sm btn-outline-secondary rounded-circle p-0 minus-btn"
+                                                    th:data-ticket-id="${ticket.id}" th:data-price="${ticket.price}">
+                                                    <i class="bi bi-dash"></i>
+                                                </button>
+                                                <span class="fw-bold fs-5 qty-display"
+                                                    th:id="'qty-' + ${ticket.id}">0</span>
+                                                <button type="button"
+                                                    class="qty-btn btn btn-sm btn-outline-secondary rounded-circle p-0 plus-btn"
+                                                    th:data-ticket-id="${ticket.id}" th:data-price="${ticket.price}"
+                                                    th:data-max="${ticket.availableQuantity}">
+                                                    <i class="bi bi-plus"></i>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
-
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted fw-semibold">Số lượng:</small>
-                                        <div class="d-flex align-items-center gap-3">
-                                            <button type="button"
-                                                class="qty-btn btn btn-sm btn-outline-secondary rounded-circle p-0 minus-btn"
-                                                th:data-ticket-id="${ticket.id}" th:data-price="${ticket.price}">
-                                                <i class="bi bi-dash"></i>
-                                            </button>
-                                            <span class="fw-bold fs-5 qty-display"
-                                                th:id="'qty-' + ${ticket.id}">0</span>
-                                            <button type="button"
-                                                class="qty-btn btn btn-sm btn-outline-secondary rounded-circle p-0 plus-btn"
-                                                th:data-ticket-id="${ticket.id}" th:data-price="${ticket.price}"
-                                                th:data-max="${ticket.availableQuantity}">
-                                                <i class="bi bi-plus"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+                                </th:block>
 
                                 <hr class="my-4">
 
