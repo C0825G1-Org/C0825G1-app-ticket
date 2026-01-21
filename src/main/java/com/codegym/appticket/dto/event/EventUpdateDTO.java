@@ -28,7 +28,8 @@ public class EventUpdateDTO {
     @NotNull(message = "Danh mục sự kiện không được để trống")
     private Long categoryId;
 
-    @NotNull(message = "Trạng thái không được để trống")
+    // @NotNull(message = "Trạng thái không được để trống") - Removed as status is
+    // not editable in form
     private EventStatus status;
 
     @Valid
@@ -38,10 +39,6 @@ public class EventUpdateDTO {
     @Valid
     @Builder.Default
     private List<EventMediaDTO> eventMedias = new ArrayList<>();
-
-    @Valid
-    @Builder.Default
-    private List<TicketTypeDTO> ticketTypes = new ArrayList<>();
 
     // Media URLs (Uploaded from Frontend)
     private String bannerUrl;

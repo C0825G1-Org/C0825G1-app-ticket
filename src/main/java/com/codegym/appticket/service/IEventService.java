@@ -11,6 +11,7 @@ import com.codegym.appticket.dto.home.TrendingEventDTO;
 import com.codegym.appticket.dto.home.UpComingEventDTO;
 import com.codegym.appticket.entity.Event;
 import com.codegym.appticket.entity.EventStatus;
+import com.codegym.appticket.entity.User;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,31 +19,32 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface IEventService {
-    Page<EventDTO> findAll(Pageable pageable);
+        Page<EventDTO> findAll(Pageable pageable);
 
-    Page<HomeEventDTO> findAllEvent(int page, int size);
+        Page<HomeEventDTO> findAllEvent(int page, int size);
 
-    Page<EventDTO> search(EventSearchDTO dto, Pageable pageable);
+        Page<EventDTO> search(EventSearchDTO dto, Pageable pageable);
 
-    org.springframework.data.domain.Page<EventDTO> findByStatus(com.codegym.appticket.entity.EventStatus status,
-            org.springframework.data.domain.Pageable pageable);
+        Page<EventDTO> findByStatus(EventStatus status,
+                        Pageable pageable);
 
-    EventDTO findById(Long id);
+        EventDTO findById(Long id);
 
-    EventDTO create(EventCreateDTO dto);
+        EventDTO create(EventCreateDTO dto);
 
-    EventDTO update(Long id, EventUpdateDTO dto);
+        EventDTO update(Long id, EventUpdateDTO dto);
 
-    void delete(Long id);
+        void delete(Long id);
 
-    List<TrendingEventDTO> findTopTrendingEvents();
+        List<TrendingEventDTO> findTopTrendingEvents();
 
-    List<UpComingEventDTO> findUpComingEvents();
+        List<UpComingEventDTO> findUpComingEvents();
 
-    Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location, int page, int size,
-            String sort);
+        Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location, int page, int size,
+                        String sort);
 
-    List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, String excludeLocation, int limit);
+        List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, String excludeLocation,
+                        int limit);
 
     List<NearByEventWithOccurrencesDTO> findNearbyEventsGrouped(Double userLatitude, Double userLongitude, String excludeLocation, int limit);
 
@@ -50,12 +52,20 @@ public interface IEventService {
     org.springframework.data.domain.Page<Event> findEventsByOrganizer(com.codegym.appticket.entity.User organizer,
             Pageable pageable);
 
-    // Approval Flow
-    void approve(Long id);
+        // Approval Flow
+        void approve(Long id);
 
-    void reject(Long id, String reason);
+        void reject(Long id, String reason);
 
-    long countByStatus(EventStatus status);
+        // Cancel an event
+        void cancel(Long eventId, String reason);
 
-    long countAll();
+        // Restore an event (from Cancelled/Deleted/Rejected -> Pending)
+        void restore(Long eventId);
+
+        long countByStatus(EventStatus status);
+
+        long countByStatuses(List<EventStatus> statuses);
+
+        long countAll();
 }

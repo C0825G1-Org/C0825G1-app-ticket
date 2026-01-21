@@ -52,6 +52,9 @@ public class Event extends Parent {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventOccurrence> eventOccurrences = new ArrayList<>();
 
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventCancellationHistory> cancellationHistories = new ArrayList<>();
+
     public String getLocation() {
         if (eventOccurrences != null && !eventOccurrences.isEmpty()) {
             EventOccurrence occurrence = eventOccurrences.get(0);

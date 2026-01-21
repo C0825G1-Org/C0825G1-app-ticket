@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.LastModifiedBy;
+import java.time.LocalDateTime;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -53,13 +54,13 @@ public class User extends Parent {
     private String otpCode;
 
     @Column(name = "otp_expiry")
-    private java.time.LocalDateTime otpExpiry;
+    private LocalDateTime otpExpiry;
 
     @Column(name = "enabled")
     private Boolean enabled = false; // Default false for new users (wait for OTP)
 
     @Column(name = "locked_at")
-    private java.time.LocalDateTime lockedAt;
+    private LocalDateTime lockedAt;
 
     @Column(name = "lock_reason", columnDefinition = "TEXT")
     private String lockReason;

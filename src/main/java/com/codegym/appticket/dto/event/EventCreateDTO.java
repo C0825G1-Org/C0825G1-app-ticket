@@ -33,10 +33,6 @@ public class EventCreateDTO {
     @Builder.Default
     private List<EventOccurrenceDTO> eventOccurrences = new ArrayList<>();
 
-    @Valid
-    @Builder.Default
-    private List<TicketTypeDTO> ticketTypes = new ArrayList<>();
-
     // Media URLs (Uploaded from Frontend)
     private String bannerUrl;
     private String logoUrl;

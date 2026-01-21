@@ -11,6 +11,7 @@ import com.codegym.appticket.service.IEventCategoryService;
 import com.codegym.appticket.service.IEventService;
 import com.codegym.appticket.repository.IUserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -59,6 +60,13 @@ public class UserEventController {
 
     @GetMapping
     public String listMyEvents(@PageableDefault(size = 5) Pageable pageable, Model model) {
+        if (pageable.getSort().isUnsorted()) {
+            pageable = org.springframework.data.domain.PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                    org.springframework.data.domain.Sort
+                            .by(org.springframework.data.domain.Sort.Direction.ASC, "status")
+                            .and(org.springframework.data.domain.Sort
+                                    .by(org.springframework.data.domain.Sort.Direction.DESC, "createdDate")));
+        }
         User currentUser = getCurrentUser();
         // If user not found (should be handled by security), redirect or error
         if (currentUser == null)
@@ -145,7 +153,7 @@ public class UserEventController {
                 eventDTO.getEventMedias().stream().filter(m -> m.getMediaPurpose().name().equals("GALLERY"))
                         .map(m -> m.getMediaUrl()).collect(java.util.stream.Collectors.toList()));
         updateDTO.setEventOccurrences(eventDTO.getEventOccurrences());
-        updateDTO.setTicketTypes(eventDTO.getTicketTypes());
+
         updateDTO.setOrganizerId(eventDTO.getOrganizerId()); // Keep implementation simple
 
         model.addAttribute("eventUpdateDTO", updateDTO);
@@ -233,18 +241,38 @@ public class UserEventController {
 
     @DeleteMapping("/delete/{id}")
     @ResponseBody
-    public org.springframework.http.ResponseEntity<?> deleteEvent(@PathVariable Long id) {
+    public ResponseEntity<?> deleteEvent(@PathVariable Long id) {
         try {
             EventDTO eventDTO = eventService.findById(id);
             User currentUser = getCurrentUser();
             if (!eventDTO.getOrganizerId().equals(currentUser.getId())) {
-                return org.springframework.http.ResponseEntity.status(403).body("Bạn không có quyền xóa sự kiện này.");
+                return ResponseEntity.status(403).body("Bạn không có quyền xóa sự kiện này.");
             }
 
             eventService.delete(id); // Soft delete
-            return org.springframework.http.ResponseEntity.ok("Deleted");
+            return ResponseEntity.ok("Deleted");
         } catch (Exception e) {
-            return org.springframework.http.ResponseEntity.internalServerError().body(e.getMessage());
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/cancel")
+    @ResponseBody
+    public ResponseEntity<?> cancelEvent(@PathVariable Long id, @RequestParam(required = true) String reason) {
+        try {
+            EventDTO eventDTO = eventService.findById(id);
+            User currentUser = getCurrentUser();
+            if (currentUser == null)
+                return ResponseEntity.status(401).body("Unauthorized");
+
+            if (!eventDTO.getOrganizerId().equals(currentUser.getId())) {
+                return ResponseEntity.status(403).body("Bạn không có quyền hủy sự kiện này.");
+            }
+
+            eventService.cancel(id, reason);
+            return ResponseEntity.ok(Map.of("message", "Đã hủy sự kiện thành công!", "status", "success"));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("message", e.getMessage(), "status", "error"));
         }
     }
 }

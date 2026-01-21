@@ -2,6 +2,8 @@ package com.codegym.appticket.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.util.List;
+import java.util.ArrayList;
 
 import java.time.LocalDateTime;
 
@@ -23,6 +25,10 @@ public class EventOccurrence {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "eventOccurrence", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TicketType> ticketTypes = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "location_id", nullable = false)

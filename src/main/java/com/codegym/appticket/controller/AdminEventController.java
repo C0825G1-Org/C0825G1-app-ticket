@@ -7,12 +7,13 @@ import com.codegym.appticket.dto.event.EventMediaDTO;
 import com.codegym.appticket.dto.event.EventOccurrenceDTO;
 import com.codegym.appticket.dto.event.EventSearchDTO;
 import com.codegym.appticket.dto.event.EventUpdateDTO;
-import com.codegym.appticket.dto.event.TicketTypeDTO;
+
 import com.codegym.appticket.entity.EventStatus;
 import com.codegym.appticket.entity.MediaPurpose;
 
 import com.codegym.appticket.service.IEventCategoryService;
 import com.codegym.appticket.service.IEventService;
+import com.codegym.appticket.repository.IUserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,34 +39,48 @@ public class AdminEventController {
 
     private final IEventService eventService;
     private final IEventCategoryService eventCategoryService;
-    private final com.codegym.appticket.repository.IUserRepository userRepository;
+    private final IUserRepository userRepository;
 
     @Value("${tinymce.api-key}")
     private String tinyMceApiKey;
 
     @GetMapping
     public String listEvents(@ModelAttribute("eventSearchDTO") EventSearchDTO searchDTO,
-            @RequestParam(required = false) EventStatus status,
             @PageableDefault(size = 5) Pageable pageable,
             Model model) {
-        if (status != null) {
-            model.addAttribute("events", eventService.findByStatus(status, pageable));
-        } else if (searchDTO.getTitle() != null || searchDTO.getCategoryId() != null ||
-                searchDTO.getStartDate() != null || searchDTO.getEndDate() != null) {
-            model.addAttribute("events", eventService.search(searchDTO, pageable));
-        } else {
-            model.addAttribute("events", eventService.findAll(pageable));
+        if (pageable.getSort().isUnsorted()) {
+            pageable = org.springframework.data.domain.PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                    org.springframework.data.domain.Sort
+                            .by(org.springframework.data.domain.Sort.Direction.ASC, "status")
+                            .and(org.springframework.data.domain.Sort
+                                    .by(org.springframework.data.domain.Sort.Direction.DESC, "createdDate")));
         }
 
+        // Unified search (if DTO has empty fields, it acts as findAll because
+        // repository handles nulls)
+        // But we need to make sure empty string becomes null for title if repo checks
+        // NULL
+        if (searchDTO.getTitle() != null && searchDTO.getTitle().isEmpty())
+            searchDTO.setTitle(null);
+
+        model.addAttribute("events", eventService.search(searchDTO, pageable));
+
         // Add statistics
-        model.addAttribute("totalEvents", eventService.countAll());
+        // Add statistics
+        model.addAttribute("totalEvents", eventService.countByStatuses(
+                java.util.Arrays.asList(EventStatus.HAPPENING, EventStatus.PENDING, EventStatus.APPROVED,
+                        EventStatus.REJECTED, EventStatus.CANCELLED)));
         model.addAttribute("pendingCount", eventService.countByStatus(EventStatus.PENDING));
         model.addAttribute("approvedCount", eventService.countByStatus(EventStatus.APPROVED));
-        model.addAttribute("rejectedCount", eventService.countByStatus(EventStatus.REJECTED));
+        model.addAttribute("happeningCount", eventService.countByStatus(EventStatus.HAPPENING));
+        model.addAttribute("rejectedCount", eventService.countByStatuses(
+                java.util.Arrays.asList(EventStatus.REJECTED, EventStatus.CANCELLED)));
 
         model.addAttribute("categories", eventCategoryService.findAll());
-        return "admin/event/list";
+        // Pass EventStatus values for filter dropdown
+        model.addAttribute("statuses", EventStatus.values());
 
+        return "admin/event/list";
     }
 
     @GetMapping("/{id}")
@@ -77,6 +92,17 @@ public class AdminEventController {
         } catch (RuntimeException e) {
             model.addAttribute("errorMessage", e.getMessage());
             return "error/404";
+        }
+    }
+
+    @GetMapping("/{id}/modal")
+    public String getEventDetailModal(@PathVariable Long id, Model model) {
+        try {
+            EventDTO event = eventService.findById(id);
+            model.addAttribute("event", event);
+            return "admin/event/detail :: detailModalContent";
+        } catch (RuntimeException e) {
+            return "error/404 :: content"; // Or empty
         }
     }
 
@@ -140,12 +166,6 @@ public class AdminEventController {
                 updateDTO.setEventOccurrences(new ArrayList<>(eventDTO.getEventOccurrences()));
             } else {
                 updateDTO.getEventOccurrences().add(new EventOccurrenceDTO());
-            }
-
-            if (eventDTO.getTicketTypes() != null && !eventDTO.getTicketTypes().isEmpty()) {
-                updateDTO.setTicketTypes(new ArrayList<>(eventDTO.getTicketTypes()));
-            } else {
-                updateDTO.getTicketTypes().add(TicketTypeDTO.builder().quantity(1).build());
             }
 
             if (eventDTO.getEventMedias() != null) {
@@ -230,14 +250,40 @@ public class AdminEventController {
 
     @PostMapping("/{id}/reject")
     @ResponseBody
-    public ResponseEntity<?> rejectEvent(@PathVariable Long id, @RequestParam(required = false) String reason) {
+    public ResponseEntity<?> rejectEvent(@PathVariable Long id, @RequestParam(required = true) String reason) {
         try {
             eventService.reject(id, reason);
-            // Optionally notification logic
             return ResponseEntity.ok(Map.of("message", "Đã từ chối sự kiện!", "status", "success"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", e.getMessage(), "status", "error"));
         }
+    }
+
+    @PostMapping("/{id}/cancel")
+    @ResponseBody
+    public ResponseEntity<?> cancelEvent(@PathVariable Long id, @RequestParam(required = true) String reason) {
+        try {
+            eventService.cancel(id, reason);
+            return ResponseEntity.ok(Map.of("message", "Đã hủy sự kiện thành công!", "status", "success"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", e.getMessage(), "status", "error"));
+        }
+    }
+
+    @PostMapping("/{id}/restore")
+    @ResponseBody
+    public Map<String, Object> restoreEvent(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            eventService.restore(id);
+            response.put("status", "success");
+            response.put("message", "Đã khôi phục sự kiện thành công!");
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Lỗi: " + e.getMessage());
+        }
+        return response;
     }
 }
