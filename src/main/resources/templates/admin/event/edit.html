@@ -455,6 +455,41 @@
                                 }
                             };
 
+                            window.onProvinceChange = async function (select, idx) {
+                                const provinceCode = select.value;
+                                const provinceName = select.options[select.selectedIndex].text;
+                                const row = select.closest('.row');
+                                row.querySelector('.province-name').value = provinceName;
+                                const wardSelect = row.querySelector('.ward-select');
+                                wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                                wardSelect.disabled = true;
+
+                                if (provinceCode) {
+                                    try {
+                                        // User confirmed depth=2 returns wards directly
+                                        const response = await fetch(`${API_BASE}/p/${provinceCode}?depth=2`);
+                                        const data = await response.json();
+                                        const wards = data.wards || [];
+
+                                        wards.sort((a, b) => a.name.localeCompare(b.name));
+
+                                        wards.forEach(w => {
+                                            const option = document.createElement('option');
+                                            option.value = w.code;
+                                            option.textContent = w.name;
+                                            wardSelect.appendChild(option);
+                                        });
+                                        wardSelect.disabled = false;
+                                    } catch (e) { console.error('Error fetching wards:', e); }
+                                }
+                            };
+
+                            window.onWardChange = function (select, idx) {
+                                const wardName = select.options[select.selectedIndex].text;
+                                const row = select.closest('.row');
+                                row.querySelector('.ward-name').value = wardName;
+                            };
+
                             // TinyMCE Init
                             tinymce.init({
                                 selector: '#description',
@@ -818,9 +853,12 @@
 
                                     // Fetch wards for this province
                                     try {
-                                        const response = await fetch(`${API_BASE}/p/${pSel.value}?depth=2`); // Use selected value
+                                        // User confirmed depth=2 returns wards directly (flattened structure)
+                                        const response = await fetch(`${API_BASE}/p/${pSel.value}?depth=2`);
                                         const data = await response.json();
                                         const wards = data.wards || [];
+
+                                        wards.sort((a, b) => a.name.localeCompare(b.name));
 
                                         wards.forEach(w => {
                                             const option = document.createElement('option');
@@ -833,9 +871,9 @@
                                             wSel.disabled = false;
                                             if (savedWardCode) {
                                                 wSel.value = savedWardCode;
-                                                if (!wSel.value) {
-                                                    wSel.value = parseInt(savedWardCode).toString();
-                                                }
+                                                // Try string/int conversion if mismatch
+                                                if (!wSel.value) wSel.value = parseInt(savedWardCode).toString();
+
                                                 item.querySelector('.ward-name').value = wSel.options[wSel.selectedIndex]?.text || '';
                                             }
                                         }

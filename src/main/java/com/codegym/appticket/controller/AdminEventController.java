@@ -225,7 +225,7 @@ public class AdminEventController {
             eventService.update(id, dto);
             response.put("status", "success");
             response.put("message", "Cập nhật sự kiện thành công!");
-            response.put("redirectUrl", "/admin/events/" + id);
+            response.put("redirectUrl", "/admin/events");
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             response.put("status", "error");
