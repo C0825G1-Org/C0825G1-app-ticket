@@ -431,10 +431,10 @@
 
                     document.addEventListener('DOMContentLoaded', function () {
                         // Persist Tab logic
-                        const activeTabKey = 'eventDetailActiveTab_' + eventId;
-                        const savedTab = localStorage.getItem(activeTabKey);
-                        if (savedTab) {
-                            const tabTrigger = document.querySelector(`.nav-link[href="${savedTab}"]`);
+                        // Persist Tab logic (URL Hash)
+                        const hash = window.location.hash;
+                        if (hash) {
+                            const tabTrigger = document.querySelector(`.nav-link[href="${hash}"]`);
                             if (tabTrigger) {
                                 const tab = new bootstrap.Tab(tabTrigger);
                                 tab.show();
@@ -444,7 +444,7 @@
                         // Save tab on change
                         document.querySelectorAll('a[data-bs-toggle="tab"]').forEach(tab => {
                             tab.addEventListener('shown.bs.tab', function (e) {
-                                localStorage.setItem(activeTabKey, e.target.getAttribute('href'));
+                                history.replaceState(null, null, e.target.getAttribute('href'));
                             });
                         });
 
@@ -538,8 +538,8 @@
                             });
                         }
 
-                        // If tab persisted as Checkin, load data
-                        if (localStorage.getItem('eventDetailActiveTab_' + eventId) === '#tab-checkin') {
+                        // If tab persisted as Checkin (URL Hash check handled above handles activation)
+                        if (window.location.hash === '#tab-checkin') {
                             loadCheckInStats();
                             loadCheckInHistory();
                         }

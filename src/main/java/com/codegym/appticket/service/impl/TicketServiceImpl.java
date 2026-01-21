@@ -87,9 +87,10 @@ public class TicketServiceImpl implements ITicketService {
 
         // Validate Duplicate
         if (ticket.getUsed()) {
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
             return com.codegym.appticket.dto.ticket.TicketCheckInResponse.builder()
                     .status(com.codegym.appticket.dto.ticket.TicketCheckInResponse.Status.ALREADY_CHECKED_IN)
-                    .message("Vé đã được sử dụng vào lúc: " + ticket.getCheckInTime())
+                    .message("Vé đã được sử dụng vào lúc: " + ticket.getCheckInTime().format(formatter))
                     .ticketCode(request.getTicketCode())
                     .customerName(ticket.getBookingDetail().getBooking().getUser().getFullName())
                     .ticketType(ticket.getBookingDetail().getTicketType().getName())
@@ -106,9 +107,10 @@ public class TicketServiceImpl implements ITicketService {
         java.time.LocalDateTime validCheckInStart = startTime.minusHours(3);
 
         if (now.isBefore(validCheckInStart)) {
+             java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
              return com.codegym.appticket.dto.ticket.TicketCheckInResponse.builder()
                     .status(com.codegym.appticket.dto.ticket.TicketCheckInResponse.Status.INVALID_TIME)
-                    .message("Sự kiện chưa diễn ra. Vui lòng quay lại sau " + validCheckInStart)
+                    .message("Sự kiện chưa diễn ra. Vui lòng quay lại sau " + validCheckInStart.format(formatter))
                     .ticketCode(request.getTicketCode())
                     .build();
         }
