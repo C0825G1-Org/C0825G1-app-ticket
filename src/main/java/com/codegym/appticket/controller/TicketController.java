@@ -20,11 +20,11 @@ import java.util.List;
 @RequestMapping("/tickets")
 @RequiredArgsConstructor
 public class TicketController {
-    
+
     private final ITicketService ticketService;
 
     // Record để làm key gộp vé (Dùng String statusName để so sánh chính xác tuyệt đối)
-    public record TicketGroupKey(Long eventId, String eventTitle, String eventLocation, String statusName) {}
+    public record TicketGroupKey(Long eventId, Long occurrenceId, String eventTitle, String eventLocation, java.time.LocalDateTime startTime, String statusName) {}
 
     // 1. Danh sách vé của tôi (đã gộp theo sự kiện và trạng thái)
     @GetMapping("/my-tickets")
@@ -33,19 +33,21 @@ public class TicketController {
         if (email == null) {
             return "redirect:/login";
         }
-        
+
         com.codegym.appticket.entity.User currentUser = ticketService.getUserByEmail(email);
         Long userId = currentUser.getId();
-        
+
         List<Ticket> tickets = ticketService.getTicketsByUserId(userId);
         
-        // Gộp vé theo sự kiện và trạng thái
+        // Gộp vé theo sự kiện, buổi diễn và trạng thái
         java.util.Map<TicketGroupKey, List<Ticket>> groupedTickets = tickets.stream()
                 .collect(java.util.stream.Collectors.groupingBy(
                         t -> new TicketGroupKey(
-                                t.getBookingDetail().getTicketType().getEvent().getId(),
-                                t.getBookingDetail().getTicketType().getEvent().getTitle(),
-                                t.getBookingDetail().getTicketType().getEvent().getLocation(),
+                                t.getBookingDetail().getTicketType().getEventOccurrence().getEvent().getId(),
+                                t.getBookingDetail().getTicketType().getEventOccurrence().getId(),
+                                t.getBookingDetail().getTicketType().getEventOccurrence().getEvent().getTitle(),
+                                t.getBookingDetail().getTicketType().getEventOccurrence().getFullLocation(),
+                                t.getBookingDetail().getTicketType().getEventOccurrence().getStartTime(),
                                 t.getBookingDetail().getBooking().getStatus().name()
                         ),
                         java.util.LinkedHashMap::new,
@@ -58,8 +60,9 @@ public class TicketController {
 
     // 2. Chi tiết các vé của một sự kiện (có lọc theo trạng thái)
     @GetMapping("/event-detail/{eventId}")
-    public String eventDetail(@PathVariable Long eventId, 
-                             @org.springframework.web.bind.annotation.RequestParam(required = false) com.codegym.appticket.entity.BookingStatus status, 
+    public String eventDetail(@PathVariable Long eventId,
+                             @org.springframework.web.bind.annotation.RequestParam(required = false) Long occurrenceId,
+                             @org.springframework.web.bind.annotation.RequestParam(required = false) com.codegym.appticket.entity.BookingStatus status,
                              Model model) {
         String email = getCurrentUserEmail();
         if (email == null) {
@@ -69,8 +72,13 @@ public class TicketController {
         com.codegym.appticket.entity.User currentUser = ticketService.getUserByEmail(email);
         Long userId = currentUser.getId();
         
-        List<Ticket> tickets = ticketService.getTicketsByUserIdAndEventId(userId, eventId);
-        
+        List<Ticket> tickets;
+        if (occurrenceId != null) {
+            tickets = ticketService.getTicketsByUserIdAndOccurrenceId(userId, occurrenceId);
+        } else {
+            tickets = ticketService.getTicketsByUserIdAndEventId(userId, eventId);
+        }
+
         // Lọc vé theo trạng thái nếu có
         if (status != null) {
             tickets = tickets.stream()
@@ -91,7 +99,7 @@ public class TicketController {
         
         model.addAttribute("tickets", tickets);
         model.addAttribute("qrCodeMap", qrCodeMap);
-        model.addAttribute("event", tickets.get(0).getBookingDetail().getTicketType().getEvent());
+        model.addAttribute("event", tickets.get(0).getBookingDetail().getTicketType().getEventOccurrence().getEvent());
         
         return "ticket/detail";
     }

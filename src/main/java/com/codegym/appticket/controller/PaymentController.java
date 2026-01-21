@@ -44,7 +44,8 @@ public class PaymentController {
                      String[] parts = orderId.split("_");
                      Long bookingId = Long.parseLong(parts[0]);
                      
-                    bookingService.cancelBooking(bookingId);
+                     // Instead of cancelling, redirect back to confirm page to retry
+                     return "redirect:/bookings/confirm?bookingId=" + bookingId;
                  } catch (Exception e) {
                      // Log error
                  }

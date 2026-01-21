@@ -54,6 +54,10 @@
                         <div class="small text-muted mb-3">
                             <i class="bi bi-geo-alt-fill me-1"></i>
                             <span th:text="${event.location ?: 'TBA'}">TP. HCM</span>
+                            <span th:if="${event.locationCount != null and event.locationCount > 1}"
+                                th:text="' và ' + ${event.locationCount - 1} + ' địa điểm khác'">
+                                và 1 địa điểm khác
+                            </span>
                         </div>
 
                         <!-- Price -->

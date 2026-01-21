@@ -117,10 +117,11 @@
                                             duyệt</span>
                                     </td>
                                     <td class="px-4 py-3 text-end">
-                                        <a th:href="@{/admin/events/edit/{id}(id=${event.id})}"
-                                            class="btn btn-sm btn-outline-primary rounded-3 fw-medium">
-                                            Xem chi tiết
-                                        </a>
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-primary rounded-3 px-3 fw-medium"
+                                            th:onclick="'openDetailModal(' + ${event.id} + ')'" title="Xem chi tiết">
+                                            <i class="bi bi-eye me-1"></i> Xem chi tiết
+                                        </button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -128,6 +129,208 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Event Detail Modal -->
+            <div class="modal fade" id="eventDetailModal" aria-hidden="true" data-bs-focus="false">
+                <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content rounded-4 border-0">
+                        <div class="modal-header border-bottom-0 pb-0">
+                            <h5 class="modal-title fw-bold">Chi tiết sự kiện</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4" id="modal-event-content">
+                            <div class="d-flex justify-content-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                        didOpen: (toast) => {
+                            toast.onmouseenter = Swal.stopTimer;
+                            toast.onmouseleave = Swal.resumeTimer;
+                        }
+                    });
+
+                    window.openDetailModal = function (id) {
+                        const modalEl = document.getElementById('eventDetailModal');
+                        const modalContent = document.getElementById('modal-event-content');
+                        const modal = new bootstrap.Modal(modalEl);
+
+                        modal.show();
+                        modalContent.innerHTML = `
+                            <div class="d-flex justify-content-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>`;
+
+                        fetch(`/admin/events/${id}/modal`)
+                            .then(response => response.text())
+                            .then(html => {
+                                modalContent.innerHTML = html;
+                            })
+                            .catch(err => {
+                                modalContent.innerHTML = '<div class="text-danger text-center py-4">Lỗi tải dữ liệu.</div>';
+                                console.error(err);
+                            });
+                    };
+
+                    window.approveEvent = function (id) {
+                        Swal.fire({
+                            title: 'Duyệt sự kiện này?',
+                            text: "Sự kiện sẽ được công khai ngay lập tức.",
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: 'Duyệt ngay',
+                            cancelButtonText: 'Hủy',
+                            confirmButtonColor: '#198754'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                                fetch('/admin/events/' + id + '/approve', {
+                                    method: 'POST',
+                                    headers: { [csrfHeader]: csrfToken }
+                                })
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        if (data.status === 'success') {
+                                            Toast.fire({ icon: 'success', title: data.message });
+                                            bootstrap.Modal.getInstance(document.getElementById('eventDetailModal')).hide();
+                                            setTimeout(() => location.reload(), 1000);
+                                        } else {
+                                            Toast.fire({ icon: 'error', title: data.message });
+                                        }
+                                    });
+                            }
+                        });
+                    }
+
+                    window.rejectEvent = function (id) {
+                        Swal.fire({
+                            title: 'Từ chối sự kiện?',
+                            input: 'textarea',
+                            inputLabel: 'Lý do từ chối',
+                            inputPlaceholder: 'Nhập lý do tại đây...',
+                            showCancelButton: true,
+                            confirmButtonText: 'Xác nhận từ chối',
+                            cancelButtonText: 'Hủy',
+                            confirmButtonColor: '#dc3545',
+                            inputValidator: (value) => {
+                                if (!value) return 'Vui lòng nhập lý do!'
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                                const reason = result.value;
+                                fetch('/admin/events/' + id + '/reject?reason=' + encodeURIComponent(reason), {
+                                    method: 'POST',
+                                    headers: { [csrfHeader]: csrfToken }
+                                })
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        if (data.status === 'success') {
+                                            Toast.fire({ icon: 'success', title: data.message });
+                                            bootstrap.Modal.getInstance(document.getElementById('eventDetailModal')).hide();
+                                            setTimeout(() => location.reload(), 1000);
+                                        } else {
+                                            Toast.fire({ icon: 'error', title: data.message });
+                                        }
+                                    });
+                            }
+                        });
+                    }
+
+                    window.cancelEvent = function (id) {
+                        Swal.fire({
+                            title: 'Hủy sự kiện?',
+                            text: 'Sự kiện sẽ chuyển sang trạng thái Đã hủy.',
+                            input: 'textarea',
+                            inputLabel: 'Lý do hủy',
+                            inputPlaceholder: 'Nhập lý do tại đây...',
+                            showCancelButton: true,
+                            confirmButtonText: 'Xác nhận hủy',
+                            cancelButtonText: 'Quay lại',
+                            confirmButtonColor: '#ffc107',
+                            inputValidator: (value) => {
+                                if (!value) return 'Vui lòng nhập lý do!'
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                                const reason = result.value;
+                                fetch('/admin/events/' + id + '/cancel?reason=' + encodeURIComponent(reason), {
+                                    method: 'POST',
+                                    headers: { [csrfHeader]: csrfToken }
+                                })
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        if (data.status === 'success') {
+                                            Toast.fire({ icon: 'success', title: data.message });
+                                            bootstrap.Modal.getInstance(document.getElementById('eventDetailModal')).hide();
+                                            setTimeout(() => location.reload(), 1000);
+                                        } else {
+                                            Toast.fire({ icon: 'error', title: data.message });
+                                        }
+                                    });
+                            }
+                        });
+                    }
+
+                    window.deleteEvent = function (id, title) {
+                        Swal.fire({
+                            title: `Xóa sự kiện "${title}"?`,
+                            text: "Hành động này không thể hoàn tác!",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#d33',
+                            cancelButtonColor: '#3085d6',
+                            confirmButtonText: 'Đồng ý xóa',
+                            cancelButtonText: 'Hủy'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                                fetch('/api/events/' + id, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        [csrfHeader]: csrfToken
+                                    }
+                                })
+                                    .then(async response => {
+                                        if (response.ok) {
+                                            Toast.fire({ icon: 'success', title: 'Đã xóa sự kiện thành công!' });
+                                            bootstrap.Modal.getInstance(document.getElementById('eventDetailModal')).hide();
+                                            setTimeout(() => location.reload(), 1000);
+                                        } else {
+                                            const errorText = await response.text();
+                                            Toast.fire({ icon: 'error', title: 'Lỗi: ' + (errorText || 'Xóa sự kiện thất bại.') });
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        Toast.fire({ icon: 'error', title: 'Đã xảy ra lỗi khi xóa sự kiện.' });
+                                    });
+                            }
+                        });
+                    }
+                });
+            </script>
 
         </div>
     </div>

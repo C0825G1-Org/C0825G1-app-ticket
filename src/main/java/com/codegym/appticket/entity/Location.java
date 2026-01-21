@@ -1,10 +1,12 @@
 package com.codegym.appticket.entity;
 
+import com.codegym.appticket.listener.LocationEntityListener;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
 @Table(name = "locations")
+@EntityListeners(LocationEntityListener.class)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -25,4 +27,10 @@ public class Location extends Parent {
 
     @Column(name = "map_link", columnDefinition = "TEXT")
     private String mapLink;
+
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
 }

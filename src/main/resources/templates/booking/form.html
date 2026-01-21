@@ -32,23 +32,39 @@
                                 <input type="hidden" name="eventId" th:value="${event.id}">
 
                                 <h5 class="mb-3">Chọn loại vé:</h5>
-                                <div th:each="tt : ${ticketTypes}" class="mb-3 p-3 border rounded">
-                                    <div class="d-flex justify-content-between align-items-center">
+                                <th:block th:each="tt, stat : ${ticketTypes}">
+                                    <!-- Header: Show only if first item OR occurrenceId changed -->
+                                    <div th:if="${stat.first or tt.eventOccurrence.id != ticketTypes[stat.index - 1].eventOccurrence.id}"
+                                        class="alert alert-soft-primary mt-4 mb-2 d-flex align-items-center">
+                                        <i class="bi bi-calendar-event me-2"></i>
                                         <div>
-                                            <h6 class="mb-0" th:text="${tt.name}">Tên vé</h6>
-                                            <small class="text-primary"
-                                                th:text="${#numbers.formatDecimal(tt.price, 0, 'COMMA', 0, 'POINT')} + ' VND'"></small>
-                                            <br>
-                                            <small class="text-muted" th:text="'Còn lại: ' + ${tt.quantity}"></small>
-                                        </div>
-                                        <div style="width: 100px;">
-                                            <input type="number" th:name="'ticket_' + ${tt.id}"
-                                                class="form-control ticket-qty"
-                                                th:value="${preSelectedQuantities != null and preSelectedQuantities.containsKey(tt.id) ? preSelectedQuantities.get(tt.id) : ''}"
-                                                placeholder="0" min="0" th:max="${tt.quantity}">
+                                            <strong
+                                                th:text="${#temporals.format(tt.eventOccurrence.startTime, 'HH:mm - dd/MM/yyyy')}"></strong>
+                                            <span class="mx-2">|</span>
+                                            <span
+                                                th:text="${tt.eventOccurrence.location.ward.province.name + ', ' + tt.eventOccurrence.location.ward.name}"></span>
                                         </div>
                                     </div>
-                                </div>
+
+                                    <div class="mb-3 p-3 border rounded">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-0" th:text="${tt.name}">Tên vé</h6>
+                                                <small class="text-primary"
+                                                    th:text="${#numbers.formatDecimal(tt.price, 0, 'COMMA', 0, 'POINT')} + ' VND'"></small>
+                                                <br>
+                                                <small class="text-muted"
+                                                    th:text="'Còn lại: ' + ${tt.quantity}"></small>
+                                            </div>
+                                            <div style="width: 100px;">
+                                                <input type="number" th:name="'ticket_' + ${tt.id}"
+                                                    class="form-control ticket-qty"
+                                                    th:value="${preSelectedQuantities != null and preSelectedQuantities.containsKey(tt.id) ? preSelectedQuantities.get(tt.id) : ''}"
+                                                    placeholder="0" min="0" th:max="${tt.quantity}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </th:block>
 
                                 <div id="ticketCountError" class="alert alert-warning py-2 mb-3 d-none">
                                     <i class="bi bi-exclamation-circle me-2"></i>
@@ -57,7 +73,7 @@
 
                                 <div class="d-grid gap-2 mt-4">
                                     <button type="submit" class="btn btn-primary btn-lg">Tiếp tục đặt vé</button>
-                                    <a th:href="@{/events/detail/{id}(id=${event.id})}"
+                                    <a th:href="@{/event/{id}(id=${event.id})}"
                                         class="btn btn-outline-secondary">Quay lại</a>
                                 </div>
                             </form>

@@ -3,6 +3,7 @@ package com.codegym.appticket.controller;
 
 import com.codegym.appticket.dto.home.HomeEventDTO;
 import com.codegym.appticket.dto.home.NearByEventDTO;
+import com.codegym.appticket.dto.home.NearByEventWithOccurrencesDTO;
 import com.codegym.appticket.dto.home.TrendingEventDTO;
 import com.codegym.appticket.dto.home.UpComingEventDTO;
 import com.codegym.appticket.repository.IEventRepository;
@@ -37,6 +38,9 @@ public class HomeController {
 
     @Autowired
     private IGeoLocationService geoLocationService;
+    
+    @Autowired
+    private com.codegym.appticket.util.VietnamProvinceCoordinates vietnamProvinceCoordinates;
 
     @GetMapping("/")
     public String showHomePage(Model model) {
@@ -59,14 +63,33 @@ public class HomeController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "6") int size,
             @RequestParam(required = false) String location,
+            @RequestParam(required = false) String searchText,
+            @RequestParam(required = false) String categoryName,
+            @RequestParam(required = false) String sort,
             Model model) {
 
-        // Show all approved events without filters
-        Page<HomeEventDTO> events = eventService.findAllEvent(page, size);
+        // Convert categoryName to categoryId if provided
+        Long categoryId = null;
+        if (categoryName != null && !categoryName.trim().isEmpty()) {
+            categoryId = eventCategoryService.findAll().stream()
+                    .filter(cat -> cat.getName().equalsIgnoreCase(categoryName.trim()))
+                    .map(com.codegym.appticket.entity.EventCategory::getId)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        // Use search method if any filter is provided
+        Page<HomeEventDTO> events;
+        if (searchText != null || categoryId != null || location != null) {
+            events = eventService.searchHomeEvents(searchText, categoryId, location, page, size, sort);
+        } else {
+            // Show all approved events without filters
+            events = eventService.findAllEvent(page, size);
+        }
 
         model.addAttribute("categories", eventCategoryService.findAll());
         model.addAttribute("events", events);
-        model.addAttribute("nearbyEvents", getNearbyEvents(null, 6));
+        model.addAttribute("nearbyEvents", getNearbyEvents(location, 6));
 
         return "home/event";
     }
@@ -176,9 +199,13 @@ public class HomeController {
 
         // Fetch ticket types with available quantities
         var ticketTypes = eventRepository.findTicketTypesByEventId(id);
+        
+        // Fetch all occurrences (time + location)
+        var occurrences = eventRepository.findOccurrencesByEventId(id);
 
         model.addAttribute("event", eventDetail);
         model.addAttribute("ticketTypes", ticketTypes);
+        model.addAttribute("occurrences", occurrences);
         model.addAttribute("currentPage", "event-detail");
 
         return "home/event_detail";
@@ -193,23 +220,29 @@ public class HomeController {
         return "error/403";
     }
 
-    private List<NearByEventDTO> getNearbyEvents(String location, int limit) {
+
+    private List<NearByEventWithOccurrencesDTO> getNearbyEvents(String location, int limit) {
         if (location == null || location.trim().isEmpty() || location.equals("Toàn quốc")) {
             return List.of();
         }
-        // ✅ Thử nhiều biến thể tên
+        
+        // Try geocoding API first
         Double[] coordinates = geoLocationService.getCoordinates(location);
 
-        if (coordinates == null && location.contains("Huế")) {
-            // Fallback: thử "Hue" hoặc "Thua Thien Hue"
-            coordinates = geoLocationService.getCoordinates("Hue, Vietnam");
+        // Fallback to VietnamProvinceCoordinates if geocoding fails
+        if (coordinates == null) {
+            log.warn("Geocoding API failed for location: {}, trying VietnamProvinceCoordinates", location);
+            coordinates = vietnamProvinceCoordinates.getCoordinates(location);
         }
 
         if (coordinates == null) {
-            log.warn("Geocoding failed for location: {}", location);
+            log.error("Could not find coordinates for location: {} (both API and local map failed)", location);
             return List.of();
         }
-        return eventService.findNearbyEvents(
+        
+        log.info("Found coordinates for {}: lat={}, lon={}", location, coordinates[0], coordinates[1]);
+        
+        return eventService.findNearbyEventsGrouped(
                 coordinates[0], coordinates[1], location, limit
         );
     }

@@ -44,6 +44,11 @@ public class TicketServiceImpl implements ITicketService {
     }
 
     @Override
+    public List<Ticket> getTicketsByUserIdAndOccurrenceId(Long userId, Long occurrenceId) {
+        return ticketRepository.findByUserIdAndOccurrenceId(userId, occurrenceId);
+    }
+
+    @Override
     public List<QRCode> getQRCodesByTicketIds(List<Long> ticketIds) {
         return qrCodeRepository.findByTicketIdIn(ticketIds);
     }

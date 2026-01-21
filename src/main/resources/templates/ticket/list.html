@@ -41,6 +41,12 @@
                                         <div class="d-flex align-items-center">
                                             <div>
                                                 <h6 class="mb-0" th:text="${entry.key.eventTitle}">Tên sự kiện</h6>
+                                                <small class="text-muted d-block mb-1">
+                                                    <i class="bi bi-clock me-1"></i>
+                                                    <span
+                                                        th:text="${#temporals.format(entry.key.startTime, 'HH:mm dd/MM/yyyy')}">19:00
+                                                        20/11/2024</span>
+                                                </small>
                                                 <small class="text-muted" th:text="${entry.key.eventLocation}">Địa
                                                     điểm</small>
                                             </div>
@@ -70,7 +76,7 @@
                                         <div class="d-flex justify-content-center gap-2">
                                             <!-- Success: Show Details -->
                                             <a th:if="${entry.key.statusName == 'SUCCESS'}"
-                                                th:href="@{/tickets/event-detail/{eventId}(eventId=${entry.key.eventId}, status=${entry.key.statusName})}"
+                                                th:href="@{/tickets/event-detail/{eventId}(eventId=${entry.key.eventId}, occurrenceId=${entry.key.occurrenceId}, status=${entry.key.statusName})}"
                                                 class="btn btn-sm btn-outline-primary" style="width: 150px;">Chi
                                                 tiết</a>
 
@@ -82,7 +88,7 @@
 
                                             <!-- Cancelled: Show Re-book -->
                                             <a th:if="${entry.key.statusName == 'CANCELLED'}"
-                                                th:href="@{/bookings/book/{eventId}(eventId=${entry.key.eventId})}"
+                                                th:href="@{/bookings/book/{eventId}(eventId=${entry.key.eventId}, occurrence=${entry.key.occurrenceId})}"
                                                 class="btn btn-sm btn-outline-info" style="width: 150px;">Đặt lại</a>
                                         </div>
                                     </td>

@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import java.util.List;
+import java.util.ArrayList;
 
 import java.time.LocalDateTime;
 
@@ -39,4 +41,7 @@ public class EventOccurrenceDTO {
     private String addressDetail;
 
     private String mapLink;
+
+    @Builder.Default
+    private List<TicketTypeDTO> ticketTypes = new ArrayList<>();
 }

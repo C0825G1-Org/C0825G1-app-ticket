@@ -19,4 +19,6 @@ public class EventSearchDTO {
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private java.time.LocalDate endDate;
+
+    private com.codegym.appticket.entity.EventStatus status;
 }

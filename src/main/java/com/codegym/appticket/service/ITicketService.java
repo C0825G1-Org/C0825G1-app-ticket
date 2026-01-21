@@ -10,5 +10,6 @@ public interface ITicketService {
     QRCode getQRCodeByTicketId(Long ticketId);
     com.codegym.appticket.entity.User getUserByEmail(String email);
     List<Ticket> getTicketsByUserIdAndEventId(Long userId, Long eventId);
+    List<Ticket> getTicketsByUserIdAndOccurrenceId(Long userId, Long occurrenceId);
     List<QRCode> getQRCodesByTicketIds(List<Long> ticketIds);
 }
