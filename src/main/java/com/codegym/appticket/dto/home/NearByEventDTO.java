@@ -18,4 +18,6 @@ public class NearByEventDTO {
     private Double distance; // Khoảng cách tính bằng km
     private String categoryName;
     private LocalDateTime eventDate;
+    private String addressDetail; // Địa chỉ chi tiết của location
+    private Long occurrenceId; // ID của occurrence để link đến chi tiết
 }
