@@ -56,6 +56,7 @@ public class BookingServiceImpl implements IBookingService {
         Booking booking = new Booking();
         booking.setUser(user);
         booking.setStatus(BookingStatus.PENDING); // Chờ thanh toán
+        booking.setBookingTime(java.time.LocalDateTime.now());
         booking = bookingRepository.save(booking);
 
         for (Map.Entry<Long, Integer> entry : ticketQuantities.entrySet()) {
@@ -169,5 +170,22 @@ public class BookingServiceImpl implements IBookingService {
             total = total.add(d.getTicketType().getPrice().multiply(new java.math.BigDecimal(d.getQuantity())));
         }
         return total.longValue();
+    }
+
+    @Override
+    @Transactional
+    public void expireBookings() {
+        java.time.LocalDateTime threshold = java.time.LocalDateTime.now().minusMinutes(15);
+        List<Booking> expiredBookings = bookingRepository.findByStatusAndBookingTimeBefore(BookingStatus.PENDING, threshold);
+        
+        for (Booking booking : expiredBookings) {
+            cancelBooking(booking.getId());
+            System.out.println("Expired booking cancelled: " + booking.getId());
+        }
+    }
+
+    @Override
+    public List<BookingDetail> getBookingDetailsByBookingId(Long bookingId) {
+        return bookingDetailRepository.findByBookingId(bookingId);
     }
 }

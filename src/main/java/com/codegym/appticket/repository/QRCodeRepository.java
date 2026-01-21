@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface QRCodeRepository extends JpaRepository<QRCode, Long> {
     Optional<QRCode> findByTicketId(Long ticketId);
+    java.util.List<QRCode> findByTicketIdIn(java.util.List<Long> ticketIds);
 }

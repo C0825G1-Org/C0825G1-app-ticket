@@ -37,4 +37,14 @@ public class TicketServiceImpl implements ITicketService {
     public com.codegym.appticket.entity.User getUserByEmail(String email) {
         return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found: " + email));
     }
+
+    @Override
+    public List<Ticket> getTicketsByUserIdAndEventId(Long userId, Long eventId) {
+        return ticketRepository.findByUserIdAndEventId(userId, eventId);
+    }
+
+    @Override
+    public List<QRCode> getQRCodesByTicketIds(List<Long> ticketIds) {
+        return qrCodeRepository.findByTicketIdIn(ticketIds);
+    }
 }
