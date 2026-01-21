@@ -163,6 +163,8 @@ public class BookingController {
             
             model.addAttribute("event", details.get(0).getTicketType().getEvent());
             model.addAttribute("selectedTickets", selectedTickets);
+            // Pass the existing booking ID to the view so we can reuse it
+            model.addAttribute("bookingId", bookingId);
             
             String email = getCurrentUserEmail();
             if (email != null) {
@@ -180,6 +182,7 @@ public class BookingController {
     // 3. Xử lý Lưu đặt vé
     @PostMapping("/save")
     public String save(@RequestParam Long eventId,
+                       @RequestParam(required = false) Long bookingId,
                        @RequestParam Map<String, String> params,
                        RedirectAttributes redirectAttributes,
                        jakarta.servlet.http.HttpServletRequest request) {
@@ -190,24 +193,45 @@ public class BookingController {
             return "redirect:/login";
         }
         
-        Map<Long, Integer> ticketQuantities = new HashMap<>();
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            if (entry.getKey().startsWith("ticket_")) {
-                Long ttId = Long.parseLong(entry.getKey().replace("ticket_", ""));
-                if (entry.getValue() != null && !entry.getValue().trim().isEmpty()) {
-                    Integer qty = Integer.parseInt(entry.getValue());
-                    if (qty > 0) {
-                        ticketQuantities.put(ttId, qty);
-                    }
-                }
-            }
-        }
-
         try {
             com.codegym.appticket.entity.User currentUser = bookingService.getUserByEmail(userEmail);
             Long userId = currentUser.getId();
-            
-            Booking booking = bookingService.createBooking(eventId, userId, ticketQuantities);
+            Booking booking;
+
+            // CHECK: If bookingId exists, validate and reuse it
+            if (bookingId != null) {
+                booking = bookingService.getBookingById(bookingId);
+                // Security check: Ensure current user owns this booking
+                if (!booking.getUser().getId().equals(userId)) {
+                     throw new RuntimeException("Bạn không có quyền thanh toán booking này.");
+                }
+                // Status check: Ensure it is PENDING
+                if (booking.getStatus() != com.codegym.appticket.entity.BookingStatus.PENDING) {
+                     // If already SUCCESS, redirect to success page directly? Or throw error?
+                     if (booking.getStatus() == com.codegym.appticket.entity.BookingStatus.SUCCESS) {
+                         return "redirect:/bookings/success/" + booking.getId();
+                     }
+                     throw new RuntimeException("Booking không ở trạng thái chờ thanh toán.");
+                }
+                // No need to create tickets/details again, they exist.
+                // Just proceed to payment URL generation.
+
+            } else {
+                // OLD FLOW: Create new booking
+                Map<Long, Integer> ticketQuantities = new HashMap<>();
+                for (Map.Entry<String, String> entry : params.entrySet()) {
+                    if (entry.getKey().startsWith("ticket_")) {
+                        Long ttId = Long.parseLong(entry.getKey().replace("ticket_", ""));
+                        if (entry.getValue() != null && !entry.getValue().trim().isEmpty()) {
+                            Integer qty = Integer.parseInt(entry.getValue());
+                            if (qty > 0) {
+                                ticketQuantities.put(ttId, qty);
+                            }
+                        }
+                    }
+                }
+                booking = bookingService.createBooking(eventId, userId, ticketQuantities);
+            }
             
             long totalAmount = bookingService.calculateTotalAmount(booking.getId());
             

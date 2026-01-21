@@ -20,10 +20,13 @@ import java.util.List;
 @RequestMapping("/tickets")
 @RequiredArgsConstructor
 public class TicketController {
-
+    
     private final ITicketService ticketService;
 
-    // 1. Danh sách vé của tôi (đã gộp theo sự kiện)
+    // Record để làm key gộp vé (Dùng String statusName để so sánh chính xác tuyệt đối)
+    public record TicketGroupKey(Long eventId, String eventTitle, String eventLocation, String statusName) {}
+
+    // 1. Danh sách vé của tôi (đã gộp theo sự kiện và trạng thái)
     @GetMapping("/my-tickets")
     public String myTickets(Model model) {
         String email = getCurrentUserEmail();
@@ -36,10 +39,15 @@ public class TicketController {
         
         List<Ticket> tickets = ticketService.getTicketsByUserId(userId);
         
-        // Gộp vé theo sự kiện
-        java.util.Map<com.codegym.appticket.entity.Event, List<Ticket>> groupedTickets = tickets.stream()
+        // Gộp vé theo sự kiện và trạng thái
+        java.util.Map<TicketGroupKey, List<Ticket>> groupedTickets = tickets.stream()
                 .collect(java.util.stream.Collectors.groupingBy(
-                        t -> t.getBookingDetail().getTicketType().getEvent(),
+                        t -> new TicketGroupKey(
+                                t.getBookingDetail().getTicketType().getEvent().getId(),
+                                t.getBookingDetail().getTicketType().getEvent().getTitle(),
+                                t.getBookingDetail().getTicketType().getEvent().getLocation(),
+                                t.getBookingDetail().getBooking().getStatus().name()
+                        ),
                         java.util.LinkedHashMap::new,
                         java.util.stream.Collectors.toList()
                 ));
@@ -48,9 +56,11 @@ public class TicketController {
         return "ticket/list";
     }
 
-    // 2. Chi tiết các vé của một sự kiện
+    // 2. Chi tiết các vé của một sự kiện (có lọc theo trạng thái)
     @GetMapping("/event-detail/{eventId}")
-    public String eventDetail(@PathVariable Long eventId, Model model) {
+    public String eventDetail(@PathVariable Long eventId, 
+                             @org.springframework.web.bind.annotation.RequestParam(required = false) com.codegym.appticket.entity.BookingStatus status, 
+                             Model model) {
         String email = getCurrentUserEmail();
         if (email == null) {
             return "redirect:/login";
@@ -60,6 +70,14 @@ public class TicketController {
         Long userId = currentUser.getId();
         
         List<Ticket> tickets = ticketService.getTicketsByUserIdAndEventId(userId, eventId);
+        
+        // Lọc vé theo trạng thái nếu có
+        if (status != null) {
+            tickets = tickets.stream()
+                    .filter(t -> t.getBookingDetail().getBooking().getStatus() == status)
+                    .collect(java.util.stream.Collectors.toList());
+        }
+
         if (tickets.isEmpty()) {
             return "redirect:/tickets/my-tickets";
         }

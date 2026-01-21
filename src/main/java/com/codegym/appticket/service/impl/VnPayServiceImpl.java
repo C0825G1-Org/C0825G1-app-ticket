@@ -29,7 +29,8 @@ public class VnPayServiceImpl implements IVnPayService {
         long amountValue = amount * 100;
         String bankCode = ""; 
         
-        String vnp_TxnRef = String.valueOf(orderId);
+        // Use bookingId_timestamp to ensure unique TxnRef for every payment attempt
+        String vnp_TxnRef = orderId + "_" + System.currentTimeMillis();
         String vnp_IpAddr = VnPayConfig.getIpAddress(request);
         String vnp_TmnCode = VnPayConfig.vnp_TmnCode;
 

@@ -32,6 +32,8 @@
 
                             <form th:action="@{/bookings/save}" method="post">
                                 <input type="hidden" name="eventId" th:value="${event.id}">
+                                <input th:if="${bookingId != null}" type="hidden" name="bookingId"
+                                    th:value="${bookingId}">
                                 <th:block th:each="entry : ${selectedTickets}">
                                     <input type="hidden" th:name="'ticket_' + ${entry.key.id}"
                                         th:value="${entry.value}">

@@ -4,6 +4,7 @@
 <head th:replace="~{common/layout :: head('Vé của tôi')}"></head>
 
 <body>
+    <!-- MARKER: VERSION 2.0 - CLEAN UI -->
     <div th:replace="~{common/layout :: user-layout(~{:: .my-tickets})}">
         <div class="my-tickets container py-5 mt-5">
             <h2 class="mb-4">Vé của tôi</h2>
@@ -39,43 +40,49 @@
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <div>
-                                                <h6 class="mb-0" th:text="${entry.key.title}">
-                                                    Tên sự kiện</h6>
-                                                <small class="text-muted" th:text="${entry.key.location}">Địa
+                                                <h6 class="mb-0" th:text="${entry.key.eventTitle}">Tên sự kiện</h6>
+                                                <small class="text-muted" th:text="${entry.key.eventLocation}">Địa
                                                     điểm</small>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge bg-info text-dark" th:text="${entry.value.size()} + ' vé'">2
-                                            vé</span>
+                                        <div class="d-flex flex-column">
+                                            <span class="badge bg-info text-dark" style="width: fit-content;"
+                                                th:text="${entry.value.size()} + ' vé'">2 vé</span>
+                                            <!-- Debug: Show Booking IDs if multiple -->
+                                            <small class="text-muted mt-1" style="font-size: 0.7rem;">
+                                                Mã ĐH: <span th:each="t, i : ${entry.value}"
+                                                    th:if="${i.index == 0 or entry.value[i.index-1].bookingDetail.booking.id != t.bookingDetail.booking.id}"
+                                                    th:text="${t.bookingDetail.booking.id} + (i.last ? '' : ', ')"></span>
+                                            </small>
+                                        </div>
                                     </td>
                                     <td>
-                                        <span th:if="${entry.value[0].bookingDetail.booking.status.name() == 'SUCCESS'}"
-                                            class="badge bg-success">Đã thanh toán</span>
-                                        <span th:if="${entry.value[0].bookingDetail.booking.status.name() == 'PENDING'}"
+                                        <span th:if="${entry.key.statusName == 'SUCCESS'}" class="badge bg-success">Đã
+                                            thanh toán</span>
+                                        <span th:if="${entry.key.statusName == 'PENDING'}"
                                             class="badge bg-warning text-dark">Chưa thanh toán</span>
-                                        <span
-                                            th:if="${entry.value[0].bookingDetail.booking.status.name() == 'CANCELLED'}"
-                                            class="badge bg-danger">Đã hủy</span>
+                                        <span th:if="${entry.key.statusName == 'CANCELLED'}" class="badge bg-danger">Đã
+                                            hủy</span>
                                     </td>
                                     <td class="text-center">
-                                        <div class="d-flex justify-content-center">
+                                        <div class="d-flex justify-content-center gap-2">
                                             <!-- Success: Show Details -->
-                                            <a th:if="${entry.value[0].bookingDetail.booking.status.name() == 'SUCCESS'}"
-                                                th:href="@{/tickets/event-detail/{eventId}(eventId=${entry.key.id})}"
+                                            <a th:if="${entry.key.statusName == 'SUCCESS'}"
+                                                th:href="@{/tickets/event-detail/{eventId}(eventId=${entry.key.eventId}, status=${entry.key.statusName})}"
                                                 class="btn btn-sm btn-outline-primary" style="width: 150px;">Chi
                                                 tiết</a>
 
                                             <!-- Pending: Show Continue Payment -->
-                                            <a th:if="${entry.value[0].bookingDetail.booking.status.name() == 'PENDING'}"
+                                            <a th:if="${entry.key.statusName == 'PENDING'}"
                                                 th:href="@{/bookings/confirm(bookingId=${entry.value[0].bookingDetail.booking.id})}"
                                                 class="btn btn-sm btn-outline-warning" style="width: 150px;">Tiếp tục
                                                 thanh toán</a>
 
                                             <!-- Cancelled: Show Re-book -->
-                                            <a th:if="${entry.value[0].bookingDetail.booking.status.name() == 'CANCELLED'}"
-                                                th:href="@{/bookings/book/{eventId}(eventId=${entry.key.id})}"
+                                            <a th:if="${entry.key.statusName == 'CANCELLED'}"
+                                                th:href="@{/bookings/book/{eventId}(eventId=${entry.key.eventId})}"
                                                 class="btn btn-sm btn-outline-info" style="width: 150px;">Đặt lại</a>
                                         </div>
                                     </td>

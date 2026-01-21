@@ -26,16 +26,26 @@ public class PaymentController {
         
         if (checksum == 1) {
 
-             Long bookingId = Long.parseLong(orderId);
-             String transactionNo = request.getParameter("vnp_TransactionNo");
-             bookingService.confirmBooking(bookingId, transactionNo);
-             return "redirect:/bookings/success/" + bookingId;
+             try {
+                // Parse bookingId from "bookingId_timestamp" format
+                String[] parts = orderId.split("_");
+                Long bookingId = Long.parseLong(parts[0]);
+                
+                String transactionNo = request.getParameter("vnp_TransactionNo");
+                bookingService.confirmBooking(bookingId, transactionNo);
+                return "redirect:/bookings/success/" + bookingId;
+             } catch (Exception e) {
+                return "redirect:/"; // Or error page
+             }
         } else {
              if (orderId != null && !orderId.isEmpty()) {
                  try {
-                    Long bookingId = Long.parseLong(orderId);
+                     // Parse bookingId from "bookingId_timestamp" format
+                     String[] parts = orderId.split("_");
+                     Long bookingId = Long.parseLong(parts[0]);
+                     
                     bookingService.cancelBooking(bookingId);
-                 } catch (NumberFormatException e) {
+                 } catch (Exception e) {
                      // Log error
                  }
              }
