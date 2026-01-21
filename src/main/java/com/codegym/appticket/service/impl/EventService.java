@@ -26,13 +26,7 @@ import com.codegym.appticket.entity.Province;
 import com.codegym.appticket.entity.User;
 import com.codegym.appticket.entity.TicketType;
 import com.codegym.appticket.entity.Ward;
-import com.codegym.appticket.repository.IEventCategoryRepository;
-import com.codegym.appticket.repository.IEventMediaRepository;
-import com.codegym.appticket.repository.IEventRepository;
-import com.codegym.appticket.repository.ILocationRepository;
-import com.codegym.appticket.repository.IProvinceRepository;
-import com.codegym.appticket.repository.IWardRepository;
-import com.codegym.appticket.repository.IEventCancellationHistoryRepository;
+import com.codegym.appticket.repository.*;
 import com.codegym.appticket.entity.EventCancellationHistory;
 import java.time.LocalDateTime;
 
@@ -59,18 +53,19 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EventService implements IEventService {
 
-    private final IGeoLocationService geocodingService;
-    private final IEventRepository eventRepository;
-    private final IEventCategoryRepository eventCategoryRepository;
-    private final ILocationRepository locationRepository;
-    private final IProvinceRepository provinceRepository;
-    private final IWardRepository wardRepository;
-    private final IEventMediaRepository eventMediaRepository;
-    private final ITicketTypeRepository ticketTypeRepository;
-    private final IEventOccurrenceRepository eventOccurrenceRepository;
-    private final AdminNotificationService adminNotificationService;
-    private final com.codegym.appticket.repository.IUserRepository userRepository;
-    private final com.codegym.appticket.util.ProvinceNameMapper provinceNameMapper;
+        private final IGeoLocationService geocodingService;
+        private final IEventRepository eventRepository;
+        private final IEventCategoryRepository eventCategoryRepository;
+        private final ILocationRepository locationRepository;
+        private final IProvinceRepository provinceRepository;
+        private final IWardRepository wardRepository;
+        private final IEventMediaRepository eventMediaRepository;
+        private final ITicketTypeRepository ticketTypeRepository;
+        private final IEventOccurrenceRepository eventOccurrenceRepository;
+        private final AdminNotificationService adminNotificationService;
+        private final com.codegym.appticket.repository.IUserRepository userRepository;
+        private final com.codegym.appticket.util.ProvinceNameMapper provinceNameMapper;
+        private final IEventCancellationHistoryRepository eventCancellationHistoryRepository;
 
         @Override
         @Transactional(readOnly = true)
@@ -131,14 +126,14 @@ public class EventService implements IEventService {
                 event.setDescription(dto.getDescription());
                 event.setCategory(category);
 
-            if (dto.getEventOccurrences() != null && !dto.getEventOccurrences().isEmpty()) {
-                EventOccurrenceDTO firstOcc = dto.getEventOccurrences().get(0);
-                Double[] coords = geocodingService.getCoordinates(firstOcc.getProvinceName());
-                if (coords != null) {
-                    event.setLatitude(coords[0]);
-                    event.setLongitude(coords[1]);
+                if (dto.getEventOccurrences() != null && !dto.getEventOccurrences().isEmpty()) {
+                        EventOccurrenceDTO firstOcc = dto.getEventOccurrences().get(0);
+                        Double[] coords = geocodingService.getCoordinates(firstOcc.getProvinceName());
+                        if (coords != null) {
+                                event.setLatitude(coords[0]);
+                                event.setLongitude(coords[1]);
+                        }
                 }
-            }
 
                 // --- LOGIC: Auto-Approve & Organizer Assignment ---
                 // Get current user (Creator)
@@ -301,15 +296,14 @@ public class EventService implements IEventService {
                 event.setCategory(category);
                 event.setStatus(dto.getStatus());
 
-
-            if (dto.getEventOccurrences() != null && !dto.getEventOccurrences().isEmpty()) {
-                EventOccurrenceDTO firstOcc = dto.getEventOccurrences().get(0);
-                Double[] coords = geocodingService.getCoordinates(firstOcc.getProvinceName());
-                if (coords != null) {
-                    event.setLatitude(coords[0]);
-                    event.setLongitude(coords[1]);
+                if (dto.getEventOccurrences() != null && !dto.getEventOccurrences().isEmpty()) {
+                        EventOccurrenceDTO firstOcc = dto.getEventOccurrences().get(0);
+                        Double[] coords = geocodingService.getCoordinates(firstOcc.getProvinceName());
+                        if (coords != null) {
+                                event.setLatitude(coords[0]);
+                                event.setLongitude(coords[1]);
+                        }
                 }
-            }
 
                 // --- LOGIC: Update Rules ---
                 // 1. Organizer Update (Admin only typically, or if allowed)
@@ -561,24 +555,25 @@ public class EventService implements IEventService {
                 return eventRepository.findTopTrendingEvents();
         }
 
-    @Override
-    public Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location, int page,
-                    int size, String sort) {
-            // Sắp xếp trong Java sử dụng Pageable
-            Sort sortOrder = Sort.by(Sort.Direction.ASC, "id");
-            Pageable pageable = PageRequest.of(page, size, sortOrder);
+        @Override
+        public Page<HomeEventDTO> searchHomeEvents(String searchText, Long categoryId, String location, int page,
+                        int size, String sort) {
+                // Sắp xếp trong Java sử dụng Pageable
+                Sort sortOrder = Sort.by(Sort.Direction.ASC, "id");
+                Pageable pageable = PageRequest.of(page, size, sortOrder);
 
-            // Convert location string to list of variants
-            List<String> locationVariants = new ArrayList<>();
-            int hasLocationFilter = 0; // 0 = false, 1 = true (MySQL compatible)
+                // Convert location string to list of variants
+                List<String> locationVariants = new ArrayList<>();
+                int hasLocationFilter = 0; // 0 = false, 1 = true (MySQL compatible)
 
-            if (location != null && !location.trim().isEmpty()) {
-                locationVariants = provinceNameMapper.getProvinceVariants(location);
-                hasLocationFilter = locationVariants.isEmpty() ? 0 : 1;
-            }
+                if (location != null && !location.trim().isEmpty()) {
+                        locationVariants = provinceNameMapper.getProvinceVariants(location);
+                        hasLocationFilter = locationVariants.isEmpty() ? 0 : 1;
+                }
 
-            return eventRepository.searchHomeEvents(searchText, categoryId, locationVariants, hasLocationFilter, pageable);
-    }
+                return eventRepository.searchHomeEvents(searchText, categoryId, locationVariants, hasLocationFilter,
+                                pageable);
+        }
 
         private Location getOrCreateLocation(EventOccurrenceDTO occDTO) {
                 // 1. Xử lý Tỉnh/Thành phố
@@ -641,72 +636,76 @@ public class EventService implements IEventService {
                 saveCancellationHistory(event, EventStatus.REJECTED, reason);
         }
 
-    @Override
-    public List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, String excludeLocation, int limit) {
-        // Convert exclude location to variants list
-        List<String> excludeLocationVariants = new ArrayList<>();
-        int hasExcludeFilter = 0;
+        @Override
+        public List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, String excludeLocation,
+                        int limit) {
+                // Convert exclude location to variants list
+                List<String> excludeLocationVariants = new ArrayList<>();
+                int hasExcludeFilter = 0;
 
-        if (excludeLocation != null && !excludeLocation.trim().isEmpty()) {
-            excludeLocationVariants = provinceNameMapper.getProvinceVariants(excludeLocation);
-            hasExcludeFilter = excludeLocationVariants.isEmpty() ? 0 : 1;
+                if (excludeLocation != null && !excludeLocation.trim().isEmpty()) {
+                        excludeLocationVariants = provinceNameMapper.getProvinceVariants(excludeLocation);
+                        hasExcludeFilter = excludeLocationVariants.isEmpty() ? 0 : 1;
+                }
+
+                return eventRepository.findNearbyEvents(userLatitude, userLongitude, excludeLocationVariants,
+                                hasExcludeFilter, limit);
         }
 
-        return eventRepository.findNearbyEvents(userLatitude, userLongitude, excludeLocationVariants, hasExcludeFilter, limit);
-    }
+        @Override
+        public List<NearByEventWithOccurrencesDTO> findNearbyEventsGrouped(Double userLatitude, Double userLongitude,
+                        String excludeLocation, int limit) {
+                // Convert exclude location to variants list
+                List<String> excludeLocationVariants = new ArrayList<>();
+                int hasExcludeFilter = 0;
 
-    @Override
-    public List<NearByEventWithOccurrencesDTO> findNearbyEventsGrouped(Double userLatitude, Double userLongitude, String excludeLocation, int limit) {
-        // Convert exclude location to variants list
-        List<String> excludeLocationVariants = new ArrayList<>();
-        int hasExcludeFilter = 0;
+                if (excludeLocation != null && !excludeLocation.trim().isEmpty()) {
+                        excludeLocationVariants = provinceNameMapper.getProvinceVariants(excludeLocation);
+                        hasExcludeFilter = excludeLocationVariants.isEmpty() ? 0 : 1;
+                }
 
-        if (excludeLocation != null && !excludeLocation.trim().isEmpty()) {
-            excludeLocationVariants = provinceNameMapper.getProvinceVariants(excludeLocation);
-            hasExcludeFilter = excludeLocationVariants.isEmpty() ? 0 : 1;
+                // Get all nearby event occurrences from repository
+                List<NearByEventDTO> allOccurrences = eventRepository.findNearbyEvents(userLatitude, userLongitude,
+                                excludeLocationVariants, hasExcludeFilter, limit * 3);
+
+                // Group occurrences by event ID using LinkedHashMap to preserve order
+                Map<Long, NearByEventWithOccurrencesDTO> eventMap = new LinkedHashMap<>();
+
+                for (NearByEventDTO occurrence : allOccurrences) {
+                        Long eventId = occurrence.getId();
+
+                        // Get or create the grouped event DTO
+                        NearByEventWithOccurrencesDTO groupedEvent = eventMap.get(eventId);
+
+                        if (groupedEvent == null) {
+                                // First occurrence for this event - create new grouped DTO
+                                groupedEvent = new NearByEventWithOccurrencesDTO();
+                                groupedEvent.setId(eventId);
+                                groupedEvent.setTitle(occurrence.getTitle());
+                                groupedEvent.setLocation(occurrence.getLocation());
+                                groupedEvent.setImage(occurrence.getImage());
+                                groupedEvent.setCategoryName(occurrence.getCategoryName());
+                                groupedEvent.setDistance(occurrence.getDistance()); // Distance to nearest occurrence
+                                groupedEvent.setOccurrences(new ArrayList<>());
+
+                                eventMap.put(eventId, groupedEvent);
+                        }
+
+                        // Add this occurrence to the event's occurrence list
+                        NearByEventWithOccurrencesDTO.OccurrenceInfo occInfo = new NearByEventWithOccurrencesDTO.OccurrenceInfo();
+                        occInfo.setOccurrenceId(occurrence.getOccurrenceId());
+                        occInfo.setEventDate(occurrence.getEventDate());
+                        occInfo.setAddressDetail(occurrence.getAddressDetail());
+                        occInfo.setDistance(occurrence.getDistance());
+
+                        groupedEvent.getOccurrences().add(occInfo);
+                }
+
+                // Convert map values to list and limit to requested number of unique events
+                return eventMap.values().stream()
+                                .limit(limit)
+                                .collect(Collectors.toList());
         }
-
-        // Get all nearby event occurrences from repository
-        List<NearByEventDTO> allOccurrences = eventRepository.findNearbyEvents(userLatitude, userLongitude, excludeLocationVariants, hasExcludeFilter, limit * 3);
-
-        // Group occurrences by event ID using LinkedHashMap to preserve order
-        Map<Long, NearByEventWithOccurrencesDTO> eventMap = new LinkedHashMap<>();
-
-        for (NearByEventDTO occurrence : allOccurrences) {
-            Long eventId = occurrence.getId();
-
-            // Get or create the grouped event DTO
-            NearByEventWithOccurrencesDTO groupedEvent = eventMap.get(eventId);
-
-            if (groupedEvent == null) {
-                // First occurrence for this event - create new grouped DTO
-                groupedEvent = new NearByEventWithOccurrencesDTO();
-                groupedEvent.setId(eventId);
-                groupedEvent.setTitle(occurrence.getTitle());
-                groupedEvent.setLocation(occurrence.getLocation());
-                groupedEvent.setImage(occurrence.getImage());
-                groupedEvent.setCategoryName(occurrence.getCategoryName());
-                groupedEvent.setDistance(occurrence.getDistance()); // Distance to nearest occurrence
-                groupedEvent.setOccurrences(new ArrayList<>());
-
-                eventMap.put(eventId, groupedEvent);
-            }
-
-            // Add this occurrence to the event's occurrence list
-            NearByEventWithOccurrencesDTO.OccurrenceInfo occInfo = new NearByEventWithOccurrencesDTO.OccurrenceInfo();
-            occInfo.setOccurrenceId(occurrence.getOccurrenceId());
-            occInfo.setEventDate(occurrence.getEventDate());
-            occInfo.setAddressDetail(occurrence.getAddressDetail());
-            occInfo.setDistance(occurrence.getDistance());
-
-            groupedEvent.getOccurrences().add(occInfo);
-        }
-
-        // Convert map values to list and limit to requested number of unique events
-        return eventMap.values().stream()
-                .limit(limit)
-                .collect(Collectors.toList());
-    }
 
         @Override
         public long countByStatus(EventStatus status) {
@@ -765,5 +764,59 @@ public class EventService implements IEventService {
                                 }
                         }
                 }
+        }
+
+        @Override
+        @Transactional
+        public void cancel(Long id, String reason) {
+                Event event = eventRepository.findById(id)
+                                .orElseThrow(() -> new RuntimeException("Event not found with id " + id));
+                // Optional: Check if event can be cancelled (e.g. not already
+                // cancelled/deleted)
+                if (event.getStatus() == EventStatus.CANCELLED || event.getStatus() == EventStatus.DELETED) {
+                        throw new RuntimeException("Sự kiện đã bị hủy hoặc xóa trước đó.");
+                }
+
+                event.setStatus(EventStatus.CANCELLED);
+                eventRepository.save(event);
+
+                saveCancellationHistory(event, EventStatus.CANCELLED, reason);
+        }
+
+        @Override
+        @Transactional
+        public void restore(Long eventId) {
+                Event event = eventRepository.findById(eventId)
+                                .orElseThrow(() -> new RuntimeException("Sự kiện không tồn tại!"));
+
+                // Reset status to PENDING
+                event.setStatus(EventStatus.PENDING);
+                eventRepository.save(event);
+        }
+
+        private void saveCancellationHistory(Event event, EventStatus status, String reason) {
+                User currentUser = getCurrentUser();
+                EventCancellationHistory history = new EventCancellationHistory();
+                history.setEvent(event);
+                history.setUser(currentUser);
+                history.setStatus(status);
+                history.setReason(reason);
+                eventCancellationHistoryRepository.save(history);
+        }
+
+        private User getCurrentUser() {
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+                        return null;
+                }
+
+                String currentEmail = auth.getName();
+                if (auth.getPrincipal() instanceof com.codegym.appticket.config.CustomOAuth2User) {
+                        currentEmail = ((com.codegym.appticket.config.CustomOAuth2User) auth.getPrincipal()).getEmail();
+                } else if (auth.getPrincipal() instanceof com.codegym.appticket.dto.user.UserInfoUserDetails) {
+                        currentEmail = ((com.codegym.appticket.dto.user.UserInfoUserDetails) auth.getPrincipal())
+                                        .getUsername();
+                }
+                return userRepository.findByEmailAndNotDeleted(currentEmail);
         }
 }

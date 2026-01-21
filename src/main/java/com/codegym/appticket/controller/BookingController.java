@@ -175,27 +175,28 @@ public class BookingController {
     public String confirm(@RequestParam Long bookingId, Model model, RedirectAttributes redirectAttributes) {
         try {
             Booking booking = bookingService.getBookingById(bookingId);
-            List<com.codegym.appticket.entity.BookingDetail> details = bookingService.getBookingDetailsByBookingId(bookingId);
-            
+            List<com.codegym.appticket.entity.BookingDetail> details = bookingService
+                    .getBookingDetailsByBookingId(bookingId);
+
             if (details.isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "Không tìm thấy chi tiết đặt vé.");
                 return "redirect:/tickets/my-tickets";
             }
-            
+
             Map<TicketType, Integer> selectedTickets = new java.util.HashMap<>();
             for (com.codegym.appticket.entity.BookingDetail detail : details) {
                 selectedTickets.put(detail.getTicketType(), detail.getQuantity());
             }
-            
-            model.addAttribute("event", details.get(0).getTicketType().getEvent());
+
+            model.addAttribute("event", details.get(0).getTicketType().getEventOccurrence().getEvent());
             model.addAttribute("selectedTickets", selectedTickets);
-            
+
             String email = getCurrentUserEmail();
             if (email != null) {
                 com.codegym.appticket.entity.User currentUser = bookingService.getUserByEmail(email);
                 model.addAttribute("currentUser", currentUser);
             }
-            
+
             return "booking/confirm";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());

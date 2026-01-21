@@ -34,14 +34,15 @@
                                 <h5 class="mb-3">Chọn loại vé:</h5>
                                 <th:block th:each="tt, stat : ${ticketTypes}">
                                     <!-- Header: Show only if first item OR occurrenceId changed -->
-                                    <div th:if="${stat.first or tt.occurrenceId != ticketTypes[stat.index - 1].occurrenceId}"
+                                    <div th:if="${stat.first or tt.eventOccurrence.id != ticketTypes[stat.index - 1].eventOccurrence.id}"
                                         class="alert alert-soft-primary mt-4 mb-2 d-flex align-items-center">
                                         <i class="bi bi-calendar-event me-2"></i>
                                         <div>
                                             <strong
-                                                th:text="${#temporals.format(tt.startTime, 'HH:mm - dd/MM/yyyy')}"></strong>
+                                                th:text="${#temporals.format(tt.eventOccurrence.startTime, 'HH:mm - dd/MM/yyyy')}"></strong>
                                             <span class="mx-2">|</span>
-                                            <span th:text="${tt.location}"></span>
+                                            <span
+                                                th:text="${tt.eventOccurrence.location.ward.province.name + ', ' + tt.eventOccurrence.location.ward.name}"></span>
                                         </div>
                                     </div>
 
@@ -72,8 +73,8 @@
 
                                 <div class="d-grid gap-2 mt-4">
                                     <button type="submit" class="btn btn-primary btn-lg">Tiếp tục đặt vé</button>
-                                    <a th:href="@{/events/detail/{id}(id=${event.id})}"
-                                        class="btn btn-outline-secondary">Quay lại</a>
+                                    <a th:href="@{/event/{id}(id=${event.id})}" class="btn btn-outline-secondary">Quay
+                                        lại</a>
                                 </div>
                             </form>
 

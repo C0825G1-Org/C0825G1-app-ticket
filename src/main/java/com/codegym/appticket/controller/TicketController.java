@@ -34,17 +34,16 @@ public class TicketController {
 
         com.codegym.appticket.entity.User currentUser = ticketService.getUserByEmail(email);
         Long userId = currentUser.getId();
-        
+
         List<Ticket> tickets = ticketService.getTicketsByUserId(userId);
-        
+
         // Gộp vé theo sự kiện
         java.util.Map<com.codegym.appticket.entity.Event, List<Ticket>> groupedTickets = tickets.stream()
                 .collect(java.util.stream.Collectors.groupingBy(
-                        t -> t.getBookingDetail().getTicketType().getEvent(),
+                        t -> t.getBookingDetail().getTicketType().getEventOccurrence().getEvent(),
                         java.util.LinkedHashMap::new,
-                        java.util.stream.Collectors.toList()
-                ));
-        
+                        java.util.stream.Collectors.toList()));
+
         model.addAttribute("groupedTickets", groupedTickets);
         return "ticket/list";
     }
@@ -56,33 +55,33 @@ public class TicketController {
         if (email == null) {
             return "redirect:/login";
         }
-        
+
         com.codegym.appticket.entity.User currentUser = ticketService.getUserByEmail(email);
         Long userId = currentUser.getId();
-        
+
         List<Ticket> tickets = ticketService.getTicketsByUserIdAndEventId(userId, eventId);
         if (tickets.isEmpty()) {
             return "redirect:/tickets/my-tickets";
         }
-        
+
         List<Long> ticketIds = tickets.stream().map(Ticket::getId).collect(java.util.stream.Collectors.toList());
         List<QRCode> qrCodes = ticketService.getQRCodesByTicketIds(ticketIds);
-        
+
         // Tạo map để dễ tra cứu QR code theo ticket id
         java.util.Map<Long, QRCode> qrCodeMap = qrCodes.stream()
                 .collect(java.util.stream.Collectors.toMap(qr -> qr.getTicket().getId(), qr -> qr));
-        
+
         model.addAttribute("tickets", tickets);
         model.addAttribute("qrCodeMap", qrCodeMap);
-        model.addAttribute("event", tickets.get(0).getBookingDetail().getTicketType().getEvent());
-        
+        model.addAttribute("event", tickets.get(0).getBookingDetail().getTicketType().getEventOccurrence().getEvent());
+
         return "ticket/detail";
     }
 
     private String getCurrentUserEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() ||
-            authentication instanceof AnonymousAuthenticationToken) {
+                authentication instanceof AnonymousAuthenticationToken) {
             return null;
         }
 
@@ -104,7 +103,7 @@ public class TicketController {
     public String detail(@PathVariable Long id, Model model) {
         Ticket ticket = ticketService.getTicketById(id);
         QRCode qrCode = ticketService.getQRCodeByTicketId(id);
-        
+
         model.addAttribute("ticket", ticket);
         model.addAttribute("qrCode", qrCode);
         return "ticket/detail";
