@@ -131,10 +131,10 @@ CREATE TABLE tickets (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     booking_detail_id BIGINT,
     ticket_code VARCHAR(255) UNIQUE,
-    used BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (booking_detail_id) REFERENCES booking_details(id)
-);
-
+    `used` BIT(1) DEFAULT b'0',
+  `check_in_time` DATETIME DEFAULT NULL,
+  CONSTRAINT `fk_tickets_booking_details` FOREIGN KEY (`booking_detail_id`) REFERENCES `booking_details` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 -- 9.2 QR Code
 CREATE TABLE qr_codes (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

@@ -17,7 +17,8 @@ import com.codegym.appticket.dto.event.EventDTO;
 public class OrganizerEventRestController {
 
     private final IEventService eventService;
-    private final IUserRepository userRepository;
+    private final com.codegym.appticket.repository.IUserRepository userRepository;
+    private final com.codegym.appticket.service.ITicketService ticketService;
 
     private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -47,5 +48,65 @@ public class OrganizerEventRestController {
 
         EventStatsDTO stats = eventService.getEventStats(id, occurrenceId);
         return ResponseEntity.ok(stats);
+    }
+
+    @PostMapping("/{id}/check-in")
+    public ResponseEntity<?> checkInTicket(@PathVariable Long id, @RequestBody com.codegym.appticket.dto.ticket.TicketCheckInRequest request) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) return ResponseEntity.status(401).body("Unauthorized");
+
+        EventDTO event = eventService.findById(id);
+        if (event.getOrganizerId() == null || !event.getOrganizerId().equals(currentUser.getId())) {
+             return ResponseEntity.status(403).body("Access Denied");
+        }
+        
+        request.setEventId(id);
+        return ResponseEntity.ok(ticketService.checkInTicket(request));
+    }
+
+    @GetMapping("/{id}/check-in-stats")
+    public ResponseEntity<?> getCheckInStats(@PathVariable Long id) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) return ResponseEntity.status(401).body("Unauthorized");
+
+        EventDTO event = eventService.findById(id);
+        if (event.getOrganizerId() == null || !event.getOrganizerId().equals(currentUser.getId())) {
+             return ResponseEntity.status(403).body("Access Denied");
+        }
+        return ResponseEntity.ok(ticketService.getCheckInStats(id));
+    }
+
+    @GetMapping("/{id}/check-in-history")
+    public ResponseEntity<?> getCheckInHistory(@PathVariable Long id) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) return ResponseEntity.status(401).body("Unauthorized");
+
+        EventDTO event = eventService.findById(id);
+        if (event.getOrganizerId() == null || !event.getOrganizerId().equals(currentUser.getId())) {
+             return ResponseEntity.status(403).body("Access Denied");
+        }
+        return ResponseEntity.ok(ticketService.getCheckInHistory(id));
+    }
+
+    @GetMapping("/{id}/export-tickets")
+    public ResponseEntity<?> exportTickets(@PathVariable Long id, @RequestParam(required = false) Long occurrenceId) throws java.io.IOException {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) return ResponseEntity.status(401).body("Unauthorized");
+
+        EventDTO event = eventService.findById(id);
+        if (event.getOrganizerId() == null || !event.getOrganizerId().equals(currentUser.getId())) {
+             return ResponseEntity.status(403).body("Access Denied");
+        }
+        
+        byte[] excelData = eventService.exportBookedTicketsToExcel(id, occurrenceId);
+        
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        String filename = "ds-ve-da-dat-" + id + ".xlsx";
+        headers.setContentDispositionFormData("attachment", filename);
+        
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(excelData);
     }
 }

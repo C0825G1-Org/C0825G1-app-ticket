@@ -71,4 +71,6 @@ public interface IEventService {
     void incrementViewCount(Long eventId);
 
     com.codegym.appticket.dto.event.EventStatsDTO getEventStats(Long eventId, Long occurrenceId);
+    
+    byte[] exportBookedTicketsToExcel(Long eventId, Long occurrenceId) throws java.io.IOException;
 }

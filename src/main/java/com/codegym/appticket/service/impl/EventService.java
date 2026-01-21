@@ -886,4 +886,90 @@ public class EventService implements IEventService {
                 .bookedTickets(bookedTickets)
                 .build();
     }
+
+    @Override
+    public byte[] exportBookedTicketsToExcel(Long eventId, Long occurrenceId) throws java.io.IOException {
+        // Fetch data
+        List<com.codegym.appticket.dto.event.BookedTicketDTO> tickets = eventRepository
+                .findBookedTicketsByEventAndOccurrence(eventId, occurrenceId);
+        
+        // Create Workbook
+        try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
+            org.apache.poi.ss.usermodel.Sheet sheet = workbook.createSheet("Danh sách vé");
+
+            // Styles
+            org.apache.poi.ss.usermodel.CellStyle headerStyle = workbook.createCellStyle();
+            org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerStyle.setFont(headerFont);
+            headerStyle.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER);
+            headerStyle.setFillForegroundColor(org.apache.poi.ss.usermodel.IndexedColors.GREY_25_PERCENT.getIndex());
+            headerStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            headerStyle.setBorderTop(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            headerStyle.setBorderLeft(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            headerStyle.setBorderRight(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            
+            org.apache.poi.ss.usermodel.CellStyle dateStyle = workbook.createCellStyle();
+            dateStyle.setDataFormat(workbook.createDataFormat().getFormat("dd/mm/yyyy hh:mm"));
+            
+            org.apache.poi.ss.usermodel.CellStyle currencyStyle = workbook.createCellStyle();
+            currencyStyle.setDataFormat(workbook.createDataFormat().getFormat("#,##0 ₫"));
+
+            // Header Row
+            String[] headers = {"Mã vé", "Khách hàng", "Email", "Số điện thoại", "Loại vé", "Giá vé", "Ngày đặt", "Suất diễn"};
+            org.apache.poi.ss.usermodel.Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < headers.length; i++) {
+                org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            // Data Rows
+            int rowNum = 1;
+            java.math.BigDecimal totalRev = java.math.BigDecimal.ZERO;
+            for (com.codegym.appticket.dto.event.BookedTicketDTO ticket : tickets) {
+                org.apache.poi.ss.usermodel.Row row = sheet.createRow(rowNum++);
+                
+                row.createCell(0).setCellValue(ticket.getTicketCode());
+                row.createCell(1).setCellValue(ticket.getCustomerName());
+                row.createCell(2).setCellValue(ticket.getCustomerEmail());
+                row.createCell(3).setCellValue(ticket.getCustomerPhone());
+                row.createCell(4).setCellValue(ticket.getTicketTypeName());
+                
+                org.apache.poi.ss.usermodel.Cell priceCell = row.createCell(5);
+                priceCell.setCellValue(ticket.getTotalPrice().doubleValue());
+                priceCell.setCellStyle(currencyStyle);
+                
+                if (ticket.getTotalPrice() != null) {
+                    totalRev = totalRev.add(ticket.getTotalPrice());
+                }
+
+                org.apache.poi.ss.usermodel.Cell dateCell = row.createCell(6);
+                if (ticket.getBookingTime() != null) {
+                    dateCell.setCellValue(ticket.getBookingTime());
+                }
+                dateCell.setCellStyle(dateStyle);
+                
+                row.createCell(7).setCellValue(ticket.getOccurrenceTime());
+            }
+
+            // Total Row
+            org.apache.poi.ss.usermodel.Row totalRow = sheet.createRow(rowNum + 1);
+            totalRow.createCell(4).setCellValue("Tổng tiền:");
+            org.apache.poi.ss.usermodel.Cell totalVal = totalRow.createCell(5);
+            totalVal.setCellValue(totalRev.doubleValue());
+            totalVal.setCellStyle(currencyStyle);
+            totalRow.getCell(5).setCellStyle(currencyStyle); // Apply again to be safe
+
+            // Auto-size columns
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            workbook.write(out);
+            return out.toByteArray();
+        }
+    }
 }

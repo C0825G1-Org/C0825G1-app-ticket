@@ -12,4 +12,8 @@ public interface ITicketService {
     List<Ticket> getTicketsByUserIdAndEventId(Long userId, Long eventId);
     List<Ticket> getTicketsByUserIdAndOccurrenceId(Long userId, Long occurrenceId);
     List<QRCode> getQRCodesByTicketIds(List<Long> ticketIds);
+
+    com.codegym.appticket.dto.ticket.TicketCheckInResponse checkInTicket(com.codegym.appticket.dto.ticket.TicketCheckInRequest request);
+    java.util.Map<String, Object> getCheckInStats(Long eventId);
+    List<com.codegym.appticket.dto.ticket.CheckInHistoryDTO> getCheckInHistory(Long eventId);
 }

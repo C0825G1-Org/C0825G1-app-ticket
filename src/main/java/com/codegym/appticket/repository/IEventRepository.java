@@ -456,4 +456,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
             ORDER BY b.bookingTime DESC
             """)
     List<com.codegym.appticket.dto.event.BookedTicketDTO> findBookedTicketsByEventAndOccurrence(@Param("eventId") Long eventId, @Param("occurrenceId") Long occurrenceId);
+
+    @Query("SELECT COUNT(t) FROM Ticket t JOIN t.bookingDetail.ticketType.eventOccurrence eo WHERE eo.event.id = :eventId AND t.used = true")
+    Long countCheckedInTickets(@Param("eventId") Long eventId);
 }
