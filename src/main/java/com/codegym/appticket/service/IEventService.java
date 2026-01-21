@@ -20,8 +20,7 @@ import java.util.List;
 public interface IEventService {
         Page<EventDTO> findAll(Pageable pageable);
 
-
-    Page<HomeEventDTO> findAllEvent(int page, int size);
+        Page<HomeEventDTO> findAllEvent(int page, int size);
 
         Page<EventDTO> search(EventSearchDTO dto, Pageable pageable);
 
@@ -55,7 +54,15 @@ public interface IEventService {
 
         void reject(Long id, String reason);
 
+        // Cancel an event
+        void cancel(Long eventId, String reason);
+
+        // Restore an event (from Cancelled/Deleted/Rejected -> Pending)
+        void restore(Long eventId);
+
         long countByStatus(EventStatus status);
+
+        long countByStatuses(List<EventStatus> statuses);
 
         long countAll();
 }

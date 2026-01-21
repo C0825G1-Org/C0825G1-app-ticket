@@ -29,9 +29,10 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
             "AND (:categoryId IS NULL OR e.category.id = :categoryId) " +
             "AND (:startDateTime IS NULL OR t.startTime >= :startDateTime) " +
             "AND (:endDateTime IS NULL OR t.endTime <= :endDateTime) " +
-            "AND e.status <> 'DELETED'")
+            "AND ((:status IS NOT NULL AND e.status = :status) OR (:status IS NULL AND e.status <> 'DELETED'))")
     org.springframework.data.domain.Page<Event> searchEvents(@Param("title") String title,
             @Param("categoryId") Long categoryId,
+            @Param("status") com.codegym.appticket.entity.EventStatus status,
             @Param("startDateTime") LocalDateTime startDateTime,
             @Param("endDateTime") LocalDateTime endDateTime,
             org.springframework.data.domain.Pageable pageable);
@@ -45,6 +46,8 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
 
     // Đếm số sự kiện theo trạng thái (cho admin dashboard/notification)
     long countByStatus(com.codegym.appticket.entity.EventStatus status);
+
+    long countByStatusIn(java.util.Collection<com.codegym.appticket.entity.EventStatus> statuses);
 
     // Lấy danh sách sự kiện user đã tạo, sắp xếp mới nhất
     List<Event> findByCreatedByOrderByCreatedDateDesc(User createdBy, Pageable pageable);
@@ -184,7 +187,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 WHERE e.status = 'APPROVED'
                   AND (:searchText IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :searchText, '%')))
                   AND (:categoryId IS NULL OR e.category_id = :categoryId)
-                  AND (:location IS NULL OR 
+                  AND (:location IS NULL OR
                        p.name LIKE CONCAT('%', :location, '%') OR
                        (:location = 'Hồ Chí Minh' AND (p.name LIKE '%TP.HCM%' OR p.name LIKE '%HCM%' OR p.name LIKE '%Hồ Chí Minh%' OR p.name LIKE '%Thành phố Hồ Chí Minh%')) OR
                        (:location = 'Hà Nội' AND (p.name LIKE '%Hà Nội%' OR p.name LIKE '%Ha Noi%' OR p.name LIKE '%Hanoi%' OR p.name LIKE '%Thành phố Hà Nội%')) OR
@@ -202,7 +205,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 WHERE e.status = 'APPROVED'
                   AND (:searchText IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :searchText, '%')))
                   AND (:categoryId IS NULL OR e.category_id = :categoryId)
-                  AND (:location IS NULL OR 
+                  AND (:location IS NULL OR
                        p.name LIKE CONCAT('%', :location, '%') OR
                        (:location = 'Hồ Chí Minh' AND (p.name LIKE '%TP.HCM%' OR p.name LIKE '%HCM%' OR p.name LIKE '%Hồ Chí Minh%' OR p.name LIKE '%Thành phố Hồ Chí Minh%')) OR
                        (:location = 'Hà Nội' AND (p.name LIKE '%Hà Nội%' OR p.name LIKE '%Ha Noi%' OR p.name LIKE '%Hanoi%' OR p.name LIKE '%Thành phố Hà Nội%')) OR
@@ -288,8 +291,8 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
             LIMIT :limit
             """, nativeQuery = true)
     List<com.codegym.appticket.dto.report.TopEventDTO> findTopSellingEvents(
-            @Param("start") LocalDateTime start, 
-            @Param("end") LocalDateTime end, 
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end,
             @Param("limit") int limit);
 
     // 2. Events Count by Category (Pie Chart)
@@ -301,76 +304,83 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
     long countNewEvents(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query(value = """
-    SELECT 
-        e.id AS id,
-        e.title AS title,
-        p.name AS location,
-        (SELECT em.media_url 
-         FROM event_media em 
-         WHERE em.event_id = e.id 
-         ORDER BY em.created_at ASC 
-         LIMIT 1) AS image,
-        e.latitude AS latitude,
-        e.longitude AS longitude,
-        (6371 * acos(
-            cos(radians(:userLat)) * cos(radians(e.latitude)) * 
-            cos(radians(e.longitude) - radians(:userLon)) + 
-            sin(radians(:userLat)) * sin(radians(e.latitude))
-        )) AS distance,
-        c.name AS categoryName,
-        MIN(eo.start_time) AS eventDate
-    FROM events e
-    LEFT JOIN event_categories c ON c.id = e.category_id
-    LEFT JOIN event_occurrences eo ON eo.event_id = e.id
-    LEFT JOIN locations l ON l.id = eo.location_id
-    LEFT JOIN wards w ON w.code = l.ward_code
-    LEFT JOIN provinces p ON p.code = w.province_code
-    WHERE e.status = 'APPROVED'
-      AND e.latitude IS NOT NULL
-      AND e.longitude IS NOT NULL
-      AND NOT (
-          (:excludeLocation = 'Hồ Chí Minh' AND (p.name LIKE '%TP.HCM%' OR p.name LIKE '%HCM%' OR p.name LIKE '%Hồ Chí Minh%' OR p.name LIKE '%Thành phố Hồ Chí Minh%')) OR
-          (:excludeLocation = 'Hà Nội' AND (p.name LIKE '%Hà Nội%' OR p.name LIKE '%Ha Noi%' OR p.name LIKE '%Hanoi%' OR p.name LIKE '%Thành phố Hà Nội%')) OR
-          (:excludeLocation = 'Đà Nẵng' AND (p.name LIKE '%Đà Nẵng%' OR p.name LIKE '%Da Nang%' OR p.name LIKE '%Danang%' OR p.name LIKE '%Thành phố Đà Nẵng%')) OR
-          (p.name LIKE CONCAT('%', :excludeLocation, '%'))
-      )
-    GROUP BY e.id, e.title, p.name, e.latitude, e.longitude, c.name
-    HAVING distance < 160
-    ORDER BY distance ASC
-    LIMIT :limit
-    """, nativeQuery = true)
+            SELECT
+                e.id AS id,
+                e.title AS title,
+                p.name AS location,
+                (SELECT em.media_url
+                 FROM event_media em
+                 WHERE em.event_id = e.id
+                 ORDER BY em.created_at ASC
+                 LIMIT 1) AS image,
+                e.latitude AS latitude,
+                e.longitude AS longitude,
+                (6371 * acos(
+                    cos(radians(:userLat)) * cos(radians(e.latitude)) *
+                    cos(radians(e.longitude) - radians(:userLon)) +
+                    sin(radians(:userLat)) * sin(radians(e.latitude))
+                )) AS distance,
+                c.name AS categoryName,
+                MIN(eo.start_time) AS eventDate
+            FROM events e
+            LEFT JOIN event_categories c ON c.id = e.category_id
+            LEFT JOIN event_occurrences eo ON eo.event_id = e.id
+            LEFT JOIN locations l ON l.id = eo.location_id
+            LEFT JOIN wards w ON w.code = l.ward_code
+            LEFT JOIN provinces p ON p.code = w.province_code
+            WHERE e.status = 'APPROVED'
+              AND e.latitude IS NOT NULL
+              AND e.longitude IS NOT NULL
+              AND NOT (
+                  (:excludeLocation = 'Hồ Chí Minh' AND (p.name LIKE '%TP.HCM%' OR p.name LIKE '%HCM%' OR p.name LIKE '%Hồ Chí Minh%' OR p.name LIKE '%Thành phố Hồ Chí Minh%')) OR
+                  (:excludeLocation = 'Hà Nội' AND (p.name LIKE '%Hà Nội%' OR p.name LIKE '%Ha Noi%' OR p.name LIKE '%Hanoi%' OR p.name LIKE '%Thành phố Hà Nội%')) OR
+                  (:excludeLocation = 'Đà Nẵng' AND (p.name LIKE '%Đà Nẵng%' OR p.name LIKE '%Da Nang%' OR p.name LIKE '%Danang%' OR p.name LIKE '%Thành phố Đà Nẵng%')) OR
+                  (p.name LIKE CONCAT('%', :excludeLocation, '%'))
+              )
+            GROUP BY e.id, e.title, p.name, e.latitude, e.longitude, c.name
+            HAVING distance < 160
+            ORDER BY distance ASC
+            LIMIT :limit
+            """, nativeQuery = true)
     List<NearByEventDTO> findNearbyEvents(
-        @Param("userLat") Double userLatitude,
-        @Param("userLon") Double userLongitude,
-        @Param("excludeLocation") String excludeLocation,
-        @Param("limit") int limit
-    );
+            @Param("userLat") Double userLatitude,
+            @Param("userLon") Double userLongitude,
+            @Param("excludeLocation") String excludeLocation,
+            @Param("limit") int limit);
 
     @Query(value = """
-    SELECT 
-        e.id AS id,
-        e.title AS title,
-        p.name AS location,
-        (SELECT em.media_url FROM event_media em 
-         WHERE em.event_id = e.id 
-         ORDER BY em.created_at ASC LIMIT 1) AS image,
-        c.name AS categoryName,
-        MIN(eo.start_time) AS eventDate
-    FROM events e
-    LEFT JOIN event_categories c ON c.id = e.category_id
-    LEFT JOIN event_occurrences eo ON eo.event_id = e.id
-    LEFT JOIN locations l ON l.id = eo.location_id
-    LEFT JOIN wards w ON w.code = l.ward_code
-    LEFT JOIN provinces p ON p.code = w.province_code
-    WHERE e.status = 'APPROVED'
-      AND p.name IN :nearbyProvinces
-    GROUP BY e.id, e.title, p.name, c.name
-    ORDER BY MIN(eo.start_time) ASC
-    LIMIT :limit
-    """, nativeQuery = true)
+            SELECT
+                e.id AS id,
+                e.title AS title,
+                p.name AS location,
+                (SELECT em.media_url FROM event_media em
+                 WHERE em.event_id = e.id
+                 ORDER BY em.created_at ASC LIMIT 1) AS image,
+                c.name AS categoryName,
+                MIN(eo.start_time) AS eventDate
+            FROM events e
+            LEFT JOIN event_categories c ON c.id = e.category_id
+            LEFT JOIN event_occurrences eo ON eo.event_id = e.id
+            LEFT JOIN locations l ON l.id = eo.location_id
+            LEFT JOIN wards w ON w.code = l.ward_code
+            LEFT JOIN provinces p ON p.code = w.province_code
+            WHERE e.status = 'APPROVED'
+              AND p.name IN :nearbyProvinces
+            GROUP BY e.id, e.title, p.name, c.name
+            ORDER BY MIN(eo.start_time) ASC
+            LIMIT :limit
+            """, nativeQuery = true)
     List<NearByEventDTO> findEventsByProvinces(
             @Param("nearbyProvinces") List<String> nearbyProvinces,
-            @Param("limit") int limit
-    );
-}
+            @Param("limit") int limit);
 
+    @Query("SELECT e FROM Event e " +
+            "WHERE e.status IN ('APPROVED', 'HAPPENING') " +
+            "AND NOT EXISTS (SELECT o FROM EventOccurrence o WHERE o.event = e AND o.endTime >= :now)")
+    List<Event> findFinishedEvents(@Param("now") LocalDateTime now);
+
+    @Query("SELECT e FROM Event e " +
+            "WHERE e.status = 'APPROVED' " +
+            "AND EXISTS (SELECT o FROM EventOccurrence o WHERE o.event = e AND o.startTime <= :now)")
+    List<Event> findStartedEvents(@Param("now") LocalDateTime now);
+}

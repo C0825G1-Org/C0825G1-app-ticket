@@ -60,6 +60,13 @@ public class UserEventController {
 
     @GetMapping
     public String listMyEvents(@PageableDefault(size = 5) Pageable pageable, Model model) {
+        if (pageable.getSort().isUnsorted()) {
+            pageable = org.springframework.data.domain.PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                    org.springframework.data.domain.Sort
+                            .by(org.springframework.data.domain.Sort.Direction.ASC, "status")
+                            .and(org.springframework.data.domain.Sort
+                                    .by(org.springframework.data.domain.Sort.Direction.DESC, "createdDate")));
+        }
         User currentUser = getCurrentUser();
         // If user not found (should be handled by security), redirect or error
         if (currentUser == null)
@@ -246,6 +253,25 @@ public class UserEventController {
             return ResponseEntity.ok("Deleted");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/cancel")
+    @ResponseBody
+    public ResponseEntity<?> cancelEvent(@PathVariable Long id, @RequestParam(required = true) String reason) {
+        try {
+            EventDTO eventDTO = eventService.findById(id);
+            User currentUser = getCurrentUser();
+            if (currentUser == null) return ResponseEntity.status(401).body("Unauthorized");
+            
+            if (!eventDTO.getOrganizerId().equals(currentUser.getId())) {
+                 return ResponseEntity.status(403).body("Bạn không có quyền hủy sự kiện này.");
+            }
+
+            eventService.cancel(id, reason);
+            return ResponseEntity.ok(Map.of("message", "Đã hủy sự kiện thành công!", "status", "success"));
+        } catch (Exception e) {
+             return ResponseEntity.internalServerError().body(Map.of("message", e.getMessage(), "status", "error"));
         }
     }
 }

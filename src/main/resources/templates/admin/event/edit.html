@@ -96,15 +96,7 @@
                                         <div class="text-danger small error-message" id="error-description"></div>
                                     </div>
 
-                                    <div class="mb-3">
-                                        <label class="form-label fw-medium">Trạng thái</label>
-                                        <select class="form-select" th:field="*{status}">
-                                            <option value="PENDING">Chờ duyệt (PENDING)</option>
-                                            <option value="APPROVED">Đã duyệt (APPROVED)</option>
-                                            <option value="REJECTED">Từ chối (REJECTED)</option>
-                                            <option value="CANCELLED">Đã hủy (CANCELLED)</option>
-                                        </select>
-                                    </div>
+                                    <!-- Status is managed via separate actions, removed from edit form -->
                                 </div>
                             </div>
 

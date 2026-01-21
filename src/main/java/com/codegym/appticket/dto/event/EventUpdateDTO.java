@@ -28,7 +28,8 @@ public class EventUpdateDTO {
     @NotNull(message = "Danh mục sự kiện không được để trống")
     private Long categoryId;
 
-    @NotNull(message = "Trạng thái không được để trống")
+    // @NotNull(message = "Trạng thái không được để trống") - Removed as status is
+    // not editable in form
     private EventStatus status;
 
     @Valid

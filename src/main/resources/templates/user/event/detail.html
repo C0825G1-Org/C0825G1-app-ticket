@@ -52,6 +52,18 @@
                             </div>
                         </div>
 
+                        <!-- Reason Alert for REJECTED/CANCELLED -->
+                        <div class="alert alert-danger d-flex align-items-top shadow-sm rounded-4 mb-4" role="alert"
+                            th:if="${(event.status.name() == 'REJECTED' || event.status.name() == 'CANCELLED') && event.reason != null}">
+                            <i class="bi bi-exclamation-triangle-fill flex-shrink-0 me-3 fs-4"></i>
+                            <div>
+                                <h5 class="alert-heading fw-bold mb-1"
+                                    th:text="${event.status.name() == 'REJECTED' ? 'Sự kiện bị từ chối' : 'Sự kiện đã hủy'}">
+                                    Thông báo</h5>
+                                <div th:text="${event.reason}">Lý do...</div>
+                            </div>
+                        </div>
+
                         <!-- Description -->
                         <div class="card border-0 shadow-sm rounded-4 mb-4">
                             <div class="card-body p-4">
