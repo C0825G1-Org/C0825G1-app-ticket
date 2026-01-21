@@ -391,7 +391,7 @@
 
                         <script>
                             // --- GLOBAL DEFINITIONS & API CONFIG ---
-                            const API_BASE = 'https://provinces.open-api.vn/api';
+                            const API_BASE = 'https://provinces.open-api.vn/api/v2';
                             const locationCache = { provinces: null, districts: {}, wards: {}, fullProvinces: {} };
 
                             async function fetchProvinces() {
@@ -585,26 +585,24 @@
 
                                 if (provinceCode) {
                                     try {
-                                        const responseDepth3 = await fetch(`${API_BASE}/p/${provinceCode}?depth=3`);
-                                        const dataDepth3 = await responseDepth3.json();
-                                        const districtsWithWards = dataDepth3.districts || [];
+                                        // API v2 with depth=2 returns wards directly (flattened)
+                                        const response = await fetch(`${API_BASE}/p/${provinceCode}?depth=2`);
+                                        const data = await response.json();
+                                        const wards = data.wards || [];
 
-                                        let allWards = [];
-                                        districtsWithWards.forEach(d => {
-                                            if (d.wards && Array.isArray(d.wards)) {
-                                                allWards = allWards.concat(d.wards);
-                                            }
-                                        });
-                                        allWards.sort((a, b) => a.name.localeCompare(b.name));
+                                        // Sort alphabetically
+                                        wards.sort((a, b) => a.name.localeCompare(b.name));
 
-                                        allWards.forEach(w => {
+                                        wards.forEach(w => {
                                             const option = document.createElement('option');
                                             option.value = w.code;
                                             option.textContent = w.name;
                                             wardSelect.appendChild(option);
                                         });
                                         wardSelect.disabled = false;
-                                    } catch (e) { console.error('Error fetching wards:', e); }
+                                    } catch (e) {
+                                        console.error('Error fetching wards:', e);
+                                    }
                                 }
                             };
 
@@ -726,27 +724,23 @@
                                         if (opt) item.querySelector('.province-name').value = opt.text;
 
                                         // Load Wards
+                                        // Load Wards
                                         try {
-                                            const responseDepth3 = await fetch(`${API_BASE}/p/${savedProvCode}?depth=3`);
-                                            const dataDepth3 = await responseDepth3.json();
-                                            const districtsWithWards = dataDepth3.districts || [];
+                                            const response = await fetch(`${API_BASE}/p/${savedProvCode}?depth=2`);
+                                            const data = await response.json();
+                                            const wards = data.wards || [];
 
-                                            let allWards = [];
-                                            districtsWithWards.forEach(d => {
-                                                if (d.wards && Array.isArray(d.wards)) {
-                                                    allWards = allWards.concat(d.wards);
-                                                }
-                                            });
-                                            allWards.sort((a, b) => a.name.localeCompare(b.name));
+                                            // Sort alphabetically
+                                            wards.sort((a, b) => a.name.localeCompare(b.name));
 
-                                            allWards.forEach(w => {
+                                            wards.forEach(w => {
                                                 const option = document.createElement('option');
                                                 option.value = w.code;
                                                 option.textContent = w.name;
                                                 wSel.appendChild(option);
                                             });
 
-                                            if (allWards.length > 0) {
+                                            if (wards.length > 0) {
                                                 wSel.disabled = false;
                                                 if (savedWardCode) {
                                                     wSel.value = savedWardCode;
