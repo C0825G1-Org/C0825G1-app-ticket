@@ -10,6 +10,8 @@ import com.codegym.appticket.entity.User;
 import com.codegym.appticket.service.IEventCategoryService;
 import com.codegym.appticket.service.IEventService;
 import com.codegym.appticket.repository.IUserRepository;
+import com.codegym.appticket.entity.EventStatus;
+import org.springframework.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,6 +39,7 @@ public class UserEventController {
 
     private final IEventCategoryService eventCategoryService;
     private final IUserRepository userRepository;
+    private final Validator validator;
 
     @Value("${tinymce.api-key}")
     private String tinyMceApiKey;
@@ -91,9 +94,14 @@ public class UserEventController {
 
     @PostMapping("/create")
     @ResponseBody
-    public Map<String, Object> createEvent(@Valid @ModelAttribute EventCreateDTO createDTO,
+    public Map<String, Object> createEvent(@ModelAttribute EventCreateDTO createDTO,
             BindingResult bindingResult) {
         Map<String, Object> response = new HashMap<>();
+
+        // Manual Validation if NOT Draft
+        if (createDTO.getStatus() != EventStatus.DRAFT) {
+            validator.validate(createDTO, bindingResult);
+        }
 
         if (bindingResult.hasErrors()) {
             response.put("status", "validation_error");
@@ -166,9 +174,14 @@ public class UserEventController {
 
     @PostMapping("/edit/{id}")
     @ResponseBody
-    public Map<String, Object> updateEvent(@PathVariable Long id, @Valid @ModelAttribute EventUpdateDTO updateDTO,
+    public Map<String, Object> updateEvent(@PathVariable Long id, @ModelAttribute EventUpdateDTO updateDTO,
             BindingResult bindingResult) {
         Map<String, Object> response = new HashMap<>();
+
+        // Manual Validation if NOT Draft
+        if (updateDTO.getStatus() != EventStatus.DRAFT) {
+            validator.validate(updateDTO, bindingResult);
+        }
 
         if (bindingResult.hasErrors()) {
             response.put("status", "validation_error");
@@ -271,6 +284,28 @@ public class UserEventController {
 
             eventService.cancel(id, reason);
             return ResponseEntity.ok(Map.of("message", "Đã hủy sự kiện thành công!", "status", "success"));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("message", e.getMessage(), "status", "error"));
+        }
+    }
+
+    @PostMapping("/{id}/publish")
+    @ResponseBody
+    public ResponseEntity<?> publishEvent(@PathVariable Long id) {
+        try {
+            EventDTO eventDTO = eventService.findById(id);
+            User currentUser = getCurrentUser();
+            if (currentUser == null)
+                return ResponseEntity.status(401).body("Unauthorized");
+
+            if (!eventDTO.getOrganizerId().equals(currentUser.getId())) {
+                return ResponseEntity.status(403).body("Bạn không có quyền thao tác trên sự kiện này.");
+            }
+
+            eventService.submitForApproval(id);
+            return ResponseEntity.ok(Map.of("message", "Gửi duyệt thành công!", "status", "success"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage(), "status", "error"));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(Map.of("message", e.getMessage(), "status", "error"));
         }

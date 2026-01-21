@@ -123,7 +123,7 @@
                             <select class="form-select" th:field="*{status}">
                                 <option value="">-- Tất cả --</option>
                                 <option th:each="st : ${statuses}" th:value="${st}"
-                                    th:text="${st.name() == 'PENDING' ? 'Chờ duyệt' : (st.name() == 'APPROVED' ? 'Đã duyệt' : (st.name() == 'HAPPENING' ? 'Đang diễn ra' : (st.name() == 'FINISHED' ? 'Đã kết thúc' : (st.name() == 'CANCELLED' ? 'Đã hủy' : (st.name() == 'DELETED' ? 'Đã xóa' : 'Từ chối')))))}">
+                                    th:text="${st.name() == 'PENDING' ? 'Chờ duyệt' : (st.name() == 'APPROVED' ? 'Đã duyệt' : (st.name() == 'HAPPENING' ? 'Đang diễn ra' : (st.name() == 'FINISHED' ? 'Đã kết thúc' : (st.name() == 'CANCELLED' ? 'Đã hủy' : (st.name() == 'DELETED' ? 'Đã xóa' : (st.name() == 'DRAFT' ? 'Lưu nháp' : 'Từ chối'))))))}">
                                     Status</option>
                             </select>
                         </div>
@@ -145,6 +145,25 @@
                 </div>
             </div>
 
+            <!-- Bulk Actions Toolbar (Hidden by default) -->
+            <div id="bulkActionsToolbar"
+                class="alert alert-info d-none d-flex justify-content-between align-items-center mb-4 shadow-sm">
+                <div>
+                    <span class="fw-bold me-2"><span id="selectedCount">0</span> sự kiện đã chọn</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-success fw-bold" onclick="bulkApprove()">
+                        <i class="bi bi-check-lg me-1"></i> Duyệt nhanh
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger fw-bold" onclick="bulkDelete()">
+                        <i class="bi bi-trash me-1"></i> Xóa
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll()">
+                        Hủy
+                    </button>
+                </div>
+            </div>
+
             <!-- Events Table -->
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-0">
@@ -152,6 +171,10 @@
                         <table class="table table-hover mb-0">
                             <thead class="bg-light">
                                 <tr class="text-muted small text-uppercase">
+                                    <th class="px-4 py-3 text-center" style="width: 50px;">
+                                        <input type="checkbox" class="form-check-input" id="selectAllCheckbox"
+                                            onchange="toggleSelectAll()">
+                                    </th>
                                     <th class="px-4 py-3 fw-bold">Sự kiện</th>
                                     <th class="px-4 py-3 fw-bold">Nhà tổ chức</th>
                                     <th class="px-4 py-3 fw-bold">Danh mục</th>
@@ -162,6 +185,10 @@
                             </thead>
                             <tbody>
                                 <tr th:each="event : ${events}" th:id="'event-row-' + ${event.id}">
+                                    <td class="px-4 py-3 text-center align-middle">
+                                        <input type="checkbox" class="form-check-input event-checkbox"
+                                            th:value="${event.id}" onchange="updateBulkToolbar()">
+                                    </td>
                                     <td class="px-4 py-3">
                                         <div class="d-flex align-items-center gap-3">
                                             <!-- Attempt to show Banner, fallback to Logo, fallback to first, fallback to placeholder -->
@@ -190,8 +217,8 @@
                                     <td class="px-4 py-3">
                                         <div class="d-flex align-items-center gap-2">
                                             <span class="badge rounded-pill px-3"
-                                                th:classappend="${event.status.name() == 'PENDING' ? 'bg-warning-subtle text-warning' : (event.status.name() == 'APPROVED' ? 'bg-success-subtle text-success' : (event.status.name() == 'HAPPENING' ? 'bg-primary-subtle text-primary' : (event.status.name() == 'FINISHED' ? 'bg-info-subtle text-info' : (event.status.name() == 'DELETED' ? 'bg-dark-subtle text-dark text-decoration-line-through' : 'bg-danger-subtle text-danger'))))}"
-                                                th:text="${event.status.name() == 'PENDING' ? 'Chờ duyệt' : (event.status.name() == 'APPROVED' ? 'Đã duyệt' : (event.status.name() == 'HAPPENING' ? 'Đang diễn ra' : (event.status.name() == 'FINISHED' ? 'Đã kết thúc' : (event.status.name() == 'DELETED' ? 'Đã xóa' : (event.status.name() == 'CANCELLED' ? 'Đã hủy' : 'Từ chối')))))}">Status</span>
+                                                th:classappend="${event.status.name() == 'PENDING' ? 'bg-warning-subtle text-warning' : (event.status.name() == 'APPROVED' ? 'bg-success-subtle text-success' : (event.status.name() == 'HAPPENING' ? 'bg-primary-subtle text-primary' : (event.status.name() == 'FINISHED' ? 'bg-info-subtle text-info' : (event.status.name() == 'DELETED' ? 'bg-dark-subtle text-dark text-decoration-line-through' : (event.status.name() == 'DRAFT' ? 'bg-secondary-subtle text-secondary' : 'bg-danger-subtle text-danger')))))}"
+                                                th:text="${event.status.name() == 'PENDING' ? 'Chờ duyệt' : (event.status.name() == 'APPROVED' ? 'Đã duyệt' : (event.status.name() == 'HAPPENING' ? 'Đang diễn ra' : (event.status.name() == 'FINISHED' ? 'Đã kết thúc' : (event.status.name() == 'DELETED' ? 'Đã xóa' : (event.status.name() == 'CANCELLED' ? 'Đã hủy' : (event.status.name() == 'DRAFT' ? 'Nháp' : 'Từ chối'))))))}">Status</span>
 
                                         </div>
                                     </td>
@@ -201,13 +228,18 @@
                                             <button type="button" class="btn btn-sm btn-outline-primary rounded-3 px-3"
                                                 th:onclick="'openDetailModal(' + ${event.id} + ')'"
                                                 title="Xem chi tiết">
-                                                <i class="bi bi-eye me-1"></i> Xem chi tiết
+                                                <i class="bi bi-eye me-1"></i>
+                                            </button>
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-secondary rounded-3 px-3"
+                                                th:onclick="'duplicateEvent(' + ${event.id} + ')'" title="Nhân bản">
+                                                <i class="bi bi-files me-1"></i>
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
                                 <tr th:if="${events.empty}">
-                                    <td colspan="6" class="text-center py-4 text-muted">Không có sự kiện nào.</td>
+                                    <td colspan="7" class="text-center py-4 text-muted">Không có sự kiện nào.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -301,6 +333,140 @@
                         }
                     });
 
+                    // --- BULK ACTIONS ---
+                    window.toggleSelectAll = function () {
+                        const isChecked = document.getElementById('selectAllCheckbox').checked;
+                        document.querySelectorAll('.event-checkbox').forEach(cb => cb.checked = isChecked);
+                        updateBulkToolbar();
+                    };
+
+                    window.updateBulkToolbar = function () {
+                        const checkedCount = document.querySelectorAll('.event-checkbox:checked').length;
+                        const toolbar = document.getElementById('bulkActionsToolbar');
+                        document.getElementById('selectedCount').innerText = checkedCount;
+                        if (checkedCount > 0) {
+                            toolbar.classList.remove('d-none');
+                        } else {
+                            toolbar.classList.add('d-none');
+                        }
+
+                        // Update select all checkbox state
+                        const total = document.querySelectorAll('.event-checkbox').length;
+                        const selectAll = document.getElementById('selectAllCheckbox');
+                        if (checkedCount === 0) selectAll.checked = false;
+                        else if (checkedCount === total) selectAll.checked = true;
+                        else selectAll.indeterminate = true;
+                    };
+
+                    window.deselectAll = function () {
+                        document.querySelectorAll('.event-checkbox').forEach(cb => cb.checked = false);
+                        document.getElementById('selectAllCheckbox').checked = false;
+                        updateBulkToolbar();
+                    };
+
+                    window.bulkApprove = function () {
+                        const ids = Array.from(document.querySelectorAll('.event-checkbox:checked')).map(cb => parseInt(cb.value));
+                        if (ids.length === 0) return;
+
+                        Swal.fire({
+                            title: `Duyệt ${ids.length} sự kiện?`,
+                            text: "Các sự kiện hợp lệ sẽ được chuyển sang Đã duyệt.",
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: 'Duyệt ngay',
+                            cancelButtonText: 'Hủy',
+                            confirmButtonColor: '#198754'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                                fetch('/admin/events/bulk-approve', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        [csrfHeader]: csrfToken
+                                    },
+                                    body: JSON.stringify(ids)
+                                })
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        if (data.status === 'success') {
+                                            Toast.fire({ icon: 'success', title: data.message });
+                                            setTimeout(() => location.reload(), 1000);
+                                        } else {
+                                            Toast.fire({ icon: 'error', title: data.message });
+                                        }
+                                    });
+                            }
+                        });
+                    };
+
+                    window.bulkDelete = function () {
+                        const ids = Array.from(document.querySelectorAll('.event-checkbox:checked')).map(cb => parseInt(cb.value));
+                        if (ids.length === 0) return;
+
+                        Swal.fire({
+                            title: `Xóa ${ids.length} sự kiện?`,
+                            text: "Hành động này sẽ chuyển trạng thái sang Đã xóa.",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Đồng ý xóa',
+                            cancelButtonText: 'Hủy',
+                            confirmButtonColor: '#dc3545'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                                fetch('/admin/events/bulk-delete', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        [csrfHeader]: csrfToken
+                                    },
+                                    body: JSON.stringify(ids)
+                                })
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        if (data.status === 'success') {
+                                            Toast.fire({ icon: 'success', title: data.message });
+                                            setTimeout(() => location.reload(), 1000);
+                                        } else {
+                                            Toast.fire({ icon: 'error', title: data.message });
+                                        }
+                                    });
+                            }
+                        });
+                    };
+
+                    window.duplicateEvent = function (id) {
+                        Swal.fire({
+                            title: 'Nhân bản sự kiện này?',
+                            text: "Tạo một bản sao mới ở trạng thái Nháp (Draft).",
+                            icon: 'info',
+                            showCancelButton: true,
+                            confirmButtonText: 'Nhân bản',
+                            cancelButtonText: 'Hủy',
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                                fetch(`/admin/events/${id}/duplicate`, {
+                                    method: 'POST',
+                                    headers: { [csrfHeader]: csrfToken }
+                                })
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        if (data.status === 'success') {
+                                            Toast.fire({ icon: 'success', title: data.message });
+                                            setTimeout(() => window.location.href = data.redirectUrl, 1000);
+                                        } else {
+                                            Toast.fire({ icon: 'error', title: data.message });
+                                        }
+                                    });
+                            }
+                        });
+                    }
+
                     // Expose Toast? Or re-declare in functions if needed.
 
                     window.openDetailModal = function (id) {
@@ -356,6 +522,9 @@
                                             Toast.fire({ icon: 'success', title: data.message });
                                             bootstrap.Modal.getInstance(document.getElementById('eventDetailModal')).hide();
                                             setTimeout(() => location.reload(), 1000); // Reload table to reflect status
+                                        } else if (data.status === 'incomplete_draft') {
+                                            Toast.fire({ icon: 'warning', title: data.message });
+                                            setTimeout(() => window.location.href = data.redirectUrl, 2000);
                                         } else {
                                             Toast.fire({ icon: 'error', title: data.message });
                                         }

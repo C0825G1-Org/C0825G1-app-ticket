@@ -34,4 +34,9 @@ public interface IBookingDetailRepository extends CrudRepository<BookingDetail, 
 
       // Find booking details by booking ID
       List<BookingDetail> findByBookingId(Long bookingId);
+
+      @Query("SELECT COALESCE(SUM(bd.quantity), 0) FROM BookingDetail bd " +
+                  "WHERE bd.ticketType.id = :ticketTypeId AND bd.booking.status = 'SUCCESS'")
+      Long countSoldTicketsByTicketTypeId(
+                  @org.springframework.data.repository.query.Param("ticketTypeId") Long ticketTypeId);
 }

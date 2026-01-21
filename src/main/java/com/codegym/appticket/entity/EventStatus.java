@@ -7,5 +7,6 @@ public enum EventStatus {
     CANCELLED,
     HAPPENING,
     FINISHED,
-    DELETED
+    DELETED,
+    DRAFT
 }
