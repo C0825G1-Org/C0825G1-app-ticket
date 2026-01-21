@@ -31,10 +31,6 @@
                 Khám phá & Đặt vé <br>
                 <span class="gradient-text">Sự kiện Đẳng cấp</span>
             </h1>
-            <p class="lead text-muted mb-5 mx-auto" style="max-width: 700px;">
-                Hàng ngàn sự kiện âm nhạc, hội thảo, thể thao đang chờ đón bạn. Trải nghiệm đặt vé dễ dàng, check-in
-                nhanh chóng.
-            </p>
 
             <!-- Search Widget -->
             <div class="search-widget mx-auto text-start" style="max-width: 900px;">
@@ -65,6 +61,7 @@
                             </select>
                         </div>
                     </div>
+
                     <div class="col-lg-3">
                         <div class="input-group">
                             <span class="input-group-text bg-white border-end-0 rounded-start-4 ps-3">
@@ -86,10 +83,16 @@
                 </form>
             </div>
 
-            <div class="mt-4 text-muted small fw-medium">
-                Phổ biến: <a href="#" class="text-decoration-underline text-dark mx-1">Sơn Tùng M-TP</a> <a href="#"
-                    class="text-decoration-underline text-dark mx-1">Ed Sheeran</a>
-            </div>
+            <p class="lead fw-medium mt-4 mx-auto" style="max-width: 700px;">
+                Hàng ngàn sự kiện âm nhạc, hội thảo, thể thao đang chờ đón bạn. Trải nghiệm đặt vé dễ dàng, check-in
+                nhanh chóng.
+            </p>
+
+
+            <!--            <div class=" mt-4 text-muted small fw-medium">-->
+            <!--                Phổ biến: <a href="#" class="text-decoration-underline text-dark mx-1">Sơn Tùng M-TP</a> <a href="#"-->
+            <!--                    class="text-decoration-underline text-dark mx-1">Ed Sheeran</a>-->
+            <!--            </div>-->
         </div>
     </section>
 
@@ -126,7 +129,7 @@
                             <!-- Event Card -->
                             <!-- Chưa fix -->
                             <div class="position-relative text-white" style="min-height: 500px; cursor: pointer;"
-                                th:onclick="'window.location.href=\'/events/' + ${event.id} + '\''">
+                                th:onclick="'window.location.href=\'/event/' + ${event.id} + '\''">
 
                                 <!-- Background Image -->
                                 <img th:src="${(event.image != null and !event.image.isEmpty()) ? event.image : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200'}"
@@ -140,11 +143,11 @@
                                         <div class="row">
                                             <div class="col-lg-8">
                                                 <!-- Ranking Badge -->
-                                                <span class="badge mb-3"
-                                                    th:class="${iterStat.index == 0 ? 'bg-warning text-dark fs-5 px-4 py-2' : 'bg-secondary fs-6 px-3 py-2'}"
+                                                <div class="badge d-inline-block mb-4 bg-warning text-dark fs-5 px-3 py-2 rounded-pill"
+                                                    style="width: fit-content; margin-bottom: 1rem !important;"
                                                     th:text="'#' + ${iterStat.index + 1} + ${iterStat.index == 0 ? ' Nổi bật nhất' : ' Trending'}">
-                                                    #1 Nổi bật nhất
-                                                </span>
+                                                    #1 Top Trending
+                                                </div>
 
                                                 <!-- Title -->
                                                 <h1 class="display-4 fw-bold mb-3" th:text="${event.title}">
@@ -152,11 +155,11 @@
                                                 </h1>
 
                                                 <!-- Description -->
-                                                <p class="fs-5 mb-4 text-light d-none d-md-block"
-                                                    th:text="${event.description}"
-                                                    style="max-width: 600px; opacity: 0.9;">
+                                                <div class="fs-5 mb-4 text-light d-none d-md-block description-clamp"
+                                                    th:utext="${event.description}"
+                                                    style="display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; max-width: 600px; opacity: 0.9; overflow: hidden;">
                                                     Trải nghiệm không khí sôi động cùng dàn DJ Top 100 thế giới.
-                                                </p>
+                                                </div>
 
                                                 <!-- Event Info -->
                                                 <div class="d-flex flex-wrap gap-4 mb-3">
@@ -189,7 +192,7 @@
                                                 <!--Chưa fix-->
                                                 <button
                                                     class="btn btn-warning btn-lg px-5 py-3 rounded-pill fw-bold mt-3"
-                                                    th:onclick="'event.stopPropagation(); window.location.href=\'/bookings/book/' + ${event.id} + '\''">
+                                                    th:onclick="'event.stopPropagation(); window.location.href=\'/event/' + ${event.id} + '\''">
                                                     <i class="bi bi-ticket-perforated me-2"></i>
                                                     Đặt vé ngay
                                                 </button>
@@ -284,6 +287,10 @@
                             <div class="text-muted small mb-3">
                                 <i class="bi bi-geo-alt-fill text-primary me-1"></i>
                                 <span th:text="${event.location ?: 'TBA'}">TP. Hồ Chí Minh</span>
+                                <span th:if="${event.locationCount != null and event.locationCount > 1}"
+                                    th:text="' và ' + ${event.locationCount - 1} + ' địa điểm khác'">
+                                    và 1 địa điểm khác
+                                </span>
                             </div>
 
                             <!-- Price -->
@@ -293,8 +300,7 @@
                                 <span class="fw-bold text-danger"
                                     th:text="${(event.minPrice != null and event.minPrice > 0) ? (#numbers.formatInteger(event.minPrice, 0, 'COMMA') + 'đ') : 'Miễn phí'}">
                                     500.000đ
-                                    <!--                                </span>-->
-                                    <!--                                    th:text="${event.minPrice != null and event.minPrice > 0} ? (#numbers.formatInteger(event.minPrice, 0, 'COMMA') + 'đ') : 'Miễn phí'">500.000đ</span>-->
+                                </span>
                             </div>
                         </div>
                     </div>

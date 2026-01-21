@@ -1,7 +1,7 @@
 :root {
-    --primary-color: #7c3aed;
-    --secondary-color: #db2777;
-    --dark-color: #0f172a;
+    --primary-color: #d946ef; /* Bright magenta/pink */
+    --secondary-color: #ec4899; /* Hot pink */
+    --dark-color: #1e293b;
 }
 
 body {
@@ -19,14 +19,14 @@ body {
 
 /* Hero Section */
 .hero-section {
-    padding-top: 120px;
-    padding-bottom: 80px;
-    background: linear-gradient(180deg, rgba(248, 250, 252, 0) 0%, #f8fafc 100%),
-    url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    min-height: 600px;
+    padding-top: 100px;
+    padding-bottom: 60px;
+    background: linear-gradient(135deg, #faf5ff 0%, #fdf2f8 100%);
+    min-height: auto;
+}
+
+.hero-section h1 {
+    color: var(--dark-color);
 }
 
 .gradient-text {
@@ -34,6 +34,8 @@ body {
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    text-shadow: none;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
 }
 
 .btn-gradient {
@@ -46,7 +48,7 @@ body {
 .btn-gradient:hover {
     color: white;
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(124, 58, 237, 0.3);
+    box-shadow: 0 5px 15px rgba(217, 70, 239, 0.4);
 }
 
 /* Search Widget */
@@ -69,7 +71,7 @@ body {
 .form-control:focus,
 .form-select:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.25rem rgba(124, 58, 237, 0.15);
+    box-shadow: 0 0 0 0.25rem rgba(217, 70, 239, 0.15);
 }
 
 /* Card Hover Effect */
@@ -156,4 +158,79 @@ body {
 
 .card-event:hover img {
     transform: scale(1.05);
+}
+
+/* Description Clamp - Force inline display for HTML content */
+.description-clamp * {
+    display: inline !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.description-clamp p,
+.description-clamp div {
+    display: inline !important;
+}
+
+.description-clamp p:not(:last-child)::after,
+.description-clamp div:not(:last-child)::after {
+    content: " ";
+}
+
+/* Nearby Events Card Styling */
+.nearby-event-card {
+    transition: all 0.3s ease;
+    border: 1px solid #e2e8f0;
+}
+
+.nearby-event-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+.nearby-event-card:hover img {
+    transform: scale(1.05);
+}
+
+.nearby-event-card img {
+    transition: transform 0.3s ease;
+}
+
+/* Occurrence List Styling */
+.occurrence-list {
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+}
+
+.occurrence-items {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f1f5f9;
+}
+
+.occurrence-items::-webkit-scrollbar {
+    width: 4px;
+}
+
+.occurrence-items::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.occurrence-items::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+}
+
+.occurrence-items::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+.occurrence-item {
+    transition: background-color 0.2s ease;
+}
+
+.occurrence-item:hover {
+    background-color: rgba(217, 70, 239, 0.05);
+    border-radius: 0.25rem;
 }

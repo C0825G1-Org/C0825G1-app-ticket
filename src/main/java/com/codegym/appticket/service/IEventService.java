@@ -6,6 +6,7 @@ import com.codegym.appticket.dto.event.EventSearchDTO;
 import com.codegym.appticket.dto.event.EventUpdateDTO;
 import com.codegym.appticket.dto.home.HomeEventDTO;
 import com.codegym.appticket.dto.home.NearByEventDTO;
+import com.codegym.appticket.dto.home.NearByEventWithOccurrencesDTO;
 import com.codegym.appticket.dto.home.TrendingEventDTO;
 import com.codegym.appticket.dto.home.UpComingEventDTO;
 import com.codegym.appticket.entity.Event;
@@ -45,9 +46,11 @@ public interface IEventService {
         List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, String excludeLocation,
                         int limit);
 
-        // User/Organizer methods
-        Page<Event> findEventsByOrganizer(User organizer,
-                        Pageable pageable);
+    List<NearByEventWithOccurrencesDTO> findNearbyEventsGrouped(Double userLatitude, Double userLongitude, String excludeLocation, int limit);
+
+    // User/Organizer methods
+    org.springframework.data.domain.Page<Event> findEventsByOrganizer(com.codegym.appticket.entity.User organizer,
+            Pageable pageable);
 
         // Approval Flow
         void approve(Long id);

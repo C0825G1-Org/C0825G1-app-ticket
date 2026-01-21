@@ -44,16 +44,20 @@
                         </h6>
 
                         <!-- Description -->
-                        <p class="card-text small text-muted mb-2"
+                        <div class="card-text small text-muted mb-2"
                             style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;"
-                            th:text="${event.description}">
+                            th:utext="${event.description}">
                             Đêm nhạc gieo hưởng kết hợp điện tử.
-                        </p>
+                        </div>
 
                         <!-- Location -->
                         <div class="small text-muted mb-3">
                             <i class="bi bi-geo-alt-fill me-1"></i>
                             <span th:text="${event.location ?: 'TBA'}">TP. HCM</span>
+                            <span th:if="${event.locationCount != null and event.locationCount > 1}"
+                                th:text="' và ' + ${event.locationCount - 1} + ' địa điểm khác'">
+                                và 1 địa điểm khác
+                            </span>
                         </div>
 
                         <!-- Price -->

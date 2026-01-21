@@ -8,6 +8,7 @@ public interface UpComingEventDTO {
     String getTitle();
     String getDescription();
     String getLocation();
+    Integer getLocationCount();
     String getImage();
     String getCategoryName();
     LocalDateTime getStartTime();
