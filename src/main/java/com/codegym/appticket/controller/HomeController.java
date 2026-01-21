@@ -38,6 +38,9 @@ public class HomeController {
 
     @Autowired
     private IGeoLocationService geoLocationService;
+    
+    @Autowired
+    private com.codegym.appticket.util.VietnamProvinceCoordinates vietnamProvinceCoordinates;
 
     @GetMapping("/")
     public String showHomePage(Model model) {
@@ -198,22 +201,28 @@ public class HomeController {
         return "error/403";
     }
 
+
     private List<NearByEventWithOccurrencesDTO> getNearbyEvents(String location, int limit) {
         if (location == null || location.trim().isEmpty() || location.equals("Toàn quốc")) {
             return List.of();
         }
-        // ✅ Thử nhiều biến thể tên
+        
+        // Try geocoding API first
         Double[] coordinates = geoLocationService.getCoordinates(location);
 
-        if (coordinates == null && location.contains("Huế")) {
-            // Fallback: thử "Hue" hoặc "Thua Thien Hue"
-            coordinates = geoLocationService.getCoordinates("Hue, Vietnam");
+        // Fallback to VietnamProvinceCoordinates if geocoding fails
+        if (coordinates == null) {
+            log.warn("Geocoding API failed for location: {}, trying VietnamProvinceCoordinates", location);
+            coordinates = vietnamProvinceCoordinates.getCoordinates(location);
         }
 
         if (coordinates == null) {
-            log.warn("Geocoding failed for location: {}", location);
+            log.error("Could not find coordinates for location: {} (both API and local map failed)", location);
             return List.of();
         }
+        
+        log.info("Found coordinates for {}: lat={}, lon={}", location, coordinates[0], coordinates[1]);
+        
         return eventService.findNearbyEventsGrouped(
                 coordinates[0], coordinates[1], location, limit
         );
