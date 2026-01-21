@@ -42,12 +42,16 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
+import jakarta.persistence.EntityManager;
 
 @Service
 @RequiredArgsConstructor
@@ -67,6 +71,7 @@ public class EventService implements IEventService {
         private final com.codegym.appticket.util.ProvinceNameMapper provinceNameMapper;
         private final IEventCancellationHistoryRepository eventCancellationHistoryRepository;
         private final com.codegym.appticket.service.IEmailService emailService;
+        private final jakarta.persistence.EntityManager entityManager;
 
         @Override
         @Transactional(readOnly = true)
@@ -347,7 +352,9 @@ public class EventService implements IEventService {
                 currentOccurrences.removeIf(occ -> !incomingOccurrenceIds.contains(occ.getId()));
 
                 // 2. Cập nhật hoặc Thêm mới
+                Set<Location> potentialOrphanLocations = new HashSet<>();
                 for (EventOccurrenceDTO occDTO : incomingOccurrences) {
+                        
                         EventOccurrence target = null;
                         if (occDTO.getId() != null) {
                                 target = currentOccurrences.stream()
@@ -363,9 +370,17 @@ public class EventService implements IEventService {
                                 isNew = true;
                         }
 
+                        // Track old location before updating (for cleanup later)
+                        if (!isNew && target.getLocation() != null) {
+                                potentialOrphanLocations.add(target.getLocation());
+                        }
+
                         target.setStartTime(occDTO.getStartTime());
                         target.setEndTime(occDTO.getEndTime());
-                        target.setLocation(getOrCreateLocation(occDTO));
+                        Location newLocation = getOrCreateLocation(occDTO);
+                        target.setLocation(newLocation);
+                        // Remove new location from orphan set (in case it's being reused)
+                        potentialOrphanLocations.remove(newLocation);
 
                         // Update Tickets specific to this occurrence
                         if (occDTO.getTicketTypes() != null) {
@@ -454,7 +469,17 @@ public class EventService implements IEventService {
                 }
 
                 Event updatedEvent = eventRepository.save(event);
-                return convertToDTO(updatedEvent);
+                // Cleanup orphaned locations before flushing
+                cleanupOrphanLocations(potentialOrphanLocations);
+                // Flush changes to DB and clear persistence context to avoid stale data
+                entityManager.flush();
+                entityManager.clear();
+                
+                // Re-fetch event to ensure all associations are fresh from DB
+                Event refreshedEvent = eventRepository.findById(updatedEvent.getId())
+                        .orElseThrow(() -> new RuntimeException("Event not found after update"));
+                
+                return convertToDTO(refreshedEvent);
         }
 
         private void removeMediaByPurpose(Event event, MediaPurpose purpose) {
@@ -578,39 +603,85 @@ public class EventService implements IEventService {
         }
 
         private Location getOrCreateLocation(EventOccurrenceDTO occDTO) {
-                // 1. Xử lý Tỉnh/Thành phố
-                Province province = provinceRepository
-                                .findById(occDTO.getProvinceCode())
-                                .orElseGet(() -> {
-                                        Province newProv = new Province();
-                                        newProv.setCode(occDTO.getProvinceCode());
-                                        newProv.setName(occDTO.getProvinceName());
-                                        return provinceRepository.save(newProv);
-                                });
+            // 1. Xử lý Tỉnh/Thành phố
+            Province province = provinceRepository
+                    .findById(occDTO.getProvinceCode())
+                    .orElseGet(() -> {
+                            Province newProv = new Province();
+                            newProv.setCode(occDTO.getProvinceCode());
+                            newProv.setName(occDTO.getProvinceName());
+                            return provinceRepository.save(newProv);
+                    });
 
-                // 2. Xử lý Phường/Xã
-                Ward ward = wardRepository
-                                .findById(occDTO.getWardCode())
-                                .orElseGet(() -> {
-                                        Ward newWard = new Ward();
-                                        newWard.setCode(occDTO.getWardCode());
-                                        newWard.setName(occDTO.getWardName());
-                                        newWard.setProvince(province);
-                                        return wardRepository.save(newWard);
-                                });
+            // 2. Xử lý Phường/Xã
+            Ward ward = wardRepository
+                    .findById(occDTO.getWardCode())
+                    .orElseGet(() -> {
+                            Ward newWard = new Ward();
+                            newWard.setCode(occDTO.getWardCode());
+                            newWard.setName(occDTO.getWardName());
+                            newWard.setProvince(province);
+                            return wardRepository.save(newWard);
+                    });
 
-                return locationRepository
-                                .findByWardCodeAndAddressDetail(
-                                                occDTO.getWardCode(),
-                                                occDTO.getAddressDetail())
-                                .orElseGet(() -> {
-                                        Location newLoc = new Location();
-                                        newLoc.setWard(ward);
-                                        newLoc.setAddressDetail(
-                                                        occDTO.getAddressDetail());
-                                        newLoc.setMapLink(occDTO.getMapLink());
-                                        return locationRepository.saveAndFlush(newLoc);
-                                });
+            // 3. Tìm hoặc tạo Location
+            Location location = locationRepository
+                    .findByWardCodeAndAddressDetail(occDTO.getWardCode(), occDTO.getAddressDetail())
+                    .orElseGet(() -> {
+                            Location newLoc = new Location();
+                            newLoc.setWard(ward);
+                            newLoc.setAddressDetail(occDTO.getAddressDetail());
+                            newLoc.setMapLink(occDTO.getMapLink());
+                            return newLoc; // CHƯA save tại đây
+                    });
+
+            // 4. Populate coordinates nếu chưa có
+            if (location.getLatitude() == null || location.getLongitude() == null) {
+                    try {
+                        String provinceName = ward.getProvince().getName();
+                        System.out.println("📍 Attempting to geocode for province: " + provinceName + " (ward: " + ward.getCode() + ")");
+                        
+                        Double[] coords = geocodingService.getCoordinates(provinceName);
+
+                        if (coords != null && coords.length == 2) {
+                                location.setLatitude(coords[0]);
+                                location.setLongitude(coords[1]);
+                                System.out.println("✅ Successfully set coordinates: lat=" + coords[0] + ", lon=" + coords[1]);
+                        } else {
+                                System.err.println("⚠️ Geocoding returned null or invalid coordinates for province: " + provinceName);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("❌ Error populating coordinates for ward " + ward.getCode() + ": " + e.getMessage());
+                        e.printStackTrace();
+                    }
+            }
+        
+            // 5. Save và trả về (cho cả location mới và cũ nếu cập nhật lat/lon)
+            return locationRepository.saveAndFlush(location);
+        }
+
+        private void cleanupOrphanLocations(Set<Location> potentialOrphans) {
+                if (potentialOrphans == null || potentialOrphans.isEmpty()) {
+                        return;
+                }
+                
+                int deletedCount = 0;
+                for (Location location : potentialOrphans) {
+                        // Check if this location is still being used by any occurrence
+                        long referenceCount = eventOccurrenceRepository.countByLocation(location);
+                        
+                        if (referenceCount == 0) {
+                                // No occurrences reference this location anymore - safe to delete
+                                locationRepository.delete(location);
+                                deletedCount++;
+                                System.out.println("🗑️ Deleted orphan location ID: " + location.getId() + 
+                                                " (ward: " + location.getWard().getCode() + ", address: " + location.getAddressDetail() + ")");
+                        }
+                }
+                
+                if (deletedCount > 0) {
+                        System.out.println("✅ Cleanup completed: " + deletedCount + " orphan location(s) deleted");
+                }
         }
 
         @Override
