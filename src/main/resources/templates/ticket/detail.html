@@ -16,11 +16,13 @@
                         <div class="card-body p-4">
                             <div class="row mb-4">
                                 <div class="col-md-8">
-                                    <h4 class="text-primary mb-3" th:text="${event.title}">Tên sự kiện</h4>
                                     <p class="mb-2"><i class="bi bi-geo-alt me-2"></i><span
                                             th:text="${event.location}"></span></p>
-                                    <p class="mb-2"><i class="bi bi-calendar-event me-2"></i><span>Sự kiện sắp diễn
-                                            ra</span></p>
+                                    <p class="mb-2"><i class="bi bi-calendar-event me-2"></i>
+                                        <span
+                                            th:text="${#temporals.format(tickets[0].bookingDetail.ticketType.eventOccurrence.startTime, 'HH:mm dd/MM/yyyy')}">Thời
+                                            gian</span>
+                                    </p>
                                 </div>
                                 <div class="col-md-4 text-end">
                                     <label class="text-muted small d-block">Ngày đặt</label>

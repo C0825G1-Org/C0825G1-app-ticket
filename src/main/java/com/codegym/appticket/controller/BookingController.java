@@ -26,14 +26,15 @@ import java.util.Map;
 public class BookingController {
 
     private final IBookingService bookingService;
-    private final IVnPayService vnPayService;
+    private final com.codegym.appticket.service.IVnPayService vnPayService;
 
     // 1. Trang Form đặt vé
     @GetMapping("/book/{eventId}")
-    public String showForm(@PathVariable Long eventId,
-            @RequestParam Map<String, String> params,
-            Model model,
-            RedirectAttributes redirectAttributes) {
+    public String showForm(@PathVariable Long eventId, 
+                          @RequestParam Map<String, String> params,
+                          @RequestParam(required = false) Long occurrence,
+                          Model model,
+                          RedirectAttributes redirectAttributes) {
         String email = getCurrentUserEmail();
         Event event;
         List<TicketType> ticketTypes;
@@ -47,6 +48,32 @@ public class BookingController {
 
         if (ticketTypes == null || ticketTypes.isEmpty()) {
             model.addAttribute("warning", "Sự kiện hiện chưa có vé để đặt.");
+        }
+
+        // Filter tickets if occurrence is selected
+        com.codegym.appticket.entity.EventOccurrence selectedOccurrence = null;
+        if (occurrence != null) {
+            ticketTypes = ticketTypes.stream()
+                    .filter(tt -> tt.getEventOccurrence().getId().equals(occurrence))
+                    .toList();
+            
+            if (event.getEventOccurrences() != null) {
+                selectedOccurrence = event.getEventOccurrences().stream()
+                        .filter(oc -> oc.getId().equals(occurrence))
+                        .findFirst()
+                        .orElse(null);
+            }
+        } 
+        
+        // Fallback or default logic if no specific occurrence selected or not found
+        if (selectedOccurrence == null && event.getEventOccurrences() != null && !event.getEventOccurrences().isEmpty()) {
+            // If we have tickets after filtering (or not filtering), try to use the occurrence of the first ticket
+            if (!ticketTypes.isEmpty()) {
+                 selectedOccurrence = ticketTypes.get(0).getEventOccurrence();
+            } else {
+                 // Fallback to first available occurrence of event
+                 selectedOccurrence = event.getEventOccurrences().get(0);
+            }
         }
 
         if (email != null) {
@@ -74,13 +101,21 @@ public class BookingController {
         }
         model.addAttribute("event", event);
 
-        // Fix location display
+        // Fix location display based on selected occurrence
         String location = "Chưa cập nhật";
-        if (event.getEventOccurrences() != null && !event.getEventOccurrences().isEmpty()) {
-            Location loc = event.getEventOccurrences().get(0).getLocation();
-            if (loc != null && loc.getWard() != null && loc.getWard().getProvince() != null) {
-                location = loc.getWard().getProvince().getName();
+        if (selectedOccurrence != null) {
+            Location loc = selectedOccurrence.getLocation();
+            if (loc != null) {
+                StringBuilder fullAddress = new StringBuilder(loc.getAddressDetail());
+                if (loc.getWard() != null) {
+                    fullAddress.append(", ").append(loc.getWard().getName());
+                    if (loc.getWard().getProvince() != null) {
+                        fullAddress.append(", ").append(loc.getWard().getProvince().getName());
+                    }
+                }
+                location = fullAddress.toString();
             }
+            model.addAttribute("startTime", selectedOccurrence.getStartTime());
         }
         model.addAttribute("location", location);
 
@@ -146,13 +181,33 @@ public class BookingController {
 
         model.addAttribute("event", event);
 
-        // Fix location display
+        // Fix location display logic: Use occurrence from the selected tickets
         String location = "Chưa cập nhật";
-        if (event.getEventOccurrences() != null && !event.getEventOccurrences().isEmpty()) {
-            Location loc = event.getEventOccurrences().get(0).getLocation();
-            if (loc != null && loc.getWard() != null && loc.getWard().getProvince() != null) {
-                location = loc.getWard().getProvince().getName();
+        com.codegym.appticket.entity.EventOccurrence occurrence = null;
+        
+        // Get occurrence from the first selected ticket
+        if (!selectedTickets.isEmpty()) {
+            occurrence = selectedTickets.keySet().iterator().next().getEventOccurrence();
+        }
+
+        // Fallback to first occurrence if for some reason we missed it (shouldn't happen with valid tickets)
+        if (occurrence == null && event.getEventOccurrences() != null && !event.getEventOccurrences().isEmpty()) {
+            occurrence = event.getEventOccurrences().get(0);
+        }
+
+        if (occurrence != null) {
+            Location loc = occurrence.getLocation();
+            if (loc != null) {
+                StringBuilder fullAddress = new StringBuilder(loc.getAddressDetail());
+                if (loc.getWard() != null) {
+                    fullAddress.append(", ").append(loc.getWard().getName());
+                    if (loc.getWard().getProvince() != null) {
+                        fullAddress.append(", ").append(loc.getWard().getProvince().getName());
+                    }
+                }
+                location = fullAddress.toString();
             }
+            model.addAttribute("startTime", occurrence.getStartTime());
         }
         model.addAttribute("location", location);
 
@@ -188,8 +243,27 @@ public class BookingController {
                 selectedTickets.put(detail.getTicketType(), detail.getQuantity());
             }
 
-            model.addAttribute("event", details.get(0).getTicketType().getEventOccurrence().getEvent());
+            com.codegym.appticket.entity.EventOccurrence occurrence = details.get(0).getTicketType().getEventOccurrence();
+            model.addAttribute("event", occurrence.getEvent());
+            model.addAttribute("startTime", occurrence.getStartTime());
+
+            String location = "Chưa cập nhật";
+            if (occurrence.getLocation() != null) {
+                Location loc = occurrence.getLocation();
+                StringBuilder fullAddress = new StringBuilder(loc.getAddressDetail());
+                if (loc.getWard() != null) {
+                    fullAddress.append(", ").append(loc.getWard().getName());
+                    if (loc.getWard().getProvince() != null) {
+                        fullAddress.append(", ").append(loc.getWard().getProvince().getName());
+                    }
+                }
+                location = fullAddress.toString();
+            }
+            model.addAttribute("location", location);
             model.addAttribute("selectedTickets", selectedTickets);
+            // Pass the existing booking ID to the view so we can reuse it
+            model.addAttribute("bookingId", bookingId);
+
 
             String email = getCurrentUserEmail();
             if (email != null) {
@@ -207,6 +281,7 @@ public class BookingController {
     // 3. Xử lý Lưu đặt vé
     @PostMapping("/save")
     public String save(@RequestParam Long eventId,
+            @RequestParam(required = false) Long bookingId,
             @RequestParam Map<String, String> params,
             RedirectAttributes redirectAttributes,
             jakarta.servlet.http.HttpServletRequest request) {
@@ -217,27 +292,48 @@ public class BookingController {
             return "redirect:/login";
         }
 
-        Map<Long, Integer> ticketQuantities = new HashMap<>();
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            if (entry.getKey().startsWith("ticket_")) {
-                Long ttId = Long.parseLong(entry.getKey().replace("ticket_", ""));
-                if (entry.getValue() != null && !entry.getValue().trim().isEmpty()) {
-                    Integer qty = Integer.parseInt(entry.getValue());
-                    if (qty > 0) {
-                        ticketQuantities.put(ttId, qty);
-                    }
-                }
-            }
-        }
-
         try {
             com.codegym.appticket.entity.User currentUser = bookingService.getUserByEmail(userEmail);
             Long userId = currentUser.getId();
+            Booking booking;
 
-            Booking booking = bookingService.createBooking(eventId, userId, ticketQuantities);
+            // CHECK: If bookingId exists, validate and reuse it
+            if (bookingId != null) {
+                booking = bookingService.getBookingById(bookingId);
+                // Security check: Ensure current user owns this booking
+                if (!booking.getUser().getId().equals(userId)) {
+                    throw new RuntimeException("Bạn không có quyền thanh toán booking này.");
+                }
+                // Status check: Ensure it is PENDING
+                if (booking.getStatus() != com.codegym.appticket.entity.BookingStatus.PENDING) {
+                    // If already SUCCESS, redirect to success page directly?
+                    if (booking.getStatus() == com.codegym.appticket.entity.BookingStatus.SUCCESS) {
+                        return "redirect:/bookings/success/" + booking.getId();
+                    }
+                    throw new RuntimeException("Booking không ở trạng thái chờ thanh toán.");
+                }
+            } else {
+                // OLD FLOW: Create new booking
+                Map<Long, Integer> ticketQuantities = new HashMap<>();
+                for (Map.Entry<String, String> entry : params.entrySet()) {
+                    if (entry.getKey().startsWith("ticket_")) {
+                        try {
+                            Long ttId = Long.parseLong(entry.getKey().replace("ticket_", ""));
+                            if (entry.getValue() != null && !entry.getValue().trim().isEmpty()) {
+                                Integer qty = Integer.parseInt(entry.getValue());
+                                if (qty > 0) {
+                                    ticketQuantities.put(ttId, qty);
+                                }
+                            }
+                        } catch (NumberFormatException e) {
+                            // ignore
+                        }
+                    }
+                }
+                booking = bookingService.createBooking(eventId, userId, ticketQuantities);
+            }
 
             long totalAmount = bookingService.calculateTotalAmount(booking.getId());
-
             String paymentUrl = vnPayService.createPaymentUrl(request, booking.getId(), totalAmount);
 
             return "redirect:" + paymentUrl;
@@ -258,6 +354,8 @@ public class BookingController {
         if (!tickets.isEmpty()) {
             model.addAttribute("event",
                     tickets.get(0).getBookingDetail().getTicketType().getEventOccurrence().getEvent());
+            model.addAttribute("startTime",
+                    tickets.get(0).getBookingDetail().getTicketType().getEventOccurrence().getStartTime());
         }
 
         model.addAttribute("booking", booking);

@@ -3,7 +3,6 @@ package com.codegym.appticket.controller;
 import com.codegym.appticket.entity.QRCode;
 import com.codegym.appticket.entity.Ticket;
 import com.codegym.appticket.service.ITicketService;
-import com.codegym.appticket.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,7 +23,10 @@ public class TicketController {
 
     private final ITicketService ticketService;
 
-    // 1. Danh sách vé của tôi (đã gộp theo sự kiện)
+    // Record để làm key gộp vé (Dùng String statusName để so sánh chính xác tuyệt đối)
+    public record TicketGroupKey(Long eventId, Long occurrenceId, String eventTitle, String eventLocation, java.time.LocalDateTime startTime, String statusName) {}
+
+    // 1. Danh sách vé của tôi (đã gộp theo sự kiện và trạng thái)
     @GetMapping("/my-tickets")
     public String myTickets(Model model) {
         String email = getCurrentUserEmail();
@@ -36,57 +38,81 @@ public class TicketController {
         Long userId = currentUser.getId();
 
         List<Ticket> tickets = ticketService.getTicketsByUserId(userId);
-
-        // Gộp vé theo sự kiện
-        java.util.Map<com.codegym.appticket.entity.Event, List<Ticket>> groupedTickets = tickets.stream()
+        
+        // Gộp vé theo sự kiện, buổi diễn và trạng thái
+        java.util.Map<TicketGroupKey, List<Ticket>> groupedTickets = tickets.stream()
                 .collect(java.util.stream.Collectors.groupingBy(
-                        t -> t.getBookingDetail().getTicketType().getEventOccurrence().getEvent(),
+                        t -> new TicketGroupKey(
+                                t.getBookingDetail().getTicketType().getEventOccurrence().getEvent().getId(),
+                                t.getBookingDetail().getTicketType().getEventOccurrence().getId(),
+                                t.getBookingDetail().getTicketType().getEventOccurrence().getEvent().getTitle(),
+                                t.getBookingDetail().getTicketType().getEventOccurrence().getFullLocation(),
+                                t.getBookingDetail().getTicketType().getEventOccurrence().getStartTime(),
+                                t.getBookingDetail().getBooking().getStatus().name()
+                        ),
                         java.util.LinkedHashMap::new,
-                        java.util.stream.Collectors.toList()));
-
+                        java.util.stream.Collectors.toList()
+                ));
+        
         model.addAttribute("groupedTickets", groupedTickets);
         return "ticket/list";
     }
 
-    // 2. Chi tiết các vé của một sự kiện
+    // 2. Chi tiết các vé của một sự kiện (có lọc theo trạng thái)
     @GetMapping("/event-detail/{eventId}")
-    public String eventDetail(@PathVariable Long eventId, Model model) {
+    public String eventDetail(@PathVariable Long eventId,
+                             @org.springframework.web.bind.annotation.RequestParam(required = false) Long occurrenceId,
+                             @org.springframework.web.bind.annotation.RequestParam(required = false) com.codegym.appticket.entity.BookingStatus status,
+                             Model model) {
         String email = getCurrentUserEmail();
         if (email == null) {
             return "redirect:/login";
         }
-
+        
         com.codegym.appticket.entity.User currentUser = ticketService.getUserByEmail(email);
         Long userId = currentUser.getId();
+        
+        List<Ticket> tickets;
+        if (occurrenceId != null) {
+            tickets = ticketService.getTicketsByUserIdAndOccurrenceId(userId, occurrenceId);
+        } else {
+            tickets = ticketService.getTicketsByUserIdAndEventId(userId, eventId);
+        }
 
-        List<Ticket> tickets = ticketService.getTicketsByUserIdAndEventId(userId, eventId);
+        // Lọc vé theo trạng thái nếu có
+        if (status != null) {
+            tickets = tickets.stream()
+                    .filter(t -> t.getBookingDetail().getBooking().getStatus() == status)
+                    .collect(java.util.stream.Collectors.toList());
+        }
+
         if (tickets.isEmpty()) {
             return "redirect:/tickets/my-tickets";
         }
-
+        
         List<Long> ticketIds = tickets.stream().map(Ticket::getId).collect(java.util.stream.Collectors.toList());
         List<QRCode> qrCodes = ticketService.getQRCodesByTicketIds(ticketIds);
-
+        
         // Tạo map để dễ tra cứu QR code theo ticket id
         java.util.Map<Long, QRCode> qrCodeMap = qrCodes.stream()
                 .collect(java.util.stream.Collectors.toMap(qr -> qr.getTicket().getId(), qr -> qr));
-
+        
         model.addAttribute("tickets", tickets);
         model.addAttribute("qrCodeMap", qrCodeMap);
         model.addAttribute("event", tickets.get(0).getBookingDetail().getTicketType().getEventOccurrence().getEvent());
-
+        
         return "ticket/detail";
     }
 
     private String getCurrentUserEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() ||
-                authentication instanceof AnonymousAuthenticationToken) {
+        if (authentication == null || !authentication.isAuthenticated() || 
+            authentication instanceof AnonymousAuthenticationToken) {
             return null;
         }
-
+        
         Object principal = authentication.getPrincipal();
-
+        
         if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
             return ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
         } else if (principal instanceof com.codegym.appticket.config.CustomOAuth2User) {
@@ -94,7 +120,7 @@ public class TicketController {
         } else if (principal instanceof org.springframework.security.oauth2.core.user.OAuth2User) {
             return ((org.springframework.security.oauth2.core.user.OAuth2User) principal).getAttribute("email");
         }
-
+        
         return authentication.getName();
     }
 
@@ -103,7 +129,7 @@ public class TicketController {
     public String detail(@PathVariable Long id, Model model) {
         Ticket ticket = ticketService.getTicketById(id);
         QRCode qrCode = ticketService.getQRCodeByTicketId(id);
-
+        
         model.addAttribute("ticket", ticket);
         model.addAttribute("qrCode", qrCode);
         return "ticket/detail";

@@ -39,4 +39,18 @@ public class EventOccurrence {
 
     @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
+
+    public String getFullLocation() {
+        if (location != null) {
+            StringBuilder fullAddress = new StringBuilder(location.getAddressDetail());
+            if (location.getWard() != null) {
+                fullAddress.append(", ").append(location.getWard().getName());
+                if (location.getWard().getProvince() != null) {
+                    fullAddress.append(", ").append(location.getWard().getProvince().getName());
+                }
+            }
+            return fullAddress.toString();
+        }
+        return "Địa điểm chưa xác định";
+    }
 }

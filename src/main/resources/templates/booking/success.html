@@ -21,6 +21,9 @@
                                 <div class="card-body text-start">
                                     <p class="mb-1"><strong>Sự kiện:</strong> <span
                                             th:text="${event != null ? event.title : 'N/A'}"></span></p>
+                                    <p class="mb-1"><strong>Thời gian:</strong> <span
+                                            th:text="${startTime != null ? #temporals.format(startTime, 'HH:mm dd/MM/yyyy') : 'N/A'}"></span>
+                                    </p>
                                     <p class="mb-1"><strong>Người mua:</strong> <span
                                             th:text="${booking.user != null ? booking.user.fullName : 'Hệ thống'}"></span>
                                     </p>
@@ -35,16 +38,21 @@
                             </div>
 
                             <div class="mb-4 text-start">
-                                <h5 class="mb-3">Vé của bạn:</h5>
-                                <div class="row row-cols-1 row-cols-md-2 g-3">
-                                    <div th:each="ticket : ${tickets}" class="col">
-                                        <div class="card h-100 border-dashed">
-                                            <div class="card-body text-center p-3">
-                                                <img th:src="'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + ${ticket.ticketCode}"
-                                                    alt="QR Code" class="img-fluid mb-2" style="width: 120px;">
-                                                <div class="small fw-bold"
+                                <h5 class="mb-3 text-center">Vé của bạn:</h5>
+                                <div class="row g-3 justify-content-center">
+                                    <div th:each="ticket : ${tickets}" class="col-12 col-sm-10 col-md-8">
+                                        <div class="card h-100 border-dashed shadow-sm">
+                                            <div class="card-body text-center p-4">
+                                                <img th:src="'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + ${ticket.ticketCode}"
+                                                    alt="QR Code" class="img-fluid mb-3" style="width: 180px;">
+                                                <div class="h6 fw-bold mb-1"
                                                     th:text="${ticket.bookingDetail.ticketType.name}"></div>
-                                                <code class="text-muted small" th:text="${ticket.ticketCode}"></code>
+                                                <div class="text-muted small mb-2">
+                                                    Mã vé: <code th:text="${ticket.ticketCode}"></code>
+                                                </div>
+                                                <div class="badge bg-soft-info text-info border border-info-subtle"
+                                                    th:text="${#temporals.format(startTime, 'HH:mm - dd/MM/yyyy')}">
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -53,6 +61,9 @@
 
                             <div class="d-grid gap-2">
                                 <a th:href="@{/tickets/my-tickets}" class="btn btn-primary">Xem vé của tôi</a>
+                                <button type="button" class="btn btn-outline-primary" onclick="window.print()">
+                                    <i class="bi bi-printer me-2"></i>In vé
+                                </button>
                                 <a th:href="@{/}" class="btn btn-outline-secondary">Về trang chủ</a>
                             </div>
                         </div>
