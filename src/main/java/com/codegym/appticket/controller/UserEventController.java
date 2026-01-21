@@ -228,6 +228,9 @@ public class UserEventController {
         model.addAttribute("event", eventDTO);
 
         // Find specific media types for easier access
+        // Increment View Count
+        eventService.incrementViewCount(id);
+
         model.addAttribute("bannerUrl", eventDTO.getEventMedias().stream()
                 .filter(m -> m.getMediaPurpose().name().equals("BANNER")).findFirst()
                 .map(m -> m.getMediaUrl()).orElse(null));

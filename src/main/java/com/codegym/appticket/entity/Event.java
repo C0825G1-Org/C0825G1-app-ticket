@@ -40,6 +40,9 @@ public class Event extends Parent {
     @Column(name = "status")
     private EventStatus status = EventStatus.PENDING;
 
+    @Column(name = "view_count")
+    private Long viewCount = 0L;
+
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventMedia> eventMedias = new ArrayList<>();
 

@@ -540,6 +540,7 @@ public class EventService implements IEventService {
                                                                                 .map(com.codegym.appticket.entity.EventCancellationHistory::getReason)
                                                                                 .orElse(null)
                                                                 : null)
+                                .viewCount(event.getViewCount())
 
                                 .eventOccurrences(occurrenceDTOs)
                                 .eventMedias(eventMediaDTOs)
@@ -848,4 +849,41 @@ public class EventService implements IEventService {
                 }
                 return userRepository.findByEmailAndNotDeleted(currentEmail);
         }
+    @Transactional
+    public void incrementViewCount(Long eventId) {
+        Event event = eventRepository.findById(eventId).orElse(null);
+        if (event != null) {
+            event.setViewCount(event.getViewCount() == null ? 1 : event.getViewCount() + 1);
+            eventRepository.save(event);
+        }
+    }
+
+    public com.codegym.appticket.dto.event.EventStatsDTO getEventStats(Long eventId, Long occurrenceId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        // 1. Fetch Aggregated Stats
+        java.util.List<Object[]> stats = eventRepository.sumRevenueAndTickets(eventId, occurrenceId);
+        Long totalTickets = 0L;
+        java.math.BigDecimal totalRevenue = java.math.BigDecimal.ZERO;
+
+        if (stats != null && !stats.isEmpty()) {
+            Object[] row = stats.get(0);
+            if (row[0] != null)
+                totalTickets = ((Number) row[0]).longValue();
+            if (row[1] != null)
+                totalRevenue = (java.math.BigDecimal) row[1];
+        }
+
+        // 2. Fetch Booked Tickets List
+        List<com.codegym.appticket.dto.event.BookedTicketDTO> bookedTickets = eventRepository
+                .findBookedTicketsByEventAndOccurrence(eventId, occurrenceId);
+
+        return com.codegym.appticket.dto.event.EventStatsDTO.builder()
+                .totalTicketsSold(totalTickets)
+                .totalRevenue(totalRevenue)
+                .viewCount(event.getViewCount() == null ? 0 : event.getViewCount())
+                .bookedTickets(bookedTickets)
+                .build();
+    }
 }

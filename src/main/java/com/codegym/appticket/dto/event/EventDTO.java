@@ -26,6 +26,7 @@ public class EventDTO {
     private Long organizerId;
     private String organizerName;
     private String reason;
+    private Long viewCount;
 
     @Builder.Default
     private List<EventOccurrenceDTO> eventOccurrences = new ArrayList<>();

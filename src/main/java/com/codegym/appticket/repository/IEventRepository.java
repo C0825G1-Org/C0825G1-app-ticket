@@ -413,4 +413,47 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
     List<NearByEventDTO> findEventsByProvinces(
             @Param("nearbyProvinces") List<String> nearbyProvinces,
             @Param("limit") int limit);
+    // --- Organizer Stats Queries ---
+
+    @Query(value = """
+            SELECT
+                SUM(bd.quantity) AS totalTicketsSold,
+                SUM(bd.quantity * tt.price) AS totalRevenue
+            FROM bookings b
+            JOIN booking_details bd ON bd.booking_id = b.id
+            JOIN ticket_types tt ON bd.ticket_type_id = tt.id
+            JOIN event_occurrences eo ON tt.event_occurrence_id = eo.id
+            WHERE b.status = 'SUCCESS'
+              AND eo.event_id = :eventId
+              AND (:occurrenceId IS NULL OR eo.id = :occurrenceId)
+            """, nativeQuery = true)
+    java.util.List<Object[]> sumRevenueAndTickets(@Param("eventId") Long eventId, @Param("occurrenceId") Long occurrenceId);
+
+
+    @Query("""
+            SELECT new com.codegym.appticket.dto.event.BookedTicketDTO(
+                t.ticketCode,
+                u.fullName,
+                u.email,
+                u.phoneNumber,
+                tt.name,
+                bd.quantity,
+                CAST(bd.quantity * tt.price AS bigdecimal),
+                b.bookingTime,
+                CAST(b.status AS string),
+                CONCAT(eo.startTime, ' - ', l.addressDetail)
+            )
+            FROM Booking b
+            JOIN b.bookingDetails bd
+            JOIN bd.tickets t
+            JOIN bd.ticketType tt
+            JOIN tt.eventOccurrence eo
+            JOIN eo.location l
+            JOIN b.user u
+            WHERE b.status = 'SUCCESS'
+              AND eo.event.id = :eventId
+              AND (:occurrenceId IS NULL OR eo.id = :occurrenceId)
+            ORDER BY b.bookingTime DESC
+            """)
+    List<com.codegym.appticket.dto.event.BookedTicketDTO> findBookedTicketsByEventAndOccurrence(@Param("eventId") Long eventId, @Param("occurrenceId") Long occurrenceId);
 }
