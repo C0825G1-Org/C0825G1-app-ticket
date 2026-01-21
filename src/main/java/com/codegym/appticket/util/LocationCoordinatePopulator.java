@@ -23,11 +23,6 @@ public class LocationCoordinatePopulator {
     private final ILocationRepository locationRepository;
     private final IGeoLocationService geoLocationService;
 
-    // run populateLocationCoordinates() method
-    public void runPopulateLocationCoordinates() {
-        populateLocationCoordinates();
-    }
-    
     /**
      * Manual trigger method - can be called from services if needed
      * @return number of locations updated
