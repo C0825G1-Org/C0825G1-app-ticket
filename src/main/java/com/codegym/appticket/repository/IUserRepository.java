@@ -119,7 +119,8 @@ public interface IUserRepository extends JpaRepository<User, Long> {
                 COALESCE(SUM(CASE WHEN b.status = 'SUCCESS' AND b.booking_time BETWEEN :start AND :end THEN bd.quantity * tt.price ELSE 0 END) * 0.05, 0) AS totalRevenue
             FROM users u
             JOIN events e ON e.organizer_id = u.id
-            LEFT JOIN ticket_types tt ON tt.event_id = e.id
+            LEFT JOIN event_occurrences eo ON eo.event_id = e.id
+            LEFT JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
             LEFT JOIN booking_details bd ON bd.ticket_type_id = tt.id
             LEFT JOIN bookings b ON b.id = bd.booking_id
             WHERE e.status = 'APPROVED'
