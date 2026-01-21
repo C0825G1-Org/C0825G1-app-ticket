@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface TicketTypeRepository extends JpaRepository<TicketType, Long> {
-    List<TicketType> findByEventId(Long eventId);
+    List<TicketType> findByEventOccurrence_Event_Id(Long eventId);
 }

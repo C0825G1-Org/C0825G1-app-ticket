@@ -17,9 +17,9 @@ public class TicketType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "event_id")
-    private Event event;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_occurrence_id")
+    private EventOccurrence eventOccurrence;
 
     @Column(name = "name", length = 100, nullable = false)
     private String name;

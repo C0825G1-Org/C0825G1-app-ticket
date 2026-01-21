@@ -14,6 +14,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.codegym.appticket.dto.auth.RegisterDTO;
 import com.codegym.appticket.service.IUserService;
 import com.codegym.appticket.repository.IUserRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import com.codegym.appticket.entity.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 @Controller
 public class AuthController {
@@ -26,10 +32,10 @@ public class AuthController {
 
     @GetMapping("/login")
     public String login() {
-        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated() && !(auth instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)) {
-            if (auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ADMIN"))) {
-                return "redirect:/admin/users";
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
+            if (auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+                return "redirect:/admin/dashboard";
             }
             return "redirect:/profile";
         }
@@ -44,13 +50,13 @@ public class AuthController {
 
     @PostMapping("/register")
     public String register(@Valid @ModelAttribute("registerDTO") RegisterDTO registerDTO,
-                           BindingResult bindingResult,
-                           Model model,
-                           HttpSession session) {
+            BindingResult bindingResult,
+            Model model,
+            HttpSession session) {
         if (bindingResult.hasErrors()) {
             return "auth/register";
         }
-        
+
         try {
             userService.registerUser(registerDTO);
             session.setAttribute("verifyEmail", registerDTO.getEmail());
@@ -73,8 +79,8 @@ public class AuthController {
 
     @PostMapping("/verify-otp")
     public String verifyOtp(@RequestParam String otp,
-                            HttpSession session,
-                            RedirectAttributes redirectAttributes) {
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
         String email = (String) session.getAttribute("verifyEmail");
         if (email == null) {
             return "redirect:/register";
@@ -83,21 +89,21 @@ public class AuthController {
         try {
             userService.verifyOtp(email, otp);
             session.removeAttribute("verifyEmail");
-            
+
             // Auto login
-             com.codegym.appticket.entity.User user = userRepository.findByEmail(email).orElse(null);
-             if (user != null) {
-                 org.springframework.security.core.userdetails.UserDetails userDetails = 
-                     org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
-                         .password(user.getPassword())
-                         .authorities(user.getRoles().stream().map(r -> r.getName()).toArray(String[]::new))
-                         .build();
-                 
-                 org.springframework.security.authentication.UsernamePasswordAuthenticationToken authentication = 
-                     new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                 
-                 org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(authentication);
-             }
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user != null) {
+                UserDetails userDetails = org.springframework.security.core.userdetails.User
+                        .withUsername(user.getEmail())
+                        .password(user.getPassword())
+                        .authorities(user.getRoles().stream().map(r -> r.getName()).toArray(String[]::new))
+                        .build();
+
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
 
             return "redirect:/";
         } catch (RuntimeException e) {
@@ -119,7 +125,8 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public String processForgotPassword(@RequestParam String email, HttpSession session, RedirectAttributes redirectAttributes) {
+    public String processForgotPassword(@RequestParam String email, HttpSession session,
+            RedirectAttributes redirectAttributes) {
         try {
             userService.initiatePasswordReset(email);
             session.setAttribute("resetEmail", email);
@@ -141,7 +148,8 @@ public class AuthController {
     }
 
     @PostMapping("/verify-forgot-password")
-    public String verifyForgotPasswordOtp(@RequestParam String otp, HttpSession session, RedirectAttributes redirectAttributes) {
+    public String verifyForgotPasswordOtp(@RequestParam String otp, HttpSession session,
+            RedirectAttributes redirectAttributes) {
         String email = (String) session.getAttribute("resetEmail");
         if (email == null) {
             return "redirect:/forgot-password";
@@ -169,7 +177,8 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public String processResetPassword(@RequestParam String password, @RequestParam String confirmPassword, HttpSession session, RedirectAttributes redirectAttributes) {
+    public String processResetPassword(@RequestParam String password, @RequestParam String confirmPassword,
+            HttpSession session, RedirectAttributes redirectAttributes) {
         String email = (String) session.getAttribute("resetEmail");
         Boolean verified = (Boolean) session.getAttribute("resetVerified");
 
