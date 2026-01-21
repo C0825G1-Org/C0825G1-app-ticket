@@ -456,6 +456,49 @@
                                 }
                             }
 
+                            // Helper function for image preview
+                            window.previewFile = function (input, imgId, placeholderId) {
+                                const file = input.files[0];
+                                const img = document.getElementById(imgId);
+                                const placeholder = document.getElementById(placeholderId);
+                                if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = function (e) {
+                                        img.src = e.target.result;
+                                        img.style.display = 'block';
+                                        img.style.objectFit = 'contain';
+                                        if (placeholder) placeholder.style.display = 'none';
+                                    }
+                                    reader.readAsDataURL(file);
+                                }
+                            };
+
+                            window.previewGallery = function (input, gridId) {
+                                const grid = document.getElementById(gridId);
+                                grid.innerHTML = '';
+                                if (input.files) {
+                                    Array.from(input.files).forEach(file => {
+                                        const item = document.createElement('div');
+                                        item.className = 'gallery-item';
+                                        const reader = new FileReader();
+                                        reader.onload = function (e) {
+                                            if (file.type.startsWith('video/')) {
+                                                const video = document.createElement('video');
+                                                video.src = e.target.result;
+                                                video.controls = false;
+                                                item.appendChild(video);
+                                            } else {
+                                                const img = document.createElement('img');
+                                                img.src = e.target.result;
+                                                item.appendChild(img);
+                                            }
+                                        }
+                                        reader.readAsDataURL(file);
+                                        grid.appendChild(item);
+                                    });
+                                }
+                            };
+
                             window.removeRow = function (btn, type) {
                                 if (type === 'occurrence') {
                                     const item = btn.closest('.event-occurrence-item');

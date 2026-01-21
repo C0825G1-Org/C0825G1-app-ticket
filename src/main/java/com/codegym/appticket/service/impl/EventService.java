@@ -66,6 +66,7 @@ public class EventService implements IEventService {
         private final com.codegym.appticket.repository.IUserRepository userRepository;
         private final com.codegym.appticket.util.ProvinceNameMapper provinceNameMapper;
         private final IEventCancellationHistoryRepository eventCancellationHistoryRepository;
+        private final com.codegym.appticket.service.IEmailService emailService;
 
         @Override
         @Transactional(readOnly = true)
@@ -623,6 +624,16 @@ public class EventService implements IEventService {
                                 .orElseThrow(() -> new RuntimeException("Event not found with id " + id));
                 event.setStatus(EventStatus.APPROVED);
                 eventRepository.save(event);
+
+                // Send notification email to organizer
+                if (emailService != null) {
+                        try {
+                                emailService.sendEventApprovalNotification(event);
+                        } catch (Exception e) {
+                                // Log but don't fail the transaction
+                                System.err.println("Failed to send approval email: " + e.getMessage());
+                        }
+                }
         }
 
         @Override
@@ -634,6 +645,15 @@ public class EventService implements IEventService {
                 eventRepository.save(event);
 
                 saveCancellationHistory(event, EventStatus.REJECTED, reason);
+
+                // Send notification email
+                if (emailService != null) {
+                        try {
+                                emailService.sendEventRejectionNotification(event, reason);
+                        } catch (Exception e) {
+                                System.err.println("Failed to send rejection email: " + e.getMessage());
+                        }
+                }
         }
 
         @Override
@@ -781,6 +801,15 @@ public class EventService implements IEventService {
                 eventRepository.save(event);
 
                 saveCancellationHistory(event, EventStatus.CANCELLED, reason);
+
+                // Send notification email
+                if (emailService != null) {
+                        try {
+                                emailService.sendEventCancellationNotification(event, reason);
+                        } catch (Exception e) {
+                                System.err.println("Failed to send cancellation email: " + e.getMessage());
+                        }
+                }
         }
 
         @Override
