@@ -30,7 +30,7 @@
                     <li class="breadcrumb-item active" aria-current="page">Sự kiện</li>
                 </ol>
             </nav>
-            <h1 class="display-6 fw-bold mb-0">Khám phá Sự kiện</h1>
+            <h1 class="display-6 fw-bold mb-0 text-white">Khám phá Sự kiện</h1>
         </div>
     </section>
 
@@ -66,7 +66,7 @@
 
                             <!-- Category Filter -->
                             <div class="mb-4">
-                                <h6 class="fw-bold mb-3">Danh mục</h6>
+                                <h6 class="fw-bold mb-3 text-white">Danh mục</h6>
                                 <select class="form-select" name="category">
                                     <option value="" th:selected="${param.category == null}">Tất cả danh mục</option>
                                     <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"
@@ -78,7 +78,7 @@
 
                             <!-- Location Filter -->
                             <div class="mb-4">
-                                <h6 class="fw-bold mb-3">Địa điểm</h6>
+                                <h6 class="fw-bold mb-3 text-white">Địa điểm</h6>
                                 <select class="form-select" name="location">
                                     <option value="" th:selected="${param.location == null}">Toàn quốc</option>
 
@@ -303,7 +303,7 @@
                     <!-- Sidebar sự kiện gần -->
                     <div class="mt-5">
                         <div class="mb-4">
-                            <h4 class="fw-bold mb-1">
+                            <h4 class="fw-bold mb-1 text-white">
                                 <i class="bi bi-geo-fill text-white"></i>
                                 Sự kiện gần bạn
                             </h4>
