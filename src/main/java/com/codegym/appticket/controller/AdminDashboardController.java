@@ -54,6 +54,7 @@ public class AdminDashboardController {
         // 6. Pending Events Table (Top 5)
         model.addAttribute("pendingEvents", eventRepository.findByStatus(EventStatus.PENDING, PageRequest.of(0, 5)));
 
+        model.addAttribute("activeNav", "dashboard");
         return "admin/dashboard";
     }
 }

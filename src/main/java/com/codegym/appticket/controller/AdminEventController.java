@@ -80,6 +80,7 @@ public class AdminEventController {
         // Pass EventStatus values for filter dropdown
         model.addAttribute("statuses", EventStatus.values());
 
+        model.addAttribute("activeNav", "events");
         return "admin/event/list";
     }
 

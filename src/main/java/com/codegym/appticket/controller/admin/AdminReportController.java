@@ -129,7 +129,7 @@ public class AdminReportController {
         model.addAttribute("endDate", endDate);
         model.addAttribute("preset", preset != null ? preset : "custom");
         model.addAttribute("compareType", compareType != null ? compareType : "previous_period");
-        model.addAttribute("currentPage", "reports");
+        model.addAttribute("activeNav", "reports");
 
         return "admin/report/index";
     }

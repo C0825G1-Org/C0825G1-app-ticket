@@ -13,6 +13,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- JQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <th:block th:replace="~{common/styles :: styles}"></th:block>
 
     <!-- CSRF Token -->
     <meta name="_csrf" th:content="${_csrf.token}" />
@@ -99,7 +102,7 @@
 
     <!-- Navbar -->
     <!-- Navbar -->
-    <div th:replace="~{common/header :: public-navbar}"></div>
+    <div th:replace="~{common/header :: public-navbar-dark}"></div>
 
     <!-- Main Content -->
     <div class="container-xl py-5" style="margin-top: 80px;">
@@ -458,6 +461,8 @@
             });
         });
     </script>
+
+    <footer th:replace="~{common/footer :: footer-dark}"></footer>
 </body>
 
 </html>
