@@ -221,48 +221,18 @@
                                     </div>
                                     <div class="card-body">
                                         <!-- Check-in Stats -->
-                                        <div class="row g-3 mb-4">
-                                            <div class="col-md-4">
+                                        <div class="row g-3 mb-4 justify-content-center">
+                                            <div class="col-md-6 col-lg-4">
                                                 <div
-                                                    class="p-3 bg-light rounded-3 border h-100 d-flex align-items-center justify-content-between">
-                                                    <div>
+                                                    class="p-3 bg-light rounded-3 border h-100 d-flex align-items-center justify-content-center gap-3">
+                                                    <div class="icon-shape bg-success text-white rounded-circle shadow-sm"
+                                                        style="width: 48px; height: 48px; display:flex; align-items:center; justify-content:center;">
+                                                        <i class="bi bi-check-lg fs-4"></i>
+                                                    </div>
+                                                    <div class="text-center text-md-start">
                                                         <div class="small text-muted fw-bold text-uppercase">Đã check-in
                                                         </div>
                                                         <h3 class="fw-bold mb-0" id="stat-checkin-checked">0</h3>
-                                                    </div>
-                                                    <div class="icon-shape bg-success text-white rounded-circle shadow-sm"
-                                                        style="width: 40px; height: 40px; display:flex; align-items:center; justify-content:center;">
-                                                        <i class="bi bi-check-lg fs-5"></i>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div
-                                                    class="p-3 bg-light rounded-3 border h-100 d-flex align-items-center justify-content-between">
-                                                    <div>
-                                                        <div class="small text-muted fw-bold text-uppercase">Tổng vé hợp
-                                                            lệ</div>
-                                                        <h3 class="fw-bold mb-0 text-primary" id="stat-checkin-total">0
-                                                        </h3>
-                                                    </div>
-                                                    <div class="icon-shape bg-primary text-white rounded-circle shadow-sm"
-                                                        style="width: 40px; height: 40px; display:flex; align-items:center; justify-content:center;">
-                                                        <i class="bi bi-ticket-perforated fs-5"></i>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div
-                                                    class="p-3 bg-light rounded-3 border h-100 d-flex align-items-center justify-content-between">
-                                                    <div>
-                                                        <div class="small text-muted fw-bold text-uppercase">Vé không
-                                                            hợp lệ</div>
-                                                        <h3 class="fw-bold mb-0 text-danger" id="stat-checkin-invalid">0
-                                                        </h3>
-                                                    </div>
-                                                    <div class="icon-shape bg-danger text-white rounded-circle shadow-sm"
-                                                        style="width: 40px; height: 40px; display:flex; align-items:center; justify-content:center;">
-                                                        <i class="bi bi-x-lg fs-5"></i>
                                                     </div>
                                                 </div>
                                             </div>
@@ -556,9 +526,7 @@
                         fetch(`/api/organizer/events/${eventId}/check-in-stats`)
                             .then(res => res.json())
                             .then(data => {
-                                document.getElementById('stat-checkin-total').textContent = (data.totalTickets || 0).toLocaleString();
                                 document.getElementById('stat-checkin-checked').textContent = (data.checkedIn || 0).toLocaleString();
-                                document.getElementById('stat-checkin-invalid').textContent = invalidCount;
                             })
                             .catch(err => console.error(err));
                     }
@@ -685,7 +653,8 @@
                                 } else {
                                     playErrorSound();
                                     invalidCount++;
-                                    document.getElementById('stat-checkin-invalid').textContent = invalidCount;
+                                    invalidCount++;
+                                    // document.getElementById('stat-checkin-invalid').textContent = invalidCount; (Removed)
                                     let color = 'text-danger';
                                     let icon = 'bi-x-circle-fill';
                                     if (resp.status === 'ALREADY_CHECKED_IN') {
