@@ -195,9 +195,15 @@
                                 <!-- Ticket List with Scroll -->
                                 <div class="ticket-list mb-3">
                                     <div th:each="ticket : ${ticketTypes}"
-                                        th:class="'ticket-item border border-2 rounded-3 p-2 mb-2 ' + (${ticket.availableQuantity <= 0} ? 'border-danger opacity-75' : 'border-light')"
+                                        th:class="'ticket-item border border-2 rounded-3 p-2 mb-2 ' + (${ticket.availableQuantity <= 0} ? 'sold-out border-danger' : 'border-light')"
                                         th:data-occurrence-id="${ticket.occurrenceId}"
-                                        th:data-start-time="${ticket.startTime}" style="display: none;">
+                                        th:data-start-time="${ticket.startTime}"
+                                        style="display: none; position: relative;">
+
+                                        <!-- Sold Out Overlay Badge -->
+                                        <div th:if="${ticket.availableQuantity <= 0}" class="ticket-badge-soldout">
+                                            <i class="bi bi-x-circle me-2"></i>Vé đã hết
+                                        </div>
                                         <div class="d-flex justify-content-between align-items-start mb-2">
                                             <div class="flex-grow-1">
                                                 <h6 class="fw-bold mb-1 small" th:text="${ticket.name}">Vé Phổ thông
@@ -306,7 +312,30 @@
 
     <!-- Ticket Selection JS -->
     <script th:inline="javascript">
-        const ticketQuantities = {};
+        // Get event ID from URL for storage key
+        const pathParts = window.location.pathname.split('/');
+        const eventId = pathParts[pathParts.length - 1];
+        const storageKey = 'ticketQuantities_' + eventId;
+
+        // Load ticket quantities from sessionStorage or initialize empty object
+        let ticketQuantities = {};
+        try {
+            const saved = sessionStorage.getItem(storageKey);
+            if (saved) {
+                ticketQuantities = JSON.parse(saved);
+            }
+        } catch (e) {
+            console.error('Error loading ticket quantities:', e);
+        }
+
+        // Save ticket quantities to sessionStorage
+        function saveTicketQuantities() {
+            try {
+                sessionStorage.setItem(storageKey, JSON.stringify(ticketQuantities));
+            } catch (e) {
+                console.error('Error saving ticket quantities:', e);
+            }
+        }
 
         // Get event status and occurrences data from Thymeleaf
         /*[# th:if="${event != null}"]*/
@@ -315,15 +344,34 @@
 
         // Occurrence selection handler
         const occurrenceSelect = document.getElementById('occurrenceSelect');
+
+        // Restore selected occurrence from sessionStorage
+        const savedOccurrence = sessionStorage.getItem('selectedOccurrence_' + eventId);
+        if (savedOccurrence && occurrenceSelect && occurrenceSelect.tagName === 'SELECT') {
+            occurrenceSelect.value = savedOccurrence;
+        }
+
         if (occurrenceSelect && occurrenceSelect.tagName === 'SELECT') {
             occurrenceSelect.addEventListener('change', function () {
                 const selectedOccurrenceId = this.value;
+                // Save selected occurrence
+                if (selectedOccurrenceId) {
+                    sessionStorage.setItem('selectedOccurrence_' + eventId, selectedOccurrenceId);
+                } else {
+                    sessionStorage.removeItem('selectedOccurrence_' + eventId);
+                }
                 filterTicketsByOccurrence(selectedOccurrenceId);
                 checkBookingAvailability(selectedOccurrenceId);
             });
 
-            // Show "please select" message initially
-            document.getElementById('noTicketsMessage').style.display = 'block';
+            // Show "please select" message initially if no occurrence selected
+            if (!occurrenceSelect.value) {
+                document.getElementById('noTicketsMessage').style.display = 'block';
+            } else {
+                // Restore the previously selected occurrence
+                filterTicketsByOccurrence(occurrenceSelect.value);
+                checkBookingAvailability(occurrenceSelect.value);
+            }
         } else if (occurrenceSelect) {
             // Single occurrence - show all tickets for that occurrence
             const singleOccurrenceId = occurrenceSelect.value;
@@ -387,7 +435,7 @@
                 return;
             }
 
-            // Show tickets for selected occurrence
+            // Show tickets for selected occurrence (including sold-out tickets with dimmed styling)
             ticketItems.forEach(item => {
                 const itemOccurrenceId = item.dataset.occurrenceId;
                 if (itemOccurrenceId === occurrenceId) {
@@ -469,8 +517,28 @@
         });
 
         function updateDisplay(ticketId) {
-            document.getElementById('qty-' + ticketId).textContent = ticketQuantities[ticketId] || 0;
+            const qtyElement = document.getElementById('qty-' + ticketId);
+            if (qtyElement) {
+                qtyElement.textContent = ticketQuantities[ticketId] || 0;
+            }
+            saveTicketQuantities(); // Save whenever display updates
         }
+
+        // Restore display for saved quantities after page loads
+        function restoreDisplays() {
+            for (const [ticketId, quantity] of Object.entries(ticketQuantities)) {
+                if (quantity > 0) {
+                    const qtyElement = document.getElementById('qty-' + ticketId);
+                    if (qtyElement) {
+                        qtyElement.textContent = quantity;
+                    }
+                }
+            }
+            updateTotal();
+        }
+
+        // Call restore after DOM is ready
+        setTimeout(restoreDisplays, 100);
 
         function updateTotal() {
             let total = 0;
@@ -526,6 +594,11 @@
             }
 
             if (hasTickets) {
+                // Clear the saved state before navigating to booking
+                // This prevents the selections from reappearing if user comes back
+                sessionStorage.removeItem(storageKey);
+                sessionStorage.removeItem('selectedOccurrence_' + eventId);
+
                 window.location.href = '/bookings/book/' + eventId + '?' + params.toString();
             }
         });
