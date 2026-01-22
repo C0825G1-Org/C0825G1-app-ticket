@@ -49,6 +49,8 @@
                         </div>
 
                         <form id="createEventForm" method="POST">
+                            <!-- Hidden Status Input -->
+                            <input type="hidden" name="status" id="eventStatus" value="PENDING">
 
                             <!-- STEP 1: EVENT INFO -->
                             <div id="step-info">
@@ -117,7 +119,7 @@
 
 
                                 <!-- Next Button for Step 1 -->
-                                <div class="d-flex justify-content-end mb-5">
+                                <div class="d-flex justify-content-end mb-5 gap-3">
                                     <button type="button" class="btn btn-primary btn-lg rounded-3 px-5 fw-bold"
                                         onclick="nextStep()">
                                         Tiếp tục <i class="bi bi-arrow-right ms-2"></i>
@@ -213,7 +215,12 @@
                                         onclick="prevStep()">
                                         <i class="bi bi-arrow-left me-2"></i> Quay lại
                                     </button>
+                                    <button type="submit" class="btn btn-outline-secondary btn-lg rounded-3 px-4"
+                                        onclick="setDraft()">
+                                        <i class="bi bi-save me-2"></i> Lưu nháp
+                                    </button>
                                     <button type="submit" class="btn btn-gradient btn-lg rounded-3 px-5 fw-bold"
+                                        onclick="setPublish()"
                                         style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); border: none; color: white;">
                                         <i class="bi bi-check-lg me-2"></i> Tạo sự kiện
                                     </button>
@@ -262,7 +269,7 @@
                                         Toast.fire({ icon: 'warning', title: 'Tối đa 10 file.' });
                                         return;
                                     }
-                                    const submitBtn = this.querySelector('button[type="submit"]');
+                                    const submitBtn = e.submitter; // Get the specific button clicked
                                     const originalBtnText = submitBtn.innerHTML;
                                     setButtonLoading(submitBtn, 'Đang xử lý...');
 
@@ -348,7 +355,6 @@
 
                                 // Initialize
                                 showStep(1);
-                                addEventOccurrence();
                             });
 
                             // --- GLOBAL DEFINITIONS & API CONFIG ---
@@ -632,7 +638,16 @@
 
                             window.prevStep = function () { showStep(1); };
 
-
+                            window.setDraft = function () {
+                                document.getElementById('eventStatus').value = 'DRAFT';
+                                const form = document.getElementById('createEventForm');
+                                form.setAttribute('novalidate', 'novalidate');
+                            }
+                            window.setPublish = function () {
+                                document.getElementById('eventStatus').value = 'PENDING';
+                                const form = document.getElementById('createEventForm');
+                                form.removeAttribute('novalidate');
+                            }
                         </script>
                     </div>
                 </div>

@@ -195,14 +195,25 @@
                                 <!-- Ticket List with Scroll -->
                                 <div class="ticket-list mb-3">
                                     <div th:each="ticket : ${ticketTypes}"
-                                        class="ticket-item border border-2 border-light rounded-3 p-2 mb-2"
-                                        th:data-occurrence-id="${ticket.occurrenceId}" style="display: none;">
+                                        th:class="'ticket-item border border-2 rounded-3 p-2 mb-2 ' + (${ticket.availableQuantity <= 0} ? 'border-danger opacity-75' : 'border-light')"
+                                        th:data-occurrence-id="${ticket.occurrenceId}"
+                                        th:data-start-time="${ticket.startTime}" style="display: none;">
                                         <div class="d-flex justify-content-between align-items-start mb-2">
                                             <div class="flex-grow-1">
                                                 <h6 class="fw-bold mb-1 small" th:text="${ticket.name}">Vé Phổ thông
                                                     (GA)</h6>
-                                                <small class="text-muted">
+                                                <!-- Availability indicator with color coding -->
+                                                <small th:if="${ticket.availableQuantity > 10}" class="text-muted">
                                                     Còn <span th:text="${ticket.availableQuantity}">100</span> vé
+                                                </small>
+                                                <small
+                                                    th:if="${ticket.availableQuantity > 0 && ticket.availableQuantity <= 10}"
+                                                    class="text-warning fw-semibold">
+                                                    Chỉ còn <span th:text="${ticket.availableQuantity}">5</span> vé!
+                                                </small>
+                                                <small th:if="${ticket.availableQuantity <= 0}"
+                                                    class="text-danger fw-semibold">
+                                                    Hết vé
                                                 </small>
                                                 <!-- Show occurrence info for this ticket -->
                                                 <div class="mt-1">
@@ -228,7 +239,10 @@
 
                                         <div class="d-flex justify-content-between align-items-center">
                                             <small class="text-muted fw-semibold">Số lượng:</small>
-                                            <div class="d-flex align-items-center gap-2">
+
+                                            <!-- Show quantity controls if available -->
+                                            <div th:if="${ticket.availableQuantity > 0}"
+                                                class="d-flex align-items-center gap-2">
                                                 <button type="button"
                                                     class="qty-btn btn btn-sm btn-outline-secondary rounded-circle p-0 minus-btn"
                                                     th:data-ticket-id="${ticket.id}" th:data-price="${ticket.price}">
@@ -242,6 +256,19 @@
                                                     <i class="bi bi-plus"></i>
                                                 </button>
                                             </div>
+
+                                            <!-- Show 'Sold out' badge if no tickets available -->
+                                            <div th:if="${ticket.availableQuantity <= 0}">
+                                                <span class="badge bg-danger">Sold out</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Warning message when reaching max quantity -->
+                                        <div th:if="${ticket.availableQuantity > 0}"
+                                            class="max-qty-warning text-danger small mt-2"
+                                            th:id="'warning-' + ${ticket.id}" style="display: none;">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>
+                                            <span>Bạn đã đạt giới hạn số lượng vé có thể đặt</span>
                                         </div>
                                     </div>
 
@@ -278,8 +305,13 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Ticket Selection JS -->
-    <script>
+    <script th:inline="javascript">
         const ticketQuantities = {};
+
+        // Get event status and occurrences data from Thymeleaf
+        /*[# th:if="${event != null}"]*/
+        const eventStatus = /*[[${event.status}]]*/ 'APPROVED';
+        /*[/]*/
 
         // Occurrence selection handler
         const occurrenceSelect = document.getElementById('occurrenceSelect');
@@ -287,6 +319,7 @@
             occurrenceSelect.addEventListener('change', function () {
                 const selectedOccurrenceId = this.value;
                 filterTicketsByOccurrence(selectedOccurrenceId);
+                checkBookingAvailability(selectedOccurrenceId);
             });
 
             // Show "please select" message initially
@@ -295,6 +328,48 @@
             // Single occurrence - show all tickets for that occurrence
             const singleOccurrenceId = occurrenceSelect.value;
             filterTicketsByOccurrence(singleOccurrenceId);
+            checkBookingAvailability(singleOccurrenceId);
+        }
+
+        function checkBookingAvailability(occurrenceId) {
+            const bookBtn = document.getElementById('bookBtn');
+
+            if (!occurrenceId) {
+                // If no occurrence selected, use default behavior
+                return;
+            }
+
+            // Find the selected occurrence's start time from ticket items
+            const ticketItems = document.querySelectorAll('.ticket-item');
+            let occurrenceStartTime = null;
+
+            for (const item of ticketItems) {
+                if (item.dataset.occurrenceId === occurrenceId) {
+                    // Get the start time from the ticket item's data attribute
+                    occurrenceStartTime = item.dataset.startTime;
+                    break;
+                }
+            }
+
+            if (occurrenceStartTime) {
+                const now = new Date();
+                const startTime = new Date(occurrenceStartTime);
+                const hoursDifference = (startTime - now) / (1000 * 60 * 60); // Convert milliseconds to hours
+
+                if (hoursDifference < 3 && hoursDifference >= 0) {
+                    // Less than 3 hours before event starts - disable booking
+                    bookBtn.innerHTML = '<i class="bi bi-exclamation-circle me-2"></i>Sự kiện sắp bắt đầu';
+                    bookBtn.disabled = true;
+                    bookBtn.classList.remove('btn-primary');
+                    bookBtn.classList.add('btn-secondary');
+                } else {
+                    // More than 3 hours away or already started - enable booking
+                    bookBtn.innerHTML = '<i class="bi bi-ticket-perforated me-2"></i>Đặt vé ngay';
+                    bookBtn.classList.remove('btn-secondary');
+                    bookBtn.classList.add('btn-primary');
+                    // Button will be enabled/disabled based on ticket selection
+                }
+            }
         }
 
         function filterTicketsByOccurrence(occurrenceId) {
@@ -336,6 +411,7 @@
                 const ticketId = this.dataset.ticketId;
                 const price = parseFloat(this.dataset.price);
                 const max = parseInt(this.dataset.max);
+                const warningEl = document.getElementById('warning-' + ticketId);
 
                 if (!ticketQuantities[ticketId]) {
                     ticketQuantities[ticketId] = 0;
@@ -345,6 +421,29 @@
                     ticketQuantities[ticketId]++;
                     updateDisplay(ticketId);
                     updateTotal();
+
+                    // Hide warning if shown
+                    if (warningEl) {
+                        warningEl.style.display = 'none';
+                    }
+
+                    // Show warning if now at max
+                    if (ticketQuantities[ticketId] >= max && warningEl) {
+                        warningEl.style.display = 'block';
+                        // Auto-hide after 3 seconds
+                        setTimeout(() => {
+                            warningEl.style.display = 'none';
+                        }, 3000);
+                    }
+                } else {
+                    // Already at max - show warning
+                    if (warningEl) {
+                        warningEl.style.display = 'block';
+                        // Auto-hide after 3 seconds
+                        setTimeout(() => {
+                            warningEl.style.display = 'none';
+                        }, 3000);
+                    }
                 }
             });
         });
@@ -354,11 +453,17 @@
             btn.addEventListener('click', function () {
                 const ticketId = this.dataset.ticketId;
                 const price = parseFloat(this.dataset.price);
+                const warningEl = document.getElementById('warning-' + ticketId);
 
                 if (ticketQuantities[ticketId] && ticketQuantities[ticketId] > 0) {
                     ticketQuantities[ticketId]--;
                     updateDisplay(ticketId);
                     updateTotal();
+
+                    // Hide warning when decreasing quantity
+                    if (warningEl) {
+                        warningEl.style.display = 'none';
+                    }
                 }
             });
         });
@@ -379,7 +484,11 @@
             document.getElementById('totalPrice').textContent =
                 total > 0 ? total.toLocaleString('vi-VN') + 'đ' : '0đ';
 
-            document.getElementById('bookBtn').disabled = total === 0;
+            // Only enable button if there are tickets selected AND button is not disabled for time restriction
+            const bookBtn = document.getElementById('bookBtn');
+            if (!bookBtn.classList.contains('btn-secondary')) {
+                bookBtn.disabled = total === 0;
+            }
         }
 
         // Form submit

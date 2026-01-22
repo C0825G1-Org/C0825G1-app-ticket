@@ -86,5 +86,29 @@ public interface IBookingRepository extends JpaRepository<Booking, Long> {
   List<Object[]> getBookingStatsByMonth(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
   // Find expired pending bookings (for auto-cancellation)
+  // Find expired pending bookings (for auto-cancellation)
   List<Booking> findByStatusAndBookingTimeBefore(BookingStatus status, LocalDateTime threshold);
+
+  // Recent Bookings for Dashboard
+  @Query(value = """
+      SELECT
+        b.id as id,
+        b.transaction_code as transactionCode,
+        u.full_name as userFullName,
+        e.title as eventTitle,
+        GROUP_CONCAT(tt.name SEPARATOR ', ') as ticketTypes,
+        b.booking_time as bookingTime,
+        COALESCE(SUM(bd.quantity * tt.price), 0) as totalPrice
+      FROM bookings b
+      JOIN users u ON b.user_id = u.id
+      JOIN booking_details bd ON bd.booking_id = b.id
+      JOIN ticket_types tt ON bd.ticket_type_id = tt.id
+      JOIN event_occurrences eo ON tt.event_occurrence_id = eo.id
+      JOIN events e ON eo.event_id = e.id
+      WHERE b.status = :#{#status.name()}
+      GROUP BY b.id, b.transaction_code, u.full_name, e.title, b.booking_time
+      ORDER BY b.booking_time DESC
+      LIMIT 3
+      """, nativeQuery = true)
+  List<com.codegym.appticket.dto.admin.RecentBookingDTO> findRecentBookings(@Param("status") BookingStatus status);
 }

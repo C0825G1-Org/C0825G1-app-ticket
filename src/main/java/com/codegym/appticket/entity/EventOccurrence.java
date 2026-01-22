@@ -8,9 +8,7 @@ import java.util.ArrayList;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "event_occurrences", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "location_id", "start_time" }, name = "unique_event_slot")
-})
+@Table(name = "event_occurrences")
 @Getter
 @Setter
 @NoArgsConstructor

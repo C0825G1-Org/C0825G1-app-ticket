@@ -80,6 +80,24 @@ public class VietnamProvinceCoordinates {
             .replaceAll("^(Thành phố|Tỉnh|TP\\.)\\s+", "")
             .trim();
         
-        return COORDS.get(normalized);
+        // Thử tìm exact match
+        Double[] coords = COORDS.get(normalized);
+        if (coords != null) {
+            return coords;
+        }
+        
+        // Fallback: Xử lý các tên viết tắt/biến thể
+        if (normalized.equalsIgnoreCase("Huế")) {
+            return COORDS.get("Thừa Thiên Huế");
+        }
+        if (normalized.equalsIgnoreCase("HCM") || normalized.equalsIgnoreCase("TPHCM") || 
+            normalized.equalsIgnoreCase("Sài Gòn")) {
+            return COORDS.get("Hồ Chí Minh");
+        }
+        if (normalized.equalsIgnoreCase("Hải Phòng")) {
+            return COORDS.get("Hải Phòng");
+        }
+        
+        return null;
     }
 }

@@ -119,26 +119,32 @@ public class AdminEventController {
         return "admin/event/create";
     }
 
+    private final org.springframework.validation.SmartValidator validator;
+
     @PostMapping("/create")
     @ResponseBody
     public ResponseEntity<?> createEvent(
-            @Valid @ModelAttribute("eventCreateDTO") EventCreateDTO dto,
+            @ModelAttribute("eventCreateDTO") EventCreateDTO dto,
             BindingResult bindingResult) {
 
         Map<String, Object> response = new HashMap<>();
 
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = new HashMap<>();
-            for (FieldError error : bindingResult.getFieldErrors()) {
-                errors.put(error.getField(), error.getDefaultMessage());
+        // Manual validation if NOT Draft
+        if (dto.getStatus() != EventStatus.DRAFT) {
+            validator.validate(dto, bindingResult);
+            if (bindingResult.hasErrors()) {
+                Map<String, String> errors = new HashMap<>();
+                for (FieldError error : bindingResult.getFieldErrors()) {
+                    errors.put(error.getField(), error.getDefaultMessage());
+                }
+                response.put("status", "validation_error");
+                response.put("errors", errors);
+                return ResponseEntity.badRequest().body(response);
             }
-            response.put("status", "validation_error");
-            response.put("errors", errors);
-            return ResponseEntity.badRequest().body(response);
         }
 
         try {
-            dto.setStatus(EventStatus.APPROVED);
+            // Priority is set in Service using dto status.
             EventDTO createdEvent = eventService.create(dto);
             response.put("status", "success");
             response.put("message", "Tạo sự kiện thành công!");
@@ -169,7 +175,6 @@ public class AdminEventController {
             }
 
             if (eventDTO.getEventMedias() != null) {
-                // Ánh xạ media vào các trường URL cụ thể
                 List<String> galleryUrls = new ArrayList<>();
                 for (EventMediaDTO media : eventDTO.getEventMedias()) {
                     if (media.getMediaPurpose() == MediaPurpose.BANNER) {
@@ -183,7 +188,6 @@ public class AdminEventController {
                     }
                 }
                 updateDTO.setGalleryUrls(galleryUrls);
-                // Giữ eventMedias nếu view cần, nhưng view đã refactor sử dụng URL
                 updateDTO.setEventMedias(new ArrayList<>(eventDTO.getEventMedias()));
             }
 
@@ -206,19 +210,23 @@ public class AdminEventController {
     @ResponseBody
     public ResponseEntity<?> updateEvent(
             @PathVariable Long id,
-            @Valid @ModelAttribute("eventUpdateDTO") EventUpdateDTO dto,
+            @ModelAttribute("eventUpdateDTO") EventUpdateDTO dto,
             BindingResult bindingResult) {
 
         Map<String, Object> response = new HashMap<>();
 
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = new HashMap<>();
-            for (FieldError error : bindingResult.getFieldErrors()) {
-                errors.put(error.getField(), error.getDefaultMessage());
+        // Manual validation if NOT Draft
+        if (dto.getStatus() != EventStatus.DRAFT) {
+            validator.validate(dto, bindingResult);
+            if (bindingResult.hasErrors()) {
+                Map<String, String> errors = new HashMap<>();
+                for (FieldError error : bindingResult.getFieldErrors()) {
+                    errors.put(error.getField(), error.getDefaultMessage());
+                }
+                response.put("status", "validation_error");
+                response.put("errors", errors);
+                return ResponseEntity.badRequest().body(response);
             }
-            response.put("status", "validation_error");
-            response.put("errors", errors);
-            return ResponseEntity.badRequest().body(response);
         }
 
         try {
@@ -227,6 +235,10 @@ public class AdminEventController {
             response.put("message", "Cập nhật sự kiện thành công!");
             response.put("redirectUrl", "/admin/events");
             return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         } catch (RuntimeException e) {
             response.put("status", "error");
             response.put("message", e.getMessage());
@@ -240,8 +252,13 @@ public class AdminEventController {
     public ResponseEntity<?> approveEvent(@PathVariable Long id) {
         try {
             eventService.approve(id);
-            // Optionally notification logic
             return ResponseEntity.ok(Map.of("message", "Đã duyệt sự kiện thành công!", "status", "success"));
+        } catch (IllegalArgumentException e) {
+            // Validation error -> Return special status to frontend to redirect
+            return ResponseEntity.badRequest().body(Map.of(
+                    "status", "incomplete_draft",
+                    "message", "Bạn cần hoàn thiện sự kiện trước khi công khai.",
+                    "redirectUrl", "/admin/events/edit/" + id));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", e.getMessage(), "status", "error"));
@@ -285,5 +302,44 @@ public class AdminEventController {
             response.put("message", "Lỗi: " + e.getMessage());
         }
         return response;
+    }
+
+    @PostMapping("/{id}/duplicate")
+    @ResponseBody
+    public ResponseEntity<?> duplicateEvent(@PathVariable Long id) {
+        try {
+            EventDTO newEvent = eventService.duplicate(id);
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "message", "Nhân bản sự kiện thành công!",
+                    "redirectUrl", "/admin/events/edit/" + newEvent.getId()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", "error", "message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/bulk-delete")
+    @ResponseBody
+    public ResponseEntity<?> bulkDeleteEvents(@RequestBody List<Long> ids) {
+        try {
+            eventService.bulkDelete(ids);
+            return ResponseEntity.ok(Map.of("status", "success", "message", "Đã xóa các sự kiện đã chọn!"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", "error", "message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/bulk-approve")
+    @ResponseBody
+    public ResponseEntity<?> bulkApproveEvents(@RequestBody List<Long> ids) {
+        try {
+            eventService.bulkApprove(ids);
+            return ResponseEntity.ok(Map.of("status", "success", "message", "Đã duyệt các sự kiện đã chọn!"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", "error", "message", e.getMessage()));
+        }
     }
 }

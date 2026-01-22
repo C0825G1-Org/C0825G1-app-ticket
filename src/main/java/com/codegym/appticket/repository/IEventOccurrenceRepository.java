@@ -19,4 +19,10 @@ public interface IEventOccurrenceRepository extends JpaRepository<EventOccurrenc
             @Param("locationId") Long locationId,
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime);
+    
+    /**
+     * Count how many occurrences reference a specific location
+     * Used for orphan location cleanup
+     */
+    long countByLocation(com.codegym.appticket.entity.Location location);
 }

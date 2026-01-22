@@ -42,12 +42,16 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
+import jakarta.persistence.EntityManager;
 
 @Service
 @RequiredArgsConstructor
@@ -67,6 +71,8 @@ public class EventService implements IEventService {
         private final com.codegym.appticket.util.ProvinceNameMapper provinceNameMapper;
         private final IEventCancellationHistoryRepository eventCancellationHistoryRepository;
         private final com.codegym.appticket.service.IEmailService emailService;
+        private final jakarta.persistence.EntityManager entityManager;
+        private final com.codegym.appticket.repository.IBookingDetailRepository bookingDetailRepository;
 
         @Override
         @Transactional(readOnly = true)
@@ -166,7 +172,9 @@ public class EventService implements IEventService {
                 boolean isAdminOrStaff = auth.getAuthorities().stream()
                                 .anyMatch(a -> a.getAuthority().equals("ADMIN") || a.getAuthority().equals("STAFF"));
 
-                if (isAdminOrStaff) {
+                if (dto.getStatus() == EventStatus.DRAFT) {
+                        event.setStatus(EventStatus.DRAFT);
+                } else if (isAdminOrStaff) {
                         event.setStatus(EventStatus.APPROVED);
                 } else {
                         event.setStatus(EventStatus.PENDING);
@@ -175,7 +183,9 @@ public class EventService implements IEventService {
 
                 // Validate Business Rules
                 // Validate Business Rules
-                validateBusinessRules(dto.getEventOccurrences(), false);
+                if (event.getStatus() != EventStatus.DRAFT) {
+                        validateBusinessRules(dto.getEventOccurrences(), false);
+                }
                 // Validation logic needs to change to iterate per occurrence but for now
                 // skipping deep validation
 
@@ -285,7 +295,6 @@ public class EventService implements IEventService {
                                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
                 // Validate Business Rules
-                // Validate Business Rules
                 validateBusinessRules(dto.getEventOccurrences(), true);
 
                 EventCategory category = eventCategoryRepository.findById(dto.getCategoryId())
@@ -295,7 +304,9 @@ public class EventService implements IEventService {
                 event.setTitle(dto.getTitle());
                 event.setDescription(dto.getDescription());
                 event.setCategory(category);
-                event.setStatus(dto.getStatus());
+                if (dto.getStatus() != null) {
+                        event.setStatus(dto.getStatus());
+                }
 
                 if (dto.getEventOccurrences() != null && !dto.getEventOccurrences().isEmpty()) {
                         EventOccurrenceDTO firstOcc = dto.getEventOccurrences().get(0);
@@ -347,7 +358,9 @@ public class EventService implements IEventService {
                 currentOccurrences.removeIf(occ -> !incomingOccurrenceIds.contains(occ.getId()));
 
                 // 2. Cập nhật hoặc Thêm mới
+                Set<Location> potentialOrphanLocations = new HashSet<>();
                 for (EventOccurrenceDTO occDTO : incomingOccurrences) {
+
                         EventOccurrence target = null;
                         if (occDTO.getId() != null) {
                                 target = currentOccurrences.stream()
@@ -363,9 +376,17 @@ public class EventService implements IEventService {
                                 isNew = true;
                         }
 
+                        // Track old location before updating (for cleanup later)
+                        if (!isNew && target.getLocation() != null) {
+                                potentialOrphanLocations.add(target.getLocation());
+                        }
+
                         target.setStartTime(occDTO.getStartTime());
                         target.setEndTime(occDTO.getEndTime());
-                        target.setLocation(getOrCreateLocation(occDTO));
+                        Location newLocation = getOrCreateLocation(occDTO);
+                        target.setLocation(newLocation);
+                        // Remove new location from orphan set (in case it's being reused)
+                        potentialOrphanLocations.remove(newLocation);
 
                         // Update Tickets specific to this occurrence
                         if (occDTO.getTicketTypes() != null) {
@@ -399,6 +420,21 @@ public class EventService implements IEventService {
                                                 tTarget.setEventOccurrence(target);
                                                 currentTickets.add(tTarget);
                                         }
+
+                                        // VALIDATION: Prevent reducing quantity below sold quantity
+                                        if (tTarget.getId() != null) {
+                                                Long soldCount = bookingDetailRepository
+                                                                .countSoldTicketsByTicketTypeId(tTarget.getId());
+                                                if (tDTO.getQuantity() < soldCount) {
+                                                        throw new IllegalArgumentException(
+                                                                        "Không thể giảm số lượng vé '" + tDTO.getName()
+                                                                                        + "' xuống "
+                                                                                        + tDTO.getQuantity()
+                                                                                        + " vì đã bán " + soldCount
+                                                                                        + " vé.");
+                                                }
+                                        }
+
                                         tTarget.setName(tDTO.getName());
                                         tTarget.setPrice(tDTO.getPrice());
                                         tTarget.setQuantity(tDTO.getQuantity());
@@ -454,7 +490,17 @@ public class EventService implements IEventService {
                 }
 
                 Event updatedEvent = eventRepository.save(event);
-                return convertToDTO(updatedEvent);
+                // Cleanup orphaned locations before flushing
+                cleanupOrphanLocations(potentialOrphanLocations);
+                // Flush changes to DB and clear persistence context to avoid stale data
+                entityManager.flush();
+                entityManager.clear();
+
+                // Re-fetch event to ensure all associations are fresh from DB
+                Event refreshedEvent = eventRepository.findById(updatedEvent.getId())
+                        .orElseThrow(() -> new RuntimeException("Event not found after update"));
+
+                return convertToDTO(refreshedEvent);
         }
 
         private void removeMediaByPurpose(Event event, MediaPurpose purpose) {
@@ -578,39 +624,85 @@ public class EventService implements IEventService {
         }
 
         private Location getOrCreateLocation(EventOccurrenceDTO occDTO) {
-                // 1. Xử lý Tỉnh/Thành phố
-                Province province = provinceRepository
-                                .findById(occDTO.getProvinceCode())
-                                .orElseGet(() -> {
-                                        Province newProv = new Province();
-                                        newProv.setCode(occDTO.getProvinceCode());
-                                        newProv.setName(occDTO.getProvinceName());
-                                        return provinceRepository.save(newProv);
-                                });
+            // 1. Xử lý Tỉnh/Thành phố
+            Province province = provinceRepository
+                    .findById(occDTO.getProvinceCode())
+                    .orElseGet(() -> {
+                            Province newProv = new Province();
+                            newProv.setCode(occDTO.getProvinceCode());
+                            newProv.setName(occDTO.getProvinceName());
+                            return provinceRepository.save(newProv);
+                    });
 
-                // 2. Xử lý Phường/Xã
-                Ward ward = wardRepository
-                                .findById(occDTO.getWardCode())
-                                .orElseGet(() -> {
-                                        Ward newWard = new Ward();
-                                        newWard.setCode(occDTO.getWardCode());
-                                        newWard.setName(occDTO.getWardName());
-                                        newWard.setProvince(province);
-                                        return wardRepository.save(newWard);
-                                });
+            // 2. Xử lý Phường/Xã
+            Ward ward = wardRepository
+                    .findById(occDTO.getWardCode())
+                    .orElseGet(() -> {
+                            Ward newWard = new Ward();
+                            newWard.setCode(occDTO.getWardCode());
+                            newWard.setName(occDTO.getWardName());
+                            newWard.setProvince(province);
+                            return wardRepository.save(newWard);
+                    });
 
-                return locationRepository
-                                .findByWardCodeAndAddressDetail(
-                                                occDTO.getWardCode(),
-                                                occDTO.getAddressDetail())
-                                .orElseGet(() -> {
-                                        Location newLoc = new Location();
-                                        newLoc.setWard(ward);
-                                        newLoc.setAddressDetail(
-                                                        occDTO.getAddressDetail());
-                                        newLoc.setMapLink(occDTO.getMapLink());
-                                        return locationRepository.saveAndFlush(newLoc);
-                                });
+            // 3. Tìm hoặc tạo Location
+            Location location = locationRepository
+                    .findByWardCodeAndAddressDetail(occDTO.getWardCode(), occDTO.getAddressDetail())
+                    .orElseGet(() -> {
+                            Location newLoc = new Location();
+                            newLoc.setWard(ward);
+                            newLoc.setAddressDetail(occDTO.getAddressDetail());
+                            newLoc.setMapLink(occDTO.getMapLink());
+                            return newLoc; // CHƯA save tại đây
+                    });
+
+            // 4. Populate coordinates nếu chưa có
+            if (location.getLatitude() == null || location.getLongitude() == null) {
+                    try {
+                        String provinceName = ward.getProvince().getName();
+                        System.out.println("📍 Attempting to geocode for province: " + provinceName + " (ward: " + ward.getCode() + ")");
+
+                        Double[] coords = geocodingService.getCoordinates(provinceName);
+
+                        if (coords != null && coords.length == 2) {
+                                location.setLatitude(coords[0]);
+                                location.setLongitude(coords[1]);
+                                System.out.println("✅ Successfully set coordinates: lat=" + coords[0] + ", lon=" + coords[1]);
+                        } else {
+                                System.err.println("⚠️ Geocoding returned null or invalid coordinates for province: " + provinceName);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("❌ Error populating coordinates for ward " + ward.getCode() + ": " + e.getMessage());
+                        e.printStackTrace();
+                    }
+            }
+
+            // 5. Save và trả về (cho cả location mới và cũ nếu cập nhật lat/lon)
+            return locationRepository.saveAndFlush(location);
+        }
+
+        private void cleanupOrphanLocations(Set<Location> potentialOrphans) {
+                if (potentialOrphans == null || potentialOrphans.isEmpty()) {
+                        return;
+                }
+
+                int deletedCount = 0;
+                for (Location location : potentialOrphans) {
+                        // Check if this location is still being used by any occurrence
+                        long referenceCount = eventOccurrenceRepository.countByLocation(location);
+
+                        if (referenceCount == 0) {
+                                // No occurrences reference this location anymore - safe to delete
+                                locationRepository.delete(location);
+                                deletedCount++;
+                                System.out.println("🗑️ Deleted orphan location ID: " + location.getId() +
+                                                " (ward: " + location.getWard().getCode() + ", address: " + location.getAddressDetail() + ")");
+                        }
+                }
+
+                if (deletedCount > 0) {
+                        System.out.println("✅ Cleanup completed: " + deletedCount + " orphan location(s) deleted");
+                }
         }
 
         @Override
@@ -623,6 +715,82 @@ public class EventService implements IEventService {
         public void approve(Long id) {
                 Event event = eventRepository.findById(id)
                                 .orElseThrow(() -> new RuntimeException("Event not found with id " + id));
+
+                // VALIDATION: Cannot approve if data is missing
+                if (event.getTitle() == null || event.getTitle().trim().isEmpty()) {
+                        throw new IllegalArgumentException("Tiêu đề sự kiện không được để trống.");
+                }
+                if (event.getDescription() == null || event.getDescription().trim().isEmpty()) {
+                        throw new IllegalArgumentException("Mô tả sự kiện không được để trống.");
+                }
+                if (event.getCategory() == null) {
+                        throw new IllegalArgumentException("Sự kiện chưa có danh mục.");
+                }
+
+                // Check Banner
+                boolean hasBanner = event.getEventMedias().stream()
+                                .anyMatch(m -> m.getMediaPurpose() == MediaPurpose.BANNER);
+                if (!hasBanner) {
+                        throw new IllegalArgumentException("Sự kiện cần có ảnh bìa (Banner) để công khai.");
+                }
+
+                // Check Occurrences
+                if (event.getEventOccurrences() == null || event.getEventOccurrences().isEmpty()) {
+                        throw new IllegalArgumentException("Sự kiện cần có ít nhất một lịch trình.");
+                }
+
+                // Map Entity validation to DTO validation
+                List<EventOccurrenceDTO> occDTOs = event.getEventOccurrences().stream()
+                                .map(occ -> {
+                                        EventOccurrenceDTO dto = new EventOccurrenceDTO();
+                                        dto.setId(occ.getId());
+                                        dto.setStartTime(occ.getStartTime());
+                                        dto.setEndTime(occ.getEndTime());
+                                        // Map Tickets
+                                        if (occ.getTicketTypes() != null) {
+                                                List<TicketTypeDTO> tDTOs = occ.getTicketTypes().stream()
+                                                                .map(t -> {
+                                                                        TicketTypeDTO tDto = new TicketTypeDTO();
+                                                                        tDto.setId(t.getId());
+                                                                        tDto.setPrice(t.getPrice());
+                                                                        tDto.setQuantity(t.getQuantity());
+                                                                        return tDto;
+                                                                }).collect(Collectors.toList());
+                                                dto.setTicketTypes(tDTOs);
+                                        }
+                                        return dto;
+                                }).collect(Collectors.toList());
+
+                // Run business rules (Treat as "Update" but still enforce strict checks if
+                // rules
+                // dictate)
+                // Note: isUpdate=true allows bypassing "Lead Time > 3 days" for *existing*
+                // occurrences.
+                // If we want to strictly enforce 3-day rule on Publish, we might need to pass
+                // false?
+                // However, if I drafted it a week ago for next month, updating it now is fine.
+                // If I draft it today for tomorrow, and try to publish today -> should fail.
+                // Logic: validateBusinessRules checks (isUpdate || id==null)
+                // If id exists (it does for saved draft), isUpdate=true -> skips lead time
+                // check
+                // for that item.
+                // This might be a loophole for "Draft today for tomorrow" -> Save -> Publish.
+                // FIX: When "Publishing" a draft, we should treat it as a "New Launch"
+                // regarding
+                // lead time?
+                // Or maybe the 3-day rule is only for "Newly created slots".
+                // Let's stick to safe side: Pass `false` (isUpdate=false) to force checking
+                // dates
+                // against NOW + 3 days?
+                // NO, if I created draft 1 month ago for an event in 3 months. Now I publish (2
+                // months left).
+                // minTime = now + 3 days. StartTime = now + 60 days. Safe.
+                // If I created draft today for tomorrow. Publish today.
+                // minTime = tomorrow + 2 days. StartTime = tomorrow. Fail. Correct.
+                // So passing `false` effectively treats all occurrences as "New" for validation
+                // purposes.
+                validateBusinessRules(occDTOs, false);
+
                 event.setStatus(EventStatus.APPROVED);
                 eventRepository.save(event);
 
@@ -635,6 +803,63 @@ public class EventService implements IEventService {
                                 System.err.println("Failed to send approval email: " + e.getMessage());
                         }
                 }
+        }
+
+        @Override
+        @Transactional
+        public void submitForApproval(Long id) {
+                Event event = eventRepository.findById(id)
+                                .orElseThrow(() -> new RuntimeException("Sự kiện không tồn tại"));
+
+                // Only allow if Draft
+                if (event.getStatus() != EventStatus.DRAFT) {
+                        throw new IllegalArgumentException("Chỉ có thể gửi duyệt sự kiện đang ở trạng thái Nháp.");
+                }
+
+                // Validation (Strict)
+                if (event.getTitle() == null || event.getTitle().trim().isEmpty())
+                        throw new IllegalArgumentException("Tiêu đề không được để trống.");
+                if (event.getDescription() == null || event.getDescription().trim().isEmpty())
+                        throw new IllegalArgumentException("Mô tả không được để trống.");
+                if (event.getCategory() == null)
+                        throw new IllegalArgumentException("Sự kiện cần có danh mục.");
+
+                boolean hasBanner = event.getEventMedias().stream()
+                                .anyMatch(m -> m.getMediaPurpose() == MediaPurpose.BANNER);
+                if (!hasBanner)
+                        throw new IllegalArgumentException("Sự kiện cần có ảnh bìa (Banner).");
+
+                // Check Occurrences
+                if (event.getEventOccurrences() == null || event.getEventOccurrences().isEmpty()) {
+                        throw new IllegalArgumentException("Sự kiện cần có ít nhất một lịch trình.");
+                }
+
+                // Map Entity validation to DTO validation
+                List<EventOccurrenceDTO> occDTOs = event.getEventOccurrences().stream()
+                                .map(occ -> {
+                                        EventOccurrenceDTO dto = new EventOccurrenceDTO();
+                                        dto.setId(occ.getId());
+                                        dto.setStartTime(occ.getStartTime());
+                                        dto.setEndTime(occ.getEndTime());
+                                        // Map Tickets
+                                        if (occ.getTicketTypes() != null) {
+                                                List<TicketTypeDTO> tDTOs = occ.getTicketTypes().stream()
+                                                                .map(t -> {
+                                                                        TicketTypeDTO tDto = new TicketTypeDTO();
+                                                                        tDto.setId(t.getId());
+                                                                        tDto.setPrice(t.getPrice());
+                                                                        tDto.setQuantity(t.getQuantity());
+                                                                        return tDto;
+                                                                }).collect(Collectors.toList());
+                                                dto.setTicketTypes(tDTOs);
+                                        }
+                                        return dto;
+                                }).collect(Collectors.toList());
+
+                validateBusinessRules(occDTOs, false);
+
+                event.setStatus(EventStatus.PENDING);
+                eventRepository.save(event);
         }
 
         @Override
@@ -745,7 +970,7 @@ public class EventService implements IEventService {
 
         private void validateBusinessRules(List<EventOccurrenceDTO> occurrences, boolean isUpdate) {
                 if (occurrences == null || occurrences.isEmpty()) {
-                        throw new RuntimeException("Sự kiện cần có ít nhất một lịch trình.");
+                        throw new IllegalArgumentException("Sự kiện cần có ít nhất một lịch trình.");
                 }
 
                 LocalDateTime now = LocalDateTime.now();
@@ -755,12 +980,14 @@ public class EventService implements IEventService {
                 for (EventOccurrenceDTO occ : occurrences) {
                         // 1. Time Validation
                         if (occ.getStartTime() == null || occ.getEndTime() == null) {
-                                throw new RuntimeException("Thời gian bắt đầu và kết thúc không được để trống.");
+                                throw new IllegalArgumentException(
+                                                "Thời gian bắt đầu và kết thúc không được để trống.");
                         }
 
                         // Duration >= 30 minutes
                         if (occ.getEndTime().isBefore(occ.getStartTime().plusMinutes(30))) {
-                                throw new RuntimeException("Thời gian diễn ra sự kiện phải từ 30 phút trở lên.");
+                                throw new IllegalArgumentException(
+                                                "Thời gian diễn ra sự kiện phải từ 30 phút trở lên.");
                         }
 
                         // Lead Time > 3 days (Apply strict check for NEW occurrences)
@@ -768,7 +995,7 @@ public class EventService implements IEventService {
                         // If Update (isUpdate=true) -> Check only if it's a new occurrence (id == null)
                         boolean shouldCheckLeadTime = !isUpdate || (occ.getId() == null);
                         if (shouldCheckLeadTime && occ.getStartTime().isBefore(minStartTime)) {
-                                throw new RuntimeException(
+                                throw new IllegalArgumentException(
                                                 "Lịch trình phải được tạo trước thời gian diễn ra ít nhất 3 ngày để đảm bảo quy trình duyệt và bán vé.");
                         }
 
@@ -777,10 +1004,10 @@ public class EventService implements IEventService {
                                 for (TicketTypeDTO t : occ.getTicketTypes()) {
                                         if (t.getPrice() != null
                                                         && t.getPrice().compareTo(java.math.BigDecimal.ZERO) < 0) {
-                                                throw new RuntimeException("Giá vé không được âm.");
+                                                throw new IllegalArgumentException("Giá vé không được âm.");
                                         }
                                         if (t.getQuantity() != null && t.getQuantity() <= 0) {
-                                                throw new RuntimeException("Số lượng vé phải lớn hơn 0.");
+                                                throw new IllegalArgumentException("Số lượng vé phải lớn hơn 0.");
                                         }
                                 }
                         }
@@ -811,6 +1038,109 @@ public class EventService implements IEventService {
                                 System.err.println("Failed to send cancellation email: " + e.getMessage());
                         }
                 }
+        }
+
+        @Override
+        @Transactional
+        public EventDTO duplicate(Long originalId) {
+                Event original = eventRepository.findById(originalId)
+                                .orElseThrow(() -> new RuntimeException("Original event not found"));
+
+                Event newEvent = new Event();
+                newEvent.setTitle(original.getTitle() + " (Sao chép)");
+                newEvent.setDescription(original.getDescription());
+                newEvent.setCategory(original.getCategory());
+                newEvent.setStatus(EventStatus.DRAFT);
+
+                // Set Creator as Current User
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                String currentEmail = auth.getName();
+                if (auth.getPrincipal() instanceof com.codegym.appticket.config.CustomOAuth2User) {
+                        currentEmail = ((com.codegym.appticket.config.CustomOAuth2User) auth.getPrincipal()).getEmail();
+                } else if (auth.getPrincipal() instanceof com.codegym.appticket.dto.user.UserInfoUserDetails) {
+                        currentEmail = ((com.codegym.appticket.dto.user.UserInfoUserDetails) auth.getPrincipal())
+                                        .getUsername();
+                }
+                User currentUser = userRepository.findByEmailAndNotDeleted(currentEmail);
+                newEvent.setCreatedBy(currentUser);
+                newEvent.setOrganizer(currentUser); // Default to creator or keep original organizer? Usually creator
+                                                    // becomes organizer of copy.
+
+                // Copy Media
+                if (original.getEventMedias() != null) {
+                        List<EventMedia> newMedias = new ArrayList<>();
+                        for (EventMedia m : original.getEventMedias()) {
+                                EventMedia nm = new EventMedia();
+                                nm.setEvent(newEvent);
+                                nm.setMediaUrl(m.getMediaUrl());
+                                nm.setMediaType(m.getMediaType());
+                                nm.setMediaPurpose(m.getMediaPurpose());
+                                nm.setIsThumbnail(m.getIsThumbnail());
+                                newMedias.add(nm);
+                        }
+                        newEvent.setEventMedias(newMedias);
+                }
+
+                // Save basic event first to get ID (though Cascade might handle it, safer to
+                // init lists)
+                if (newEvent.getEventOccurrences() == null)
+                        newEvent.setEventOccurrences(new ArrayList<>());
+
+                // Copy Occurrences
+                if (original.getEventOccurrences() != null) {
+                        for (EventOccurrence occ : original.getEventOccurrences()) {
+                                EventOccurrence nOcc = new EventOccurrence();
+                                nOcc.setEvent(newEvent);
+                                // Shift time by 1 day to make it distinct and practical for "next show"
+                                nOcc.setStartTime(occ.getStartTime().plusDays(1));
+                                nOcc.setEndTime(occ.getEndTime().plusDays(1));
+                                nOcc.setLocation(occ.getLocation());
+
+                                List<TicketType> newTickets = new ArrayList<>();
+                                if (occ.getTicketTypes() != null) {
+                                        for (TicketType tt : occ.getTicketTypes()) {
+                                                TicketType ntt = new TicketType();
+                                                ntt.setEventOccurrence(nOcc);
+                                                ntt.setName(tt.getName());
+                                                ntt.setPrice(tt.getPrice());
+                                                ntt.setQuantity(tt.getQuantity());
+                                                newTickets.add(ntt);
+                                        }
+                                }
+                                nOcc.setTicketTypes(newTickets);
+                                newEvent.getEventOccurrences().add(nOcc);
+                        }
+                }
+
+                Event saved = eventRepository.save(newEvent);
+                return convertToDTO(saved);
+        }
+
+        @Override
+        @Transactional
+        public void bulkDelete(List<Long> ids) {
+                List<Event> events = eventRepository.findAllById(ids);
+                for (Event e : events) {
+                        e.setStatus(EventStatus.DELETED);
+                }
+                eventRepository.saveAll(events);
+        }
+
+        @Override
+        @Transactional
+        public void bulkApprove(List<Long> ids) {
+                List<Event> events = eventRepository.findAllById(ids);
+                for (Event e : events) {
+                        if (e.getStatus() == EventStatus.PENDING || e.getStatus() == EventStatus.DRAFT) {
+                                e.setStatus(EventStatus.APPROVED);
+                                try {
+                                        emailService.sendEventApprovalNotification(e);
+                                } catch (Exception ex) {
+                                        // ignore
+                                }
+                        }
+                }
+                eventRepository.saveAll(events);
         }
 
         @Override
@@ -885,5 +1215,91 @@ public class EventService implements IEventService {
                 .viewCount(event.getViewCount() == null ? 0 : event.getViewCount())
                 .bookedTickets(bookedTickets)
                 .build();
+    }
+
+    @Override
+    public byte[] exportBookedTicketsToExcel(Long eventId, Long occurrenceId) throws java.io.IOException {
+        // Fetch data
+        List<com.codegym.appticket.dto.event.BookedTicketDTO> tickets = eventRepository
+                .findBookedTicketsByEventAndOccurrence(eventId, occurrenceId);
+
+        // Create Workbook
+        try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
+            org.apache.poi.ss.usermodel.Sheet sheet = workbook.createSheet("Danh sách vé");
+
+            // Styles
+            org.apache.poi.ss.usermodel.CellStyle headerStyle = workbook.createCellStyle();
+            org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerStyle.setFont(headerFont);
+            headerStyle.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER);
+            headerStyle.setFillForegroundColor(org.apache.poi.ss.usermodel.IndexedColors.GREY_25_PERCENT.getIndex());
+            headerStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            headerStyle.setBorderTop(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            headerStyle.setBorderLeft(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            headerStyle.setBorderRight(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+
+            org.apache.poi.ss.usermodel.CellStyle dateStyle = workbook.createCellStyle();
+            dateStyle.setDataFormat(workbook.createDataFormat().getFormat("dd/mm/yyyy hh:mm"));
+
+            org.apache.poi.ss.usermodel.CellStyle currencyStyle = workbook.createCellStyle();
+            currencyStyle.setDataFormat(workbook.createDataFormat().getFormat("#,##0 ₫"));
+
+            // Header Row
+            String[] headers = {"Mã vé", "Khách hàng", "Email", "Số điện thoại", "Loại vé", "Giá vé", "Ngày đặt", "Suất diễn"};
+            org.apache.poi.ss.usermodel.Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < headers.length; i++) {
+                org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            // Data Rows
+            int rowNum = 1;
+            java.math.BigDecimal totalRev = java.math.BigDecimal.ZERO;
+            for (com.codegym.appticket.dto.event.BookedTicketDTO ticket : tickets) {
+                org.apache.poi.ss.usermodel.Row row = sheet.createRow(rowNum++);
+
+                row.createCell(0).setCellValue(ticket.getTicketCode());
+                row.createCell(1).setCellValue(ticket.getCustomerName());
+                row.createCell(2).setCellValue(ticket.getCustomerEmail());
+                row.createCell(3).setCellValue(ticket.getCustomerPhone());
+                row.createCell(4).setCellValue(ticket.getTicketTypeName());
+
+                org.apache.poi.ss.usermodel.Cell priceCell = row.createCell(5);
+                priceCell.setCellValue(ticket.getTotalPrice().doubleValue());
+                priceCell.setCellStyle(currencyStyle);
+
+                if (ticket.getTotalPrice() != null) {
+                    totalRev = totalRev.add(ticket.getTotalPrice());
+                }
+
+                org.apache.poi.ss.usermodel.Cell dateCell = row.createCell(6);
+                if (ticket.getBookingTime() != null) {
+                    dateCell.setCellValue(ticket.getBookingTime());
+                }
+                dateCell.setCellStyle(dateStyle);
+
+                row.createCell(7).setCellValue(ticket.getOccurrenceTime());
+            }
+
+            // Total Row
+            org.apache.poi.ss.usermodel.Row totalRow = sheet.createRow(rowNum + 1);
+            totalRow.createCell(4).setCellValue("Tổng tiền:");
+            org.apache.poi.ss.usermodel.Cell totalVal = totalRow.createCell(5);
+            totalVal.setCellValue(totalRev.doubleValue());
+            totalVal.setCellStyle(currencyStyle);
+            totalRow.getCell(5).setCellStyle(currencyStyle); // Apply again to be safe
+
+            // Auto-size columns
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            workbook.write(out);
+            return out.toByteArray();
+        }
     }
 }

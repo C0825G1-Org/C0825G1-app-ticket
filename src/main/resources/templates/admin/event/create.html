@@ -215,14 +215,20 @@
 
                             <!-- Buttons for Step 2 -->
                             <div class="d-flex gap-3 justify-content-end mb-5">
-                                <button type="button" class="btn btn-outline-secondary btn-lg rounded-3 px-5"
+                                <button type="button" class="btn btn-outline-secondary btn-lg rounded-3 px-4 fw-bold"
                                     onclick="prevStep()">
                                     <i class="bi bi-arrow-left me-2"></i> Quay lại
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-lg rounded-3 px-5 fw-bold me-2"
+                                    onclick="saveAsDraft()">
+                                    <i class="bi bi-file-earmark me-2"></i> Lưu nháp
                                 </button>
                                 <button type="submit" class="btn btn-gradient btn-lg rounded-3 px-5 fw-bold"
                                     style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); border: none; color: white;">
                                     <i class="bi bi-check-lg me-2"></i> Tạo sự kiện
                                 </button>
+                                <input type="hidden" name="status" id="eventStatus" value="APPROVED">
+                                <!-- Default value -->
                             </div>
                         </div>
 
@@ -259,6 +265,19 @@
                                 content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
                             });
 
+                            window.saveAsDraft = function () {
+                                document.getElementById('eventStatus').value = 'DRAFT';
+
+                                // Remove 'required' attributes to allow draft saving
+                                document.querySelectorAll('[required]').forEach(el => {
+                                    el.removeAttribute('required');
+                                    el.classList.remove('is-invalid'); // Remove error styling if any
+                                });
+
+                                const submitBtn = document.querySelector('button[type="submit"]');
+                                submitBtn.click();
+                            };
+
                             document.getElementById('createEventForm').addEventListener('submit', async function (e) {
                                 e.preventDefault();
 
@@ -267,7 +286,7 @@
                                     tinymce.get('description').save();
                                 }
 
-                                // 1. Validate phía Client (Kiểm tra lại cho chắc chắn)
+                                // 1. Validate phía Client
                                 const galleryInput = document.getElementById('galleryFiles');
                                 const maxFiles = 10;
                                 if (galleryInput.files.length > maxFiles) {
@@ -281,7 +300,7 @@
                                 // 2. Chuẩn bị tải lên
                                 const submitBtn = this.querySelector('button[type="submit"]');
                                 const originalBtnText = submitBtn.innerHTML;
-                                const resetButton = setButtonLoading(submitBtn, 'Đang tải file lên Cloudinary...');
+                                const resetButton = setButtonLoading(submitBtn, 'Đang xử lý...');
 
                                 try {
                                     const bannerFile = document.getElementById('bannerFile').files[0];
@@ -342,9 +361,10 @@
                                     const data = await response.json();
 
                                     if (data.status === 'success') {
+                                        const isDraft = document.getElementById('eventStatus').value === 'DRAFT';
                                         Toast.fire({
                                             icon: 'success',
-                                            title: 'Tạo sự kiện thành công!'
+                                            title: isDraft ? 'Lưu bản nháp thành công!' : 'Tạo sự kiện thành công!'
                                         });
                                         setTimeout(() => {
                                             window.location.href = data.redirectUrl;
@@ -400,8 +420,7 @@
                                         title: 'Đã xảy ra lỗi: ' + error.message
                                     });
                                 } finally {
-                                    submitBtn.innerHTML = originalBtnText; // Restore text
-                                    submitBtn.disabled = false;
+                                    resetButton();
                                 }
                             });
 
