@@ -83,7 +83,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 JOIN booking_details bd ON bd.ticket_type_id = tt.id
                 JOIN bookings b ON b.id = bd.booking_id
                 WHERE b.status = 'SUCCESS'
-                  AND e.status = 'APPROVED'
+                  AND (e.status = 'APPROVED' OR e.status = 'HAPPENING')
                 GROUP BY e.id, e.title, e.description, c.name
                 ORDER BY totalTickets DESC
                 LIMIT 3
@@ -113,7 +113,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 LEFT JOIN provinces p ON p.code = w.province_code
                 LEFT JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
                 WHERE eo.start_time > NOW()
-                  AND e.status = 'APPROVED'
+                  AND (e.status = 'APPROVED' OR e.status = 'HAPPENING')
                 GROUP BY e.id, e.title, e.description, c.name
                 ORDER BY startTime ASC
                 LIMIT 4
@@ -154,13 +154,13 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 LEFT JOIN wards w ON w.code = l.ward_code
                 LEFT JOIN provinces p ON p.code = w.province_code
                 LEFT JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
-                WHERE e.status = 'APPROVED'
+                WHERE (e.status = 'APPROVED' OR e.status = 'HAPPENING')
                 GROUP BY e.id, e.title, e.description, c.name
                 ORDER BY MIN(eo.start_time) ASC
             """, countQuery = """
                 SELECT COUNT(DISTINCT e.id)
                 FROM events e
-                WHERE e.status = 'APPROVED'
+                WHERE (e.status = 'APPROVED' OR e.status = 'HAPPENING')
             """, nativeQuery = true)
     Page<HomeEventDTO> findAllEvent(Pageable pageable);
 
@@ -189,7 +189,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 LEFT JOIN wards w ON w.code = l.ward_code
                 LEFT JOIN provinces p ON p.code = w.province_code
                 LEFT JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
-                WHERE e.status = 'APPROVED'
+                WHERE (e.status = 'APPROVED' OR e.status = 'HAPPENING')
                   AND (:searchText IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :searchText, '%')))
                   AND (:categoryId IS NULL OR e.category_id = :categoryId)
                   AND (:hasLocationFilter = 0 OR p.name IN :locationVariants)
@@ -202,7 +202,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 LEFT JOIN locations l ON l.id = eo.location_id
                 LEFT JOIN wards w ON w.code = l.ward_code
                 LEFT JOIN provinces p ON p.code = w.province_code
-                WHERE e.status = 'APPROVED'
+                WHERE (e.status = 'APPROVED' OR e.status = 'HAPPENING')
                   AND (:searchText IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :searchText, '%')))
                   AND (:categoryId IS NULL OR e.category_id = :categoryId)
                   AND (:hasLocationFilter = 0 OR p.name IN :locationVariants)
@@ -227,6 +227,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                      WHERE em.event_id = e.id
                      ORDER BY em.created_at ASC
                      LIMIT 1) AS mediaUrl,
+                    e.status AS status,
                     MIN(eo.start_time) AS startTime,
                     MAX(eo.end_time) AS endTime
                 FROM events e
@@ -235,8 +236,8 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 LEFT JOIN locations l ON l.id = eo.location_id
                 LEFT JOIN wards w ON w.code = l.ward_code
                 LEFT JOIN provinces p ON p.code = w.province_code
-                WHERE e.id = :eventId AND e.status = 'APPROVED'
-                GROUP BY e.id, e.title, e.description, c.name
+                WHERE e.id = :eventId AND (e.status = 'APPROVED' OR e.status = 'HAPPENING')
+                GROUP BY e.id, e.title, e.description, c.name, e.status
             """, nativeQuery = true)
     EventDetailDTO findEventDetailById(@Param("eventId") Long eventId);
 
@@ -372,7 +373,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
             JOIN locations l ON l.id = eo.location_id
             LEFT JOIN wards w ON w.code = l.ward_code
             LEFT JOIN provinces p ON p.code = w.province_code
-            WHERE e.status = 'APPROVED'
+            WHERE e.status = 'APPROVED' OR e.status = 'HAPPENING'
               AND l.latitude IS NOT NULL
               AND l.longitude IS NOT NULL
               AND eo.start_time > NOW()
