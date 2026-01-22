@@ -188,6 +188,59 @@
                             });
                         }
 
+                        window.duplicateEvent = function (id, title) {
+                            Swal.fire({
+                                title: `Nhân bản sự kiện "${title}"?`,
+                                text: "Sẽ tạo ra một bản sao mới ở trạng thái NHÁP.",
+                                icon: 'info',
+                                showCancelButton: true,
+                                confirmButtonColor: '#3085d6',
+                                cancelButtonColor: '#d33',
+                                confirmButtonText: 'Nhân bản ngay',
+                                cancelButtonText: 'Hủy'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+                                    // Show loading
+                                    Swal.fire({
+                                        title: 'Đang xử lý...',
+                                        allowOutsideClick: false,
+                                        didOpen: () => { Swal.showLoading(); }
+                                    });
+
+                                    fetch('/user/events/' + id + '/duplicate', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            [csrfHeader]: csrfToken
+                                        }
+                                    })
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            if (data.status === 'success') {
+                                                Swal.fire({
+                                                    icon: 'success',
+                                                    title: 'Thành công!',
+                                                    text: 'Đang chuyển hướng đến trang chỉnh sửa...',
+                                                    timer: 1500,
+                                                    showConfirmButton: false
+                                                }).then(() => {
+                                                    window.location.href = data.redirectUrl;
+                                                });
+                                            } else {
+                                                Swal.fire('Lỗi', data.message || 'Có lỗi xảy ra', 'error');
+                                            }
+                                        })
+                                        .catch(error => {
+                                            console.error('Error:', error);
+                                            Swal.fire('Lỗi', 'Không thể kết nối đến server', 'error');
+                                        });
+                                }
+                            });
+                        }
+
 
                     });
                 </script>
@@ -197,3 +250,6 @@
 </body>
 
 </html>
+
+
+

@@ -313,4 +313,29 @@ public class UserEventController {
             return ResponseEntity.internalServerError().body(Map.of("message", e.getMessage(), "status", "error"));
         }
     }
+
+    @PostMapping("/{id}/duplicate")
+    @ResponseBody
+    public ResponseEntity<?> duplicateEvent(@PathVariable Long id) {
+        try {
+            EventDTO eventDTO = eventService.findById(id);
+            User currentUser = getCurrentUser();
+            if (currentUser == null)
+                return ResponseEntity.status(401).body("Unauthorized");
+
+            if (!eventDTO.getOrganizerId().equals(currentUser.getId())) {
+                return ResponseEntity.status(403)
+                        .body(Map.of("status", "error", "message", "Bạn không có quyền nhân bản sự kiện này."));
+            }
+
+            EventDTO newEvent = eventService.duplicate(id);
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "message", "Nhân bản sự kiện thành công!",
+                    "redirectUrl", "/user/events/edit/" + newEvent.getId()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of("status", "error", "message", e.getMessage()));
+        }
+    }
 }

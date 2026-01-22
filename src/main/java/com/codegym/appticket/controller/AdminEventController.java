@@ -84,6 +84,11 @@ public class AdminEventController {
         return "admin/event/list";
     }
 
+    @GetMapping("/guide")
+    public String showGuide() {
+        return "admin/event/guide";
+    }
+
     @GetMapping("/{id}")
     public String showEventDetail(@PathVariable Long id, Model model) {
         try {

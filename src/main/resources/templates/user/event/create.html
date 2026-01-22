@@ -97,6 +97,10 @@
                                                 class="form-control bg-dark text-white border-secondary border-opacity-50"
                                                 rows="5" name="description" id="description"
                                                 placeholder="Mô tả chi tiết..."></textarea>
+                                            <div class="form-text text-muted mt-2">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#guideModal">Xem hướng dẫn soạn thảo nội dung <i class="bi bi-eye ms-1"></i></a>
+                                            </div>
                                             <div class="text-danger small error-message" id="error-description"></div>
                                         </div>
 
@@ -228,7 +232,6 @@
                                         <i class="bi bi-save me-2"></i> Lưu nháp
                                     </button>
                                     <button type="submit" class="btn btn-gradient btn-lg rounded-3 px-5 fw-bold"
-                                        onclick="setPublish()"
                                         style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); border: none; color: white;">
                                         <i class="bi bi-check-lg me-2"></i> Tạo sự kiện
                                     </button>
@@ -272,10 +275,20 @@
                                     if (typeof tinymce !== 'undefined' && tinymce.get('description')) {
                                         tinymce.get('description').save();
                                     }
-                                    const galleryInput = document.getElementById('galleryFiles');
-                                    if (galleryInput.files.length > 10) {
-                                        Toast.fire({ icon: 'warning', title: 'Tối đa 10 file.' });
-                                        return;
+
+                                    // REMOVE VALIDATION IF DRAFT
+                                    const eventStatus = document.getElementById('eventStatus').value;
+                                    if (eventStatus === 'DRAFT') {
+                                        // Skip file count validation or make it optional?
+                                        // Draft should normally allow anything, but max file count is safeguard. Let's keep max 10 check for safety or skip it too?
+                                        // Let's keep hard limits but skip 'required'
+                                    } else {
+                                        // Only validate gallery if NOT draft
+                                        const galleryInput = document.getElementById('galleryFiles');
+                                        if (galleryInput.files.length > 10) {
+                                            Toast.fire({ icon: 'warning', title: 'Tối đa 10 file.' });
+                                            return;
+                                        }
                                     }
                                     const submitBtn = e.submitter; // Get the specific button clicked
                                     const originalBtnText = submitBtn.innerHTML;
@@ -529,19 +542,19 @@
                                 row.innerHTML = `
                                     <div class="col-md-5">
                                         <label class="form-label small text-white-50">Tên vé</label>
-                                        <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50" 
+                                        <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50"
                                                name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].name" 
                                                placeholder="VD: VIP" required>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label small text-white-50">Giá (VNĐ)</label>
-                                        <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50" 
+                                        <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50"
                                                name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].price" 
                                                min="0" placeholder="0" required>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label small text-white-50">Số lượng</label>
-                                        <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50" 
+                                        <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50"
                                                name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].quantity" 
                                                min="1" placeholder="100" required>
                                     </div>
@@ -646,17 +659,28 @@
 
                             window.prevStep = function () { showStep(1); };
 
-                            window.setDraft = function () {
+                            window.saveAsDraft = function () {
                                 document.getElementById('eventStatus').value = 'DRAFT';
-                                const form = document.getElementById('createEventForm');
-                                form.setAttribute('novalidate', 'novalidate');
-                            }
-                            window.setPublish = function () {
-                                document.getElementById('eventStatus').value = 'PENDING';
-                                const form = document.getElementById('createEventForm');
-                                form.removeAttribute('novalidate');
-                            }
+                                // Remove 'required' attributes to allow draft saving
+                                document.querySelectorAll('[required]').forEach(el => {
+                                    el.removeAttribute('required');
+                                    el.classList.remove('is-invalid');
+                                });
+                                // Remove client-side checks classes if any
+                                document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                                document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+
+                                // Trigger submit
+                                // No manual submit needed if button is type="submit"
+                            };
+                            // Default submit button handles PENDING automatically as default value is PENDING
+                            // But we removed setPublish onclick. Ensure defaults.
+                            // The default value of hidden input is PENDING. So normal submit works fine.
                         </script>
+
+                        <!-- Include Guide & Preview modals (admin fragments) -->
+                        <div th:replace="~{admin/event/fragments/guide-modal :: guideModal}"></div>
+                        <div th:replace="~{admin/event/fragments/preview-modal :: previewModal}"></div>
                     </div>
                 </div>
             </div>
@@ -665,3 +689,4 @@
 </body>
 
 </html>
+

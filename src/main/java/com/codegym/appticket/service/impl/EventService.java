@@ -12,7 +12,6 @@ import com.codegym.appticket.dto.home.NearByEventWithOccurrencesDTO;
 import com.codegym.appticket.dto.home.TrendingEventDTO;
 import com.codegym.appticket.dto.home.UpComingEventDTO;
 import com.codegym.appticket.dto.event.EventOccurrenceDTO;
-import com.codegym.appticket.dto.event.EventSearchDTO;
 
 import com.codegym.appticket.entity.Event;
 import com.codegym.appticket.entity.EventCategory;
@@ -33,6 +32,7 @@ import java.time.LocalDateTime;
 import com.codegym.appticket.service.IEventService;
 import com.codegym.appticket.service.IGeoLocationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -55,6 +55,7 @@ import jakarta.persistence.EntityManager;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EventService implements IEventService {
 
         private final IGeoLocationService geocodingService;
@@ -78,7 +79,9 @@ public class EventService implements IEventService {
         @Transactional(readOnly = true)
         public org.springframework.data.domain.Page<EventDTO> findAll(
                         org.springframework.data.domain.Pageable pageable) {
-                return eventRepository.findByStatusNot(EventStatus.DELETED, pageable).map(this::convertToDTO);
+                // Enforce custom sort by stripping sort from pageable
+                Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+                return eventRepository.findAllWithCustomSort(sortedPageable).map(this::convertToDTO);
         }
 
         @Override
@@ -96,13 +99,15 @@ public class EventService implements IEventService {
                                 ? dto.getEndDate().atTime(java.time.LocalTime.MAX)
                                 : null;
 
+                // Strip sort to use custom query sort
+                Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
                 return eventRepository.searchEvents(
                                 dto.getTitle(),
                                 dto.getCategoryId(),
                                 dto.getStatus(),
                                 start,
                                 end,
-                                pageable).map(this::convertToDTO);
+                                sortedPageable).map(this::convertToDTO);
         }
 
         @Override
@@ -181,7 +186,6 @@ public class EventService implements IEventService {
                 }
                 // --------------------------------------------------
 
-                // Validate Business Rules
                 // Validate Business Rules
                 if (event.getStatus() != EventStatus.DRAFT) {
                         validateBusinessRules(dto.getEventOccurrences(), false);
@@ -706,8 +710,13 @@ public class EventService implements IEventService {
         }
 
         @Override
-        public Page<Event> findEventsByOrganizer(User organizer, Pageable pageable) {
-                return eventRepository.findByOrganizerAndStatusNot(organizer, EventStatus.DELETED, pageable);
+        public org.springframework.data.domain.Page<Event> findEventsByOrganizer(
+                        com.codegym.appticket.entity.User organizer,
+                        Pageable pageable) {
+                // Enforce custom sort by stripping sort from pageable
+                Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+                return eventRepository.findByOrganizerWithCustomSort(organizer.getId(), EventStatus.DELETED,
+                                sortedPageable);
         }
 
         @Override
@@ -1120,19 +1129,35 @@ public class EventService implements IEventService {
         @Transactional
         public void bulkDelete(List<Long> ids) {
                 List<Event> events = eventRepository.findAllById(ids);
+                int deletedCount = 0;
                 for (Event e : events) {
-                        e.setStatus(EventStatus.DELETED);
+                        // Chỉ cho phép xóa sự kiện đã bị hủy hoặc từ chối
+                        if (e.getStatus() == EventStatus.CANCELLED || e.getStatus() == EventStatus.REJECTED) {
+                                e.setStatus(EventStatus.DELETED);
+                                deletedCount++;
+                        }
                 }
                 eventRepository.saveAll(events);
+
+                if (deletedCount == 0) {
+                        throw new IllegalStateException(
+                                        "Không có sự kiện nào đủ điều kiện để xóa. Chỉ có thể xóa sự kiện đã bị hủy hoặc từ chối.");
+                } else if (deletedCount < ids.size()) {
+                        throw new IllegalStateException("Chỉ có thể xóa " + deletedCount + "/" + ids.size()
+                                        + " sự kiện. Chỉ có thể xóa sự kiện đã bị hủy hoặc từ chối.");
+                }
         }
 
         @Override
         @Transactional
         public void bulkApprove(List<Long> ids) {
                 List<Event> events = eventRepository.findAllById(ids);
+                int approvedCount = 0;
                 for (Event e : events) {
-                        if (e.getStatus() == EventStatus.PENDING || e.getStatus() == EventStatus.DRAFT) {
+                        // Chỉ cho phép duyệt sự kiện đang chờ duyệt
+                        if (e.getStatus() == EventStatus.PENDING) {
                                 e.setStatus(EventStatus.APPROVED);
+                                approvedCount++;
                                 try {
                                         emailService.sendEventApprovalNotification(e);
                                 } catch (Exception ex) {
@@ -1141,6 +1166,14 @@ public class EventService implements IEventService {
                         }
                 }
                 eventRepository.saveAll(events);
+
+                if (approvedCount == 0) {
+                        throw new IllegalStateException(
+                                        "Không có sự kiện nào đủ điều kiện để duyệt. Chỉ có thể duyệt sự kiện đang chờ duyệt.");
+                } else if (approvedCount < ids.size()) {
+                        throw new IllegalStateException("Chỉ có thể duyệt " + approvedCount + "/" + ids.size()
+                                        + " sự kiện. Chỉ có thể duyệt sự kiện đang chờ duyệt.");
+                }
         }
 
         @Override
@@ -1149,9 +1182,35 @@ public class EventService implements IEventService {
                 Event event = eventRepository.findById(eventId)
                                 .orElseThrow(() -> new RuntimeException("Sự kiện không tồn tại!"));
 
-                // Reset status to PENDING
+                // Kiểm tra điều kiện: chỉ khôi phục sự kiện đã bị xóa, hủy hoặc từ chối
+                if (event.getStatus() != EventStatus.DELETED
+                                && event.getStatus() != EventStatus.CANCELLED
+                                && event.getStatus() != EventStatus.REJECTED) {
+                        throw new IllegalStateException(
+                                        "Chỉ có thể khôi phục sự kiện đã bị xóa, hủy hoặc từ chối. Trạng thái hiện tại: "
+                                                        + event.getStatus());
+                }
+
+                // Lưu trạng thái cũ để ghi log
+                EventStatus oldStatus = event.getStatus();
+
+                // Khôi phục về trạng thái PENDING để admin xem xét lại
                 event.setStatus(EventStatus.PENDING);
                 eventRepository.save(event);
+
+                // Ghi log lịch sử khôi phục
+                log.info("Event #{} restored from {} to PENDING", eventId, oldStatus);
+
+                // Gửi email thông báo cho nhà tổ chức
+                if (emailService != null) {
+                        try {
+                                emailService.sendEventRestorationNotification(event);
+                        } catch (Exception e) {
+                                // Log but don't fail the transaction
+                                log.error("Failed to send restoration email for event #{}: {}", eventId,
+                                                e.getMessage());
+                        }
+                }
         }
 
         private void saveCancellationHistory(Event event, EventStatus status, String reason) {

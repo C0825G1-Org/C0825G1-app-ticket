@@ -304,6 +304,7 @@
                                         <input type="hidden" th:field="*{bannerUrl}" id="bannerUrl">
                                         <input type="hidden" th:field="*{logoUrl}" id="logoUrl">
                                         <input type="hidden" th:field="*{ticketMapUrl}" id="ticketMapUrl">
+                                        <input type="hidden" th:field="*{status}" id="eventStatus">
                                         <div id="galleryUrlsContainer"></div>
 
                                         <div class="mb-5">
@@ -398,6 +399,12 @@
                                         onclick="prevStep()">
                                         <i class="bi bi-arrow-left me-2"></i> Quay lại
                                     </button>
+                                    <button type="submit"
+                                        class="btn btn-outline-secondary btn-lg rounded-3 px-5 fw-bold"
+                                        onclick="saveAsDraft()" formnovalidate
+                                        th:if="${eventUpdateDTO.status.name() == 'DRAFT'}">
+                                        <i class="bi bi-file-earmark me-2"></i> Lưu nháp
+                                    </button>
                                     <button type="submit" class="btn btn-gradient btn-lg rounded-3 px-5 fw-bold"
                                         style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); border: none; color: white;">
                                         <i class="bi bi-check-lg me-2"></i> Lưu thay đổi
@@ -425,6 +432,11 @@
                             }
 
                             // Global helper functions
+                            window.saveAsDraft = function () {
+                                document.getElementById('eventStatus').value = 'DRAFT';
+                                // formnovalidate on button handles the rest
+                            };
+
                             window.removeRow = function (btn, type) {
                                 if (type === 'occurrence') {
                                     const item = btn.closest('.event-occurrence-item');
@@ -490,19 +502,19 @@
                                 row.innerHTML = `
                                     <div class="col-md-5">
                                         <label class="form-label small text-white-50">Tên vé</label>
-                                        <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50" 
+                                        <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50"
                                                name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].name" 
                                                placeholder="VD: VIP" required>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label small text-white-50">Giá (VNĐ)</label>
-                                        <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50" 
+                                        <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50"
                                                name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].price" 
                                                min="0" placeholder="0" required>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label small text-white-50">Số lượng</label>
-                                        <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50" 
+                                        <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50"
                                                name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].quantity" 
                                                min="1" placeholder="100" required>
                                     </div>
@@ -907,6 +919,12 @@
             </div>
         </div>
     </div>
+
+    <!-- Use admin guide and preview fragments for consistent UX -->
+    <div th:replace="~{admin/event/fragments/guide-modal :: guideModal}"></div>
+    <div th:replace="~{admin/event/fragments/preview-modal :: previewModal}"></div>
 </body>
 
 </html>
+
+
