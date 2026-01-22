@@ -229,6 +229,14 @@ public class BookingController {
         model.addAttribute("totalAmount", totalAmount);
 
         model.addAttribute("selectedTickets", selectedTickets);
+        model.addAttribute("occurrenceId", occurrence.getId());
+
+        // Construct back URL for "Edit" button
+        StringBuilder backUrl = new StringBuilder("/bookings/book/" + eventId + "?occurrence=" + occurrence.getId());
+        for (Map.Entry<TicketType, Integer> entry : selectedTickets.entrySet()) {
+            backUrl.append("&ticket_").append(entry.getKey().getId()).append("=").append(entry.getValue());
+        }
+        model.addAttribute("backUrl", backUrl.toString());
 
         // Lấy thông tin người dùng hiện tại để hiển thị trên trang xác nhận
         if (email != null) {
@@ -286,6 +294,14 @@ public class BookingController {
                     .map(d -> d.getTicketType().getPrice().multiply(java.math.BigDecimal.valueOf(d.getQuantity())))
                     .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
             model.addAttribute("totalAmount", totalAmount);
+            model.addAttribute("occurrenceId", occurrence.getId());
+
+            // Construct back URL for "Edit" button
+            StringBuilder backUrl = new StringBuilder("/bookings/book/" + occurrence.getEvent().getId() + "?occurrence=" + occurrence.getId());
+            for (Map.Entry<TicketType, Integer> entry : selectedTickets.entrySet()) {
+                backUrl.append("&ticket_").append(entry.getKey().getId()).append("=").append(entry.getValue());
+            }
+            model.addAttribute("backUrl", backUrl.toString());
 
             String email = getCurrentUserEmail();
             if (email != null) {

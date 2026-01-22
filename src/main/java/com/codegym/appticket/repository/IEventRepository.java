@@ -259,7 +259,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 LEFT JOIN wards w ON w.code = l.ward_code
                 LEFT JOIN provinces p ON p.code = w.province_code
                 WHERE eo.event_id = :eventId
-                  AND (b.id IS NULL OR b.status = 'SUCCESS')
+                  AND (b.id IS NULL OR b.status = 'SUCCESS' OR b.status = 'PENDING')
                 GROUP BY tt.id, tt.name, tt.price, tt.quantity, eo.id, eo.start_time, p.name
                 ORDER BY eo.start_time ASC, tt.price ASC
             """, nativeQuery = true)

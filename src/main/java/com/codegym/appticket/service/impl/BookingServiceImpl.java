@@ -203,7 +203,8 @@ public class BookingServiceImpl implements IBookingService {
     public int getSoldQuantity(Long ticketTypeId) {
         List<BookingDetail> details = bookingDetailRepository.findByTicketType_Id(ticketTypeId);
         return details.stream()
-                .filter(detail -> detail.getBooking().getStatus() == BookingStatus.SUCCESS)
+                .filter(detail -> detail.getBooking().getStatus() == BookingStatus.SUCCESS || 
+                                 detail.getBooking().getStatus() == BookingStatus.PENDING)
                 .mapToInt(BookingDetail::getQuantity)
                 .sum();
     }

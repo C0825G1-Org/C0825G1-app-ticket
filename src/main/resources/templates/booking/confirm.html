@@ -5,39 +5,120 @@
 
 <body>
     <div th:replace="~{common/layout :: user-layout(~{:: .booking-confirm})}">
-        <div class="booking-confirm container py-5">
+        <div class="booking-confirm container mt-5 pt-5 pb-5">
             <div class="row justify-content-center">
-                <div class="col-md-6">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-body p-4 text-center">
-                            <h3 class="mb-4">Xác nhận thông tin đặt vé</h3>
-                            <div class="text-start mb-4">
-                                <p><strong>Khách hàng</strong> <span
-                                        th:text="${currentUser != null ? (currentUser.fullName != null && !currentUser.fullName.isEmpty() ? currentUser.fullName : currentUser.email) : 'Chưa đăng nhập'}"></span>
-                                </p>
-                                <p><strong>Số điện thoại:</strong> <span
-                                        th:text="${currentUser != null && currentUser.phoneNumber != null && !currentUser.phoneNumber.isEmpty() ? currentUser.phoneNumber : 'Chưa cập nhật'}"></span>
-                                </p>
-                                <hr>
-                                <p><strong>Sự kiện:</strong> <span th:text="${event.title}"></span></p>
-                                <p><strong>Thời gian:</strong> <span
-                                        th:text="${#temporals.format(startTime, 'HH:mm dd/MM/yyyy')}"></span></p>
-                                <p><strong>Địa điểm:</strong> <span th:text="${location}"></span></p>
-                                <hr>
-                                <h6>Danh sách vé đã chọn:</h6>
-                                <div th:each="entry : ${selectedTickets}" class="d-flex justify-content-between mb-2">
-                                    <span th:text="${entry.key.name} + ' (x' + ${entry.value} + ')'"></span>
-                                    <span
-                                        th:text="${#numbers.formatDecimal(entry.key.price * entry.value, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
-                                </div>
-                                <div class="d-flex justify-content-between pt-3 border-top mt-2">
-                                    <h5 class="fw-bold mb-0">Tổng cộng (Tạm tính):</h5>
-                                    <h5 class="fw-bold text-primary mb-0"
-                                        th:text="${#numbers.formatDecimal(totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'">
-                                    </h5>
+                <div class="col-lg-8 col-xl-7">
+
+
+                    <div class="card shadow-lg border-0 rounded-4 overflow-hidden animate-fade-up">
+                        <!-- Refined Header: Blue Background with Black Text -->
+                        <div class="card-header border-bottom py-4 text-center" style="background-color: #0d6efd;">
+                            <h3 class="mb-0 fw-bold" style="color: #000000;">
+                                Xác nhận thông tin
+                            </h3>
+                        </div>
+
+                        <div class="card-body p-lg-5 p-4">
+                            <!-- Section: Buyer Information -->
+                            <div class="mb-5">
+                                <h5 class="fw-bold mb-4 text-dark d-flex align-items-center">
+                                    Thông tin người mua
+                                </h5>
+                                <div class="p-3 border-start border-primary border-4 bg-light rounded-end shadow-sm">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center mb-1">
+                                                <i class="bi bi-person-fill text-primary me-2"></i>
+                                                <small class="text-muted text-uppercase fw-bold"
+                                                    style="font-size: 0.7rem; letter-spacing: 0.5px;">Họ và tên</small>
+                                            </div>
+                                            <div class="fw-bold text-dark ps-4"
+                                                th:text="${currentUser != null ? (currentUser.fullName != null && !currentUser.fullName.isEmpty() ? currentUser.fullName : currentUser.email) : 'Chưa đăng nhập'}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center mb-1">
+                                                <i class="bi bi-telephone-fill text-primary me-2"></i>
+                                                <small class="text-muted text-uppercase fw-bold"
+                                                    style="font-size: 0.7rem; letter-spacing: 0.5px;">Số điện
+                                                    thoại</small>
+                                            </div>
+                                            <div class="fw-bold text-dark ps-4">
+                                                <span
+                                                    th:text="${currentUser != null && currentUser.phoneNumber != null && !currentUser.phoneNumber.isEmpty() ? currentUser.phoneNumber : 'Chưa cập nhật'}"></span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
+                            <!-- Section: Event Details -->
+                            <div class="mb-5">
+                                <h5 class="fw-bold mb-4 text-dark d-flex align-items-center">
+                                    Thông tin sự kiện
+                                </h5>
+                                <div class="p-3 border-start border-primary border-4 bg-light rounded-end shadow-sm">
+                                    <h4 class="fw-bold mb-3" th:text="${event.title}">Tên sự kiện</h4>
+                                    <div class="d-flex flex-column gap-2">
+                                        <div class="d-flex align-items-center text-dark">
+                                            <span
+                                                th:text="${#temporals.format(startTime, 'HH:mm - EEEE, dd/MM/yyyy')}">Thời
+                                                gian</span>
+                                        </div>
+                                        <div class="d-flex align-items-center text-dark">
+                                            <span th:text="${location}">Địa điểm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section: Ticket List -->
+                            <div class="mb-5">
+                                <h5 class="fw-bold mb-4 text-dark d-flex align-items-center">
+                                    Danh sách vé đã chọn
+                                </h5>
+                                <div class="table-responsive rounded-3 border">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th class="ps-4 py-3">Loại vé</th>
+                                                <th class="text-center py-3">Số lượng</th>
+                                                <th class="text-end pe-4 py-3">Thành tiền</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="entry : ${selectedTickets}">
+                                                <td class="ps-4 py-3">
+                                                    <div class="fw-bold text-dark" th:text="${entry.key.name}">Tên vé
+                                                    </div>
+                                                    <small class="text-muted"
+                                                        th:text="${#numbers.formatDecimal(entry.key.price, 0, 'COMMA', 0, 'POINT')} + 'đ'"></small>
+                                                </td>
+                                                <td class="text-center py-3">
+                                                    <span
+                                                        class="badge bg-soft-primary text-primary px-3 py-2 rounded-pill fw-bold"
+                                                        th:text="${entry.value}"></span>
+                                                </td>
+                                                <td class="text-end pe-4 py-3 fw-bold text-dark">
+                                                    <span
+                                                        th:text="${#numbers.formatDecimal(entry.key.price * entry.value, 0, 'COMMA', 0, 'POINT')} + 'đ'"></span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot class="bg-white border-top">
+                                            <tr>
+                                                <td colspan="2" class="ps-4 py-3 fw-bold fs-5">Tổng cộng đơn hàng:</td>
+                                                <td class="text-end pe-4 py-3">
+                                                    <span class="fw-bold fs-4 text-primary"
+                                                        th:text="${#numbers.formatDecimal(totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Action Form -->
                             <form th:action="@{/bookings/save}" method="post">
                                 <input type="hidden" name="eventId" th:value="${event.id}">
                                 <input th:if="${bookingId != null}" type="hidden" name="bookingId"
@@ -47,12 +128,28 @@
                                         th:value="${entry.value}">
                                 </th:block>
 
-                                <div class="d-grid gap-2">
-                                    <button type="submit" class="btn btn-success btn-lg">Xác nhận và Thanh toán</button>
-                                    <button type="button" class="btn btn-outline-secondary"
-                                        onclick="history.back()">Quay lại chỉnh sửa</button>
+                                <div class="row g-3 mt-2">
+                                    <div class="col-md-8 order-md-2">
+                                        <button type="submit"
+                                            class="btn btn-success btn-lg w-100 py-3 fw-bold rounded-pill shadow-sm">
+                                            Xác nhận & Thanh toán
+                                        </button>
+                                    </div>
+                                    <div class="col-md-4 order-md-1">
+                                        <a th:href="${backUrl}"
+                                            class="btn btn-outline-secondary btn-lg w-100 py-3 rounded-pill h-100 d-flex align-items-center justify-content-center">
+                                            Quay lại
+                                        </a>
+                                    </div>
                                 </div>
                             </form>
+
+                            <!-- Notice -->
+                            <div class="mt-4 text-center">
+                                <p class="small text-muted mb-0">
+                                    Vui lòng kiểm tra kỹ thông tin trước khi thực hiện thanh toán.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
