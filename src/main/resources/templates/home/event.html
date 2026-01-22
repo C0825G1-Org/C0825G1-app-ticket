@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" data-bs-theme="dark">
 
 <head>
     <meta charset="UTF-8">
@@ -16,12 +16,12 @@
     <th:block th:replace="~{common/styles :: styles}"></th:block>
 </head>
 
-<body>
+<body style="background-color: #0f172a;">
     <!-- Navbar -->
     <div th:replace="~{common/header :: public-navbar-dark}"></div>
 
     <!-- Breadcrumb & Page Title -->
-    <section class="mt-5 pt-5 py-4 bg-light border-bottom">
+    <section class="mt-5 pt-5 py-4 border-bottom" style="background-color: transparent;">
         <div class="container-xl">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-2">
@@ -45,7 +45,7 @@
                             <!-- Search Box -->
                             <div class="mb-4">
                                 <div class="input-group">
-                                    <span class="input-group-text bg-white border-end-0">
+                                    <span class="input-group-text border-end-0" style="background-color: transparent;">
                                         <i class="bi bi-search text-muted"></i>
                                     </span>
                                     <input type="text" class="form-control border-start-0 ps-0"
@@ -57,7 +57,7 @@
                                     <button type="submit" class="btn btn-primary btn-sm flex-fill mt-2">
                                         <i class="bi bi-search me-1"></i> Tìm kiếm
                                     </button>
-                                    <a th:href="@{/events}" class="btn btn-primary btn-sm flex-fill mt-2">
+                                    <a th:href="@{/events}" class="btn btn-outline-light btn-sm flex-fill mt-2">
                                         <i class="bi bi-x-circle me-1"></i> Xóa
                                     </a>
                                 </div>

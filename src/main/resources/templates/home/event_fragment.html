@@ -44,7 +44,7 @@
                         </h6>
 
                         <!-- Description -->
-                        <div class="card-text small text-muted mb-2"
+                        <div class="card-text small text-muted mb-2 text-truncate"
                             style="display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; min-height: 48px;"
                             th:utext="${event.description}">
                             Đêm nhạc gieo hưởng kết hợp điện tử.
@@ -92,7 +92,7 @@
 
         <!-- Pagination -->
         <nav th:if="${events != null and events.totalPages > 1}" aria-label="Page navigation" class="mt-4">
-            <ul class="pagination justify-content-center">
+            <ul class="pagination pagination-custom justify-content-center">
                 <!-- Previous -->
                 <li class="page-item" th:classappend="${events.first} ? 'disabled'">
                     <a class="page-link" th:href="@{/events(page=${events.number - 1}, size=${events.size})}"
