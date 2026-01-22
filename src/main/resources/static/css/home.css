@@ -1,11 +1,13 @@
 :root {
-    --primary-color: #d946ef; /* Bright magenta/pink */
-    --secondary-color: #ec4899; /* Hot pink */
+    --primary-color: #d946ef;
+    /* Bright magenta/pink */
+    --secondary-color: #ec4899;
+    /* Hot pink */
     --dark-color: #1e293b;
 }
 
 body {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Inter', sans-serif;
     background-color: #f8fafc;
     color: var(--dark-color);
 }
@@ -22,27 +24,37 @@ body {
     padding-top: 120px;
     padding-bottom: 80px;
     /* Animated Mesh Gradient Background */
-    background: 
-        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
-        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
-    background-color: #0f172a; /* Fallback/Base dark color */
+    background:
+        radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+        radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
+    background-color: #0f172a;
+    /* Fallback/Base dark color */
     background-size: 200% 200%;
     animation: gradientBG 15s ease infinite;
     min-height: auto;
-    color: white; /* Ensure text is readable on dark bg */
+    color: white;
+    /* Ensure text is readable on dark bg */
 }
 
 @keyframes gradientBG {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 .hero-section h1 {
     color: white;
     font-weight: 800;
-    text-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    text-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 .gradient-text {
@@ -51,7 +63,8 @@ body {
     background-clip: text;
     color: transparent;
     text-shadow: none;
-    filter: drop-shadow(0 0 20px rgba(217, 70, 239, 0.5)); /* Glow effect */
+    filter: drop-shadow(0 0 20px rgba(217, 70, 239, 0.5));
+    /* Glow effect */
 }
 
 .btn-gradient {
