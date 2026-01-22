@@ -3,52 +3,107 @@
 
 <head th:replace="~{common/layout :: head('Đặt vé thành công')}"></head>
 
-<body>
+<body style="background-color: #0f172a;" data-bs-theme="dark">
     <div th:replace="~{common/layout :: user-layout(~{:: .booking-success})}">
         <div class="booking-success container py-5">
             <div class="row justify-content-center">
                 <div class="col-md-6 text-center">
-                    <div class="card shadow-sm border-0">
+                    <div class="card card-glass-dark border-0">
                         <div class="card-body p-5">
                             <div class="mb-4">
                                 <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
                             </div>
-                            <h2 class="mb-3">Đặt vé thành công!</h2>
-                            <p class="text-muted mb-4">Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi. Bạn có thể xem vé
+                            <h2 class="mb-3 text-white">Đặt vé thành công!</h2>
+                            <p class="text-white-50 mb-4">Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi. Bạn có thể xem vé
                                 của mình trong mục "Vé của tôi".</p>
 
-                            <div class="card bg-light border-0 mb-4">
-                                <div class="card-body text-start">
-                                    <p class="mb-1"><strong>Mã đơn hàng:</strong> #<span th:text="${booking.id}"></span>
+                            <div class="card bg-dark border border-secondary border-opacity-25 mb-4 rounded-3">
+                                <div class="card-body text-start text-white-50">
+                                    <p class="mb-1"><strong>Sự kiện:</strong> <span class="text-white"
+                                            th:text="${event != null ? event.title : 'N/A'}"></span></p>
+                                    <p class="mb-1"><strong>Thời gian:</strong> <span class="text-white"
+                                            th:text="${startTime != null ? #temporals.format(startTime, 'HH:mm dd/MM/yyyy') : 'N/A'}"></span>
                                     </p>
+                                    <p class="mb-1"><strong>Người mua:</strong> <span class="text-white"
+                                            th:text="${booking.user != null ? booking.user.fullName : 'Hệ thống'}"></span>
+                                    </p>
+                                    <p class="mb-1"><strong>Mã đơn hàng:</strong> <span class="text-white">#<span
+                                                th:text="${booking != null ? booking.id : '---'}"></span></span></p>
                                     <p class="mb-1"><strong>Trạng thái:</strong> <span class="badge bg-success"
                                             th:text="${booking.status}"></span></p>
-                                    <p class="mb-0"><strong>Ngày đặt:</strong> <span
+                                    <p class="mb-0"><strong>Ngày đặt:</strong> <span class="text-white"
                                             th:text="${#temporals.format(booking.bookingTime, 'dd/MM/yyyy HH:mm')}"></span>
                                     </p>
                                 </div>
                             </div>
 
                             <div class="mb-4 text-start">
-                                <h5 class="mb-3">Vé của bạn:</h5>
-                                <div class="row row-cols-1 row-cols-md-2 g-3">
-                                    <div th:each="ticket : ${tickets}" class="col">
-                                        <div class="card h-100 border-dashed">
-                                            <div class="card-body text-center p-3">
-                                                <img th:src="'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + ${ticket.ticketCode}"
-                                                    alt="QR Code" class="img-fluid mb-2" style="width: 120px;">
-                                                <div class="small fw-bold"
-                                                    th:text="${ticket.bookingDetail.ticketType.name}"></div>
-                                                <code class="text-muted small" th:text="${ticket.ticketCode}"></code>
+                                <h5 class="mb-3 text-center text-white">Vé của bạn:</h5>
+                                <div class="row g-3 justify-content-center">
+                                    <div th:each="ticket : ${tickets}" class="col-12 col-md-10">
+                                        <div class="card border-dashed shadow-sm" th:id="'ticket-card-' + ${ticket.id}">
+                                            <div class="card-body p-3 d-flex align-items-center gap-3">
+                                                <!-- QR Code -->
+                                                <div class="flex-shrink-0">
+                                                    <img th:src="'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' + ${ticket.ticketCode}"
+                                                        alt="QR Code" class="img-fluid border rounded"
+                                                        style="width: 80px; height: 80px;">
+                                                </div>
+
+                                                <!-- Ticket Info -->
+                                                <div class="flex-grow-1 text-start">
+                                                    <h6 class="fw-bold mb-1"
+                                                        th:text="${ticket.bookingDetail.ticketType.name}">Loại vé</h6>
+                                                    <div class="d-flex flex-wrap gap-3 small align-items-center">
+                                                        <span class="text-muted">Mã vé: <code
+                                                                class="text-white fw-bold fs-6"
+                                                                th:text="${ticket.ticketCode}"></code></span>
+                                                        <span class="vr d-none d-sm-block"></span>
+                                                        <span class="text-secondary"><i
+                                                                class="bi bi-calendar-event me-1"></i><span
+                                                                th:text="${#temporals.format(startTime, 'HH:mm dd/MM/yyyy')}"></span></span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Action -->
+                                                <div class="flex-shrink-0 no-print">
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-outline-success rounded-pill px-3"
+                                                        th:onclick="'printTicket(\'print-ticket-card-' + ${ticket.id} + '\')'">
+                                                        <i class="bi bi-printer me-1"></i>In
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Hidden Legacy Vertical Layout for Printing -->
+                                        <div class="d-none">
+                                            <div class="card border-dashed shadow-sm"
+                                                th:id="'print-ticket-card-' + ${ticket.id}">
+                                                <div class="card-body text-center p-4">
+                                                    <img th:src="'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + ${ticket.ticketCode}"
+                                                        alt="QR Code" class="img-fluid mb-3" style="width: 180px;">
+                                                    <div class="h6 fw-bold mb-1"
+                                                        th:text="${ticket.bookingDetail.ticketType.name}"></div>
+                                                    <div class="text-muted small mb-2">
+                                                        Mã vé: <code th:text="${ticket.ticketCode}"
+                                                            style="font-size: 1.2em; font-weight: bold;"></code>
+                                                    </div>
+                                                    <div class="badge bg-light text-dark border mb-3"
+                                                        th:text="${#temporals.format(startTime, 'HH:mm - dd/MM/yyyy')}">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="d-grid gap-2">
-                                <a th:href="@{/tickets/my-tickets}" class="btn btn-primary">Xem vé của tôi</a>
-                                <a th:href="@{/}" class="btn btn-outline-secondary">Về trang chủ</a>
+                            <div class="d-grid gap-2 no-print">
+                                <a th:href="@{/tickets/my-tickets}" class="btn btn-primary"
+                                    style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); border: none;">Xem
+                                    vé của tôi</a>
+                                <a th:href="@{/}" class="btn btn-outline-light">Về trang chủ</a>
                             </div>
                         </div>
                     </div>
@@ -56,6 +111,67 @@
             </div>
         </div>
     </div>
+
+    <div id="print-header-template" style="display: none;">
+        <div style="text-align: left; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px;">
+            <h2 style="margin: 0 0 10px 0; color: #0d6efd;">XÁC NHẬN ĐẶT VÉ THÀNH CÔNG</h2>
+            <p style="margin: 2px 0;"><strong>Sự kiện:</strong> [[${event != null ? event.title : 'N/A'}]]</p>
+            <p style="margin: 2px 0;"><strong>Thời gian:</strong> [[${startTime != null ? #temporals.format(startTime,
+                'HH:mm dd/MM/yyyy') : 'N/A'}]]</p>
+            <p style="margin: 2px 0;"><strong>Địa điểm:</strong> [[${!tickets.isEmpty() ?
+                tickets[0].bookingDetail.ticketType.eventOccurrence.getFullLocation() : 'N/A'}]]</p>
+            <p style="margin: 2px 0;"><strong>Mã đơn hàng:</strong> #[[${booking != null ? booking.id : '---'}]]</p>
+            <p style="margin: 2px 0;"><strong>Người mua:</strong> [[${booking.user != null ? booking.user.fullName : 'Hệ
+                thống'}]]</p>
+            <p style="margin: 2px 0;"><strong>Ngày đặt:</strong> [[${#temporals.format(booking.bookingTime, 'dd/MM/yyyy
+                HH:mm')}]]</p>
+        </div>
+    </div>
+
+    <style>
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            .card {
+                border: none !important;
+                box-shadow: none !important;
+            }
+
+            .booking-success {
+                padding: 0 !important;
+            }
+        }
+    </style>
+
+    <script th:inline="javascript">
+        function printTicket(cardId) {
+            const printHeader = document.getElementById('print-header-template').innerHTML;
+
+            // Clone the card and remove the print button
+            const cardClone = document.getElementById(cardId).cloneNode(true);
+            const noPrintElements = cardClone.querySelectorAll('.no-print');
+            noPrintElements.forEach(el => el.remove());
+
+            const ticketContents = cardClone.innerHTML;
+
+            document.body.innerHTML = `
+                <div style="padding: 40px; max-width: 800px; margin: 0 auto; font-family: 'Segoe UI', Arial, sans-serif;">
+                    ${printHeader}
+                    <div style="text-align: center; margin-top: 30px;">
+                        ${ticketContents}
+                    </div>
+                    <div style="margin-top: 50px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #eee; padding-top: 20px;">
+                        <p>Vui lòng mang theo vé này để check-in tại sự kiện.</p>
+                        <p>Hệ thống vé EventPro - Tra cứu tại: http://localhost:8080</p>
+                    </div>
+                </div>`;
+
+            window.print();
+            window.location.reload();
+        }
+    </script>
 </body>
 
 </html>

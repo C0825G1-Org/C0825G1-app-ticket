@@ -3,10 +3,11 @@
 
 <head th:replace="~{common/layout :: head('Vé của tôi')}"></head>
 
-<body>
+<body class="my-tickets-page" style="background-color: #0f172a;" data-bs-theme="dark">
+    <!-- MARKER: VERSION 2.0 - DARK THEME -->
     <div th:replace="~{common/layout :: user-layout(~{:: .my-tickets})}">
-        <div class="my-tickets container py-5">
-            <h2 class="mb-4">Vé của tôi</h2>
+        <div class="my-tickets container py-5 mt-5">
+            <h2 class="mb-4 fw-bold text-white">Vé của tôi</h2>
 
             <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
                 <span th:text="${message}"></span>
@@ -18,68 +19,87 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
 
-            <div class="card shadow-sm border-0">
+            <div class="card card-glass-dark border-0">
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
+                        <table class="table align-middle mb-0 text-white" style="border-color: rgba(255,255,255,0.1);">
+                            <thead style="background-color: rgba(255,255,255,0.05);">
                                 <tr>
-                                    <th class="ps-4">Mã vé</th>
+                                    <th class="ps-4">STT</th>
                                     <th>Sự kiện</th>
-                                    <th>Loại vé</th>
-                                    <th>Trạng thái</th>
-                                    <th class="text-end pe-4">Thao tác</th>
+                                    <th>Số lượng vé</th>
+                                    <th>Trạng thái thanh toán</th>
+                                    <th class="text-center">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr th:each="ticket : ${tickets}">
+                                <tr th:each="entry, iterStat : ${groupedTickets}">
                                     <td class="ps-4">
-                                        <code th:text="${ticket.ticketCode}">TICKET-123</code>
+                                        <span th:text="${iterStat.count}">1</span>
                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <div>
-                                                <h6 class="mb-0"
-                                                    th:text="${ticket.bookingDetail.booking.status == 'CANCELLED' ? '[Đã hủy] ' : ''} + ${ticket.bookingDetail.ticketType.event.title}">
+                                                <h6 class="mb-0 fw-bold text-white" th:text="${entry.key.eventTitle}">
                                                     Tên sự kiện</h6>
-                                                <small class="text-muted"
-                                                    th:text="${ticket.bookingDetail.ticketType.event.location}">Địa
+                                                <small class="text-white-50 d-block mb-1">
+                                                    <i class="bi bi-clock me-1 text-primary"></i>
+                                                    <span
+                                                        th:text="${#temporals.format(entry.key.startTime, 'HH:mm dd/MM/yyyy')}">19:00
+                                                        20/11/2024</span>
+                                                </small>
+                                                <small class="text-white-50" th:text="${entry.key.eventLocation}">Địa
                                                     điểm</small>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge bg-info text-dark"
-                                            th:text="${ticket.bookingDetail.ticketType.name}">Loại vé</span>
+                                        <div class="d-flex flex-column">
+                                            <span
+                                                class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25"
+                                                style="width: fit-content;" th:text="${entry.value.size()} + ' vé'">2
+                                                vé</span>
+                                            <!-- Debug: Show Booking IDs if multiple -->
+                                            <small class="text-white-50 mt-1" style="font-size: 0.7rem;">
+                                                Mã ĐH: <span th:each="t, i : ${entry.value}"
+                                                    th:if="${i.index == 0 or entry.value[i.index-1].bookingDetail.booking.id != t.bookingDetail.booking.id}"
+                                                    th:text="${t.bookingDetail.booking.id} + (i.last ? '' : ', ')"></span>
+                                            </small>
+                                        </div>
                                     </td>
                                     <td>
-                                        <span th:if="${ticket.used}" class="badge bg-secondary">Đã sử dụng</span>
-                                        <span
-                                            th:if="${!ticket.used && ticket.bookingDetail.booking.status.name() == 'SUCCESS'}"
-                                            class="badge bg-success">Chưa sử dụng</span>
-                                        <span th:if="${ticket.bookingDetail.booking.status.name() == 'CANCELLED'}"
-                                            class="badge bg-danger">Đã hủy</span>
+                                        <span th:if="${entry.key.statusName == 'SUCCESS'}"
+                                            class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25">Đã
+                                            thanh toán</span>
+                                        <span th:if="${entry.key.statusName == 'PENDING'}"
+                                            class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25">Chưa
+                                            thanh toán</span>
+                                        <span th:if="${entry.key.statusName == 'CANCELLED'}"
+                                            class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25">Đã
+                                            hủy</span>
                                     </td>
-                                    <td class="text-end pe-4">
-                                        <div class="btn-group">
-                                            <a th:href="@{/tickets/detail/{id}(id=${ticket.id})}"
-                                                class="btn btn-sm btn-outline-primary">Chi tiết</a>
-                                            <a th:if="${!ticket.used && ticket.bookingDetail.booking.status == 'SUCCESS'}"
-                                                th:href="@{/tickets/qrcode/{id}(id=${ticket.id})}"
-                                                class="btn btn-sm btn-outline-success">QR Code</a>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <!-- Success: Show Details -->
+                                            <a th:if="${entry.key.statusName == 'SUCCESS'}"
+                                                th:href="@{/tickets/event-detail/{eventId}(eventId=${entry.key.eventId}, occurrenceId=${entry.key.occurrenceId}, status=${entry.key.statusName})}"
+                                                class="btn btn-sm btn-primary" style="width: 150px;">Chi
+                                                tiết</a>
 
-                                            <form
-                                                th:if="${!ticket.used && ticket.bookingDetail.booking.status == 'SUCCESS'}"
-                                                th:action="@{/bookings/cancel/{id}(id=${ticket.bookingDetail.booking.id})}"
-                                                method="post"
-                                                onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')">
-                                                <button type="submit"
-                                                    class="btn btn-sm btn-outline-danger ms-1">Hủy</button>
-                                            </form>
+                                            <!-- Pending: Show Continue Payment -->
+                                            <a th:if="${entry.key.statusName == 'PENDING'}"
+                                                th:href="@{/bookings/confirm(bookingId=${entry.value[0].bookingDetail.booking.id})}"
+                                                class="btn btn-sm btn-outline-warning" style="width: 150px;">Tiếp tục
+                                                thanh toán</a>
+
+                                            <!-- Cancelled: Show Re-book -->
+                                            <a th:if="${entry.key.statusName == 'CANCELLED'}"
+                                                th:href="@{/bookings/book/{eventId}(eventId=${entry.key.eventId}, occurrence=${entry.key.occurrenceId})}"
+                                                class="btn btn-sm btn-outline-danger" style="width: 150px;">Đặt lại</a>
                                         </div>
                                     </td>
                                 </tr>
-                                <tr th:if="${#lists.isEmpty(tickets)}">
+                                <tr th:if="${#maps.isEmpty(groupedTickets)}">
                                     <td colspan="5" class="text-center py-5">
                                         <p class="text-muted">Bạn chưa có vé nào.</p>
                                         <a th:href="@{/}" class="btn btn-primary">Khám phá sự kiện</a>

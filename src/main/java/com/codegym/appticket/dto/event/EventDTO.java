@@ -16,20 +16,22 @@ public class EventDTO {
     private Long id;
     private String title;
     private String description;
-    private String location;
+
     private Long categoryId;
     private String categoryName;
     private Long createdById;
     private String createdByName;
     private EventStatus status;
     private LocalDateTime createdAt;
+    private Long organizerId;
+    private String organizerName;
+    private String reason;
+    private Long viewCount;
 
     @Builder.Default
-    private List<EventTimeDTO> eventTimes = new ArrayList<>();
+    private List<EventOccurrenceDTO> eventOccurrences = new ArrayList<>();
 
     @Builder.Default
     private List<EventMediaDTO> eventMedias = new ArrayList<>();
 
-    @Builder.Default
-    private List<TicketTypeDTO> ticketTypes = new ArrayList<>();
 }

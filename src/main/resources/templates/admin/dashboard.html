@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{common/layout :: admin-head('Dashboard')}">
+</head>
+
+<body>
+    <div th:replace="~{common/layout :: admin-layout(~{::content})}">
+        <div th:fragment="content">
+
+            <!-- Custom Styles -->
+            <style>
+                .stats-card {
+                    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+                }
+
+                .stats-card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+                }
+
+                .icon-circle {
+                    width: 56px;
+                    height: 56px;
+                    font-size: 1.75rem;
+                    border-radius: 16px;
+                    /* Squircleish */
+                }
+
+                .bg-gradient-primary {
+                    background: linear-gradient(45deg, #0d6efd, #0dcaf0);
+                }
+
+                .bg-gradient-success {
+                    background: linear-gradient(45deg, #198754, #20c997);
+                }
+
+                .bg-gradient-warning {
+                    background: linear-gradient(45deg, #ffc107, #fd7e14);
+                }
+
+                .table-hover tbody tr:hover {
+                    background-color: rgba(0, 0, 0, .02);
+                }
+
+                .rounded-4-5 {
+                    border-radius: 1rem;
+                }
+            </style>
+
+            <!-- Title -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1">Tổng quan</h2>
+                    <p class="text-muted mb-0">Chào mừng trở lại bảng điều khiển quản trị.</p>
+                </div>
+            </div>
+
+            <!-- KPI Cards Row -->
+            <div class="row g-4 mb-4">
+                <!-- Card 1: Revenue Today -->
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100 rounded-4 stats-card position-relative overflow-hidden">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-4">
+                                <div>
+                                    <span class="text-muted fw-medium d-block mb-1">Doanh thu 24h qua</span>
+                                    <h3 class="fw-bold mb-0 text-dark"
+                                        th:text="${#numbers.formatDecimal(revenueToday, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
+                                        0 VNĐ</h3>
+                                </div>
+                                <div
+                                    class="bg-success-subtle text-success icon-circle d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-currency-dollar"></i>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center small">
+                                <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 me-2">
+                                    <i class="bi bi-arrow-up-short"></i> +12.5%
+                                </span>
+                                <span class="text-muted">So với hôm qua</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Happening Events -->
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100 rounded-4 stats-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-4">
+                                <div>
+                                    <span class="text-muted fw-medium d-block mb-1">Sự kiện đang diễn ra</span>
+                                    <h3 class="fw-bold mb-0 text-dark" th:text="${happeningEventsCount}">0</h3>
+                                </div>
+                                <div
+                                    class="bg-primary-subtle text-primary icon-circle d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-broadcast"></i>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center small">
+                                <span class="text-success fw-medium"><i class="bi bi-circle-fill"
+                                        style="font-size: 8px;"></i> Live Status</span>
+                                <span class="mx-2 text-muted">•</span>
+                                <span class="text-muted">Cập nhật realtime</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Pending Events -->
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100 rounded-4 stats-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-4">
+                                <div>
+                                    <span class="text-muted fw-medium d-block mb-1">Yêu cầu duyệt</span>
+                                    <h3 class="fw-bold mb-0 text-dark" th:text="${pendingEventsCount}">0</h3>
+                                </div>
+                                <div
+                                    class="bg-warning-subtle text-warning icon-circle d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-hourglass-split"></i>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center small">
+                                <span class="badge bg-warning-subtle text-warning rounded-pill px-2 py-1 me-2"
+                                    th:if="${pendingEventsCount > 0}">
+                                    Action Needed
+                                </span>
+                                <span class="text-muted"
+                                    th:text="${pendingEventsCount > 0 ? 'Cần xử lý ngay' : 'Không có yêu cầu mới'}"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats & Lists Row -->
+            <div class="row g-4 mb-4">
+                <!-- Recent Bookings (Main Column) -->
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden">
+                        <div
+                            class="card-header bg-white border-bottom-0 py-4 px-4 d-flex justify-content-between align-items-center">
+                            <h5 class="fw-bold mb-0">Đơn hàng mới nhất</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0 align-middle">
+                                    <thead class="bg-light">
+                                        <tr class="text-secondary small text-uppercase">
+                                            <th class="px-4 py-3 fw-bold border-0">Khách hàng</th>
+                                            <th class="px-4 py-3 fw-bold border-0">Sự kiện</th>
+                                            <th class="px-4 py-3 fw-bold border-0">Loại vé</th>
+                                            <th class="px-4 py-3 fw-bold border-0 text-end">Tổng tiền</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:if="${#lists.isEmpty(recentBookings)}">
+                                            <td colspan="4" class="text-center py-5 text-muted">
+                                                <i class="bi bi-receipt display-4 text-secondary opacity-25 mb-3"></i>
+                                                <p class="mb-0">Chưa có đơn hàng nào.</p>
+                                            </td>
+                                        </tr>
+                                        <tr th:each="booking : ${recentBookings}">
+                                            <td class="px-4 py-3">
+                                                <div class="fw-medium text-dark" th:text="${booking.userFullName}">User
+                                                    Name</div>
+                                                <small class="text-muted"
+                                                    th:text="${#temporals.format(booking.bookingTime, 'HH:mm dd/MM')}">Time</small>
+                                            </td>
+                                            <td class="px-4 py-3 text-secondary text-truncate" style="max-width: 200px;"
+                                                th:text="${booking.eventTitle}">Event Name</td>
+                                            <td class="px-4 py-3 text-muted small text-wrap">
+                                                <span class="badge bg-light text-secondary border fw-normal"
+                                                    th:text="${booking.ticketTypes}">Standard</span>
+                                            </td>
+                                            <td class="px-4 py-3 text-end fw-bold text-success"
+                                                th:text="${#numbers.formatDecimal(booking.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'">
+                                                Amount</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming Events Sales Performance (Side Column) -->
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden">
+                        <div class="card-header bg-white border-bottom-0 py-4 px-4">
+                            <h5 class="fw-bold mb-0">Hiệu suất bán vé</h5>
+                        </div>
+                        <div class="card-body px-4 pb-4 pt-0">
+                            <div th:if="${#lists.isEmpty(upcomingSales)}" class="text-center text-muted py-5">
+                                <i class="bi bi-calendar-x display-4 text-secondary opacity-25 mb-3"></i>
+                                <p>Chưa có dữ liệu.</p>
+                            </div>
+                            <div th:each="event : ${upcomingSales}" class="mb-4 last:mb-0">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <div class="text-truncate pe-2">
+                                        <span class="fw-bold text-dark d-block text-truncate"
+                                            th:text="${event.title}">Tên sự kiện</span>
+                                        <small class="text-muted"
+                                            th:text="${#temporals.format(event.startTime, 'dd/MM/yyyy')}">Date</small>
+                                    </div>
+                                    <div class="text-end flex-shrink-0">
+                                        <span class="fw-bold text-primary" th:text="${event.soldTickets}">0</span>
+                                        <span class="text-muted small">/ <span
+                                                th:text="${event.totalTickets}">100</span></span>
+                                    </div>
+                                </div>
+                                <div class="progress rounded-pill bg-light" style="height: 6px;" role="progressbar"
+                                    th:aria-label="${event.title}"
+                                    th:aria-valuenow="${event.totalTickets > 0 ? (event.soldTickets * 100 / event.totalTickets) : 0}"
+                                    aria-valuemin="0" aria-valuemax="100">
+                                    <div class="progress-bar bg-gradient-primary rounded-pill"
+                                        th:style="'width: ' + ${event.totalTickets > 0 ? (event.soldTickets * 100.0 / event.totalTickets) : 0} + '%; box-shadow: 0 2px 4px rgba(13, 110, 253, 0.3);'">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Events Table -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
+                <div
+                    class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">Yêu cầu duyệt</h5>
+                        <small class="text-muted">Các sự kiện đang chờ phê duyệt từ nhà tổ chức</small>
+                    </div>
+                    <a th:href="@{/admin/events(status='PENDING')}"
+                        class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-medium transition-base">
+                        Xem tất cả <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="bg-light">
+                                <tr class="text-secondary small text-uppercase">
+                                    <th class="px-4 py-3 fw-bold border-0">Sự kiện</th>
+                                    <th class="px-4 py-3 fw-bold border-0">Nhà tổ chức</th>
+                                    <th class="px-4 py-3 fw-bold border-0">Ngày tạo</th>
+                                    <th class="px-4 py-3 fw-bold border-0">Trạng thái</th>
+                                    <th class="px-4 py-3 fw-bold border-0 text-end">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${pendingEvents.empty}">
+                                    <td colspan="5" class="text-center py-5 text-muted">
+                                        <i class="bi bi-check2-circle display-4 text-success opacity-25 mb-3"></i>
+                                        <p class="mb-0">Tuyệt vời! Không có yêu cầu nào cần duyệt.</p>
+                                    </td>
+                                </tr>
+                                <tr th:each="event : ${pendingEvents}">
+                                    <td class="px-4 py-3 fw-bold text-dark" th:text="${event.title}">Tên sự kiện</td>
+                                    <td class="px-4 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-secondary-subtle rounded-circle d-flex align-items-center justify-content-center me-2"
+                                                style="width: 32px; height: 32px">
+                                                <i class="bi bi-person-fill text-muted"></i>
+                                            </div>
+                                            <span
+                                                th:text="${event.createdBy != null ? event.createdBy.fullName : 'Unknown'}"
+                                                class="text-secondary fw-medium">Organizer</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 text-muted"
+                                        th:text="${#temporals.format(event.createdDate, 'dd/MM/yyyy')}">Date
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span
+                                            class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-2">
+                                            <i class="bi bi-clock me-1"></i> Chờ duyệt
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-end">
+                                        <button type="button"
+                                            class="btn btn-sm btn-light text-primary fw-medium rounded-pill px-3 shadow-sm border"
+                                            th:onclick="'openDetailModal(' + ${event.id} + ')'" title="Xem chi tiết">
+                                            Xem chi tiết
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Event Detail Modal -->
+            <div class="modal fade" id="eventDetailModal" aria-hidden="true" data-bs-focus="false">
+                <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content rounded-4 border-0">
+                        <div class="modal-header border-bottom-0 pb-0">
+                            <h5 class="modal-title fw-bold">Chi tiết sự kiện</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4" id="modal-event-content">
+                            <div class="d-flex justify-content-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                        didOpen: (toast) => {
+                            toast.onmouseenter = Swal.stopTimer;
+                            toast.onmouseleave = Swal.resumeTimer;
+                        }
+                    });
+
+                    window.openDetailModal = function (id) {
+                        const modalEl = document.getElementById('eventDetailModal');
+                        const modalContent = document.getElementById('modal-event-content');
+                        const modal = new bootstrap.Modal(modalEl);
+
+                        modal.show();
+                        modalContent.innerHTML = `
+                            <div class="d-flex justify-content-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>`;
+
+                        fetch(`/admin/events/${id}/modal`)
+                            .then(response => response.text())
+                            .then(html => {
+                                modalContent.innerHTML = html;
+                            })
+                            .catch(err => {
+                                modalContent.innerHTML = '<div class="text-danger text-center py-4">Lỗi tải dữ liệu.</div>';
+                                console.error(err);
+                            });
+                    };
+
+                    window.approveEvent = function (id) {
+                        Swal.fire({
+                            title: 'Duyệt sự kiện này?',
+                            text: "Sự kiện sẽ được công khai ngay lập tức.",
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: 'Duyệt ngay',
+                            cancelButtonText: 'Hủy',
+                            confirmButtonColor: '#198754'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                                fetch('/admin/events/' + id + '/approve', {
+                                    method: 'POST',
+                                    headers: { [csrfHeader]: csrfToken }
+                                })
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        if (data.status === 'success') {
+                                            Toast.fire({ icon: 'success', title: data.message });
+                                            bootstrap.Modal.getInstance(document.getElementById('eventDetailModal')).hide();
+                                            setTimeout(() => location.reload(), 1000);
+                                        } else {
+                                            Toast.fire({ icon: 'error', title: data.message });
+                                        }
+                                    });
+                            }
+                        });
+                    }
+
+                    window.rejectEvent = function (id) {
+                        Swal.fire({
+                            title: 'Từ chối sự kiện?',
+                            input: 'textarea',
+                            inputLabel: 'Lý do từ chối',
+                            inputPlaceholder: 'Nhập lý do tại đây...',
+                            showCancelButton: true,
+                            confirmButtonText: 'Xác nhận từ chối',
+                            cancelButtonText: 'Hủy',
+                            confirmButtonColor: '#dc3545',
+                            inputValidator: (value) => {
+                                if (!value) return 'Vui lòng nhập lý do!'
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                                const reason = result.value;
+                                fetch('/admin/events/' + id + '/reject?reason=' + encodeURIComponent(reason), {
+                                    method: 'POST',
+                                    headers: { [csrfHeader]: csrfToken }
+                                })
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        if (data.status === 'success') {
+                                            Toast.fire({ icon: 'success', title: data.message });
+                                            bootstrap.Modal.getInstance(document.getElementById('eventDetailModal')).hide();
+                                            setTimeout(() => location.reload(), 1000);
+                                        } else {
+                                            Toast.fire({ icon: 'error', title: data.message });
+                                        }
+                                    });
+                            }
+                        });
+                    }
+
+                    window.cancelEvent = function (id) {
+                        Swal.fire({
+                            title: 'Hủy sự kiện?',
+                            text: 'Sự kiện sẽ chuyển sang trạng thái Đã hủy.',
+                            input: 'textarea',
+                            inputLabel: 'Lý do hủy',
+                            inputPlaceholder: 'Nhập lý do tại đây...',
+                            showCancelButton: true,
+                            confirmButtonText: 'Xác nhận hủy',
+                            cancelButtonText: 'Quay lại',
+                            confirmButtonColor: '#ffc107',
+                            inputValidator: (value) => {
+                                if (!value) return 'Vui lòng nhập lý do!'
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                                const reason = result.value;
+                                fetch('/admin/events/' + id + '/cancel?reason=' + encodeURIComponent(reason), {
+                                    method: 'POST',
+                                    headers: { [csrfHeader]: csrfToken }
+                                })
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        if (data.status === 'success') {
+                                            Toast.fire({ icon: 'success', title: data.message });
+                                            bootstrap.Modal.getInstance(document.getElementById('eventDetailModal')).hide();
+                                            setTimeout(() => location.reload(), 1000);
+                                        } else {
+                                            Toast.fire({ icon: 'error', title: data.message });
+                                        }
+                                    });
+                            }
+                        });
+                    }
+
+                    window.deleteEvent = function (id, title) {
+                        Swal.fire({
+                            title: `Xóa sự kiện "${title}"?`,
+                            text: "Hành động này không thể hoàn tác!",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#d33',
+                            cancelButtonColor: '#3085d6',
+                            confirmButtonText: 'Đồng ý xóa',
+                            cancelButtonText: 'Hủy'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                                fetch('/api/events/' + id, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        [csrfHeader]: csrfToken
+                                    }
+                                })
+                                    .then(async response => {
+                                        if (response.ok) {
+                                            Toast.fire({ icon: 'success', title: 'Đã xóa sự kiện thành công!' });
+                                            bootstrap.Modal.getInstance(document.getElementById('eventDetailModal')).hide();
+                                            setTimeout(() => location.reload(), 1000);
+                                        } else {
+                                            const errorText = await response.text();
+                                            Toast.fire({ icon: 'error', title: 'Lỗi: ' + (errorText || 'Xóa sự kiện thất bại.') });
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        Toast.fire({ icon: 'error', title: 'Đã xảy ra lỗi khi xóa sự kiện.' });
+                                    });
+                            }
+                        });
+                    }
+                });
+            </script>
+
+        </div>
+    </div>
+</body>
+
+</html>

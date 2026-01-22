@@ -19,10 +19,16 @@ public class Booking extends Parent {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(name = "booking_time", insertable = false, updatable = false)
+    @Column(name = "booking_time")
     private java.time.LocalDateTime bookingTime;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private BookingStatus status;
+
+    @Column(name = "transaction_code")
+    private String transactionCode;
+
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+    private java.util.List<BookingDetail> bookingDetails;
 }

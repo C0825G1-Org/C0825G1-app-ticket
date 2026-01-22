@@ -25,4 +25,7 @@ public class BookingDetail {
 
     @Column(name = "quantity")
     private Integer quantity;
+
+    @OneToMany(mappedBy = "bookingDetail", cascade = CascadeType.ALL)
+    private java.util.List<Ticket> tickets;
 }

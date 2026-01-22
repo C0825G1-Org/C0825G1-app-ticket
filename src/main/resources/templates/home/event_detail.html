@@ -5,201 +5,74 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${event.title} + ' - EventPro'">Event Detail - EventPro</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
     <link rel="stylesheet" th:href="@{/css/home.css}">
+    <th:block th:replace="~{common/styles :: styles}"></th:block>
+
     <style>
-        .hero-section-detail {
-            position: relative;
+        /* Minimal custom CSS - Only what Bootstrap can't do */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .hero-bg {
             min-height: 500px;
             background-size: cover;
             background-position: center;
-            display: flex;
-            align-items: flex-end;
-            padding-bottom: 40px;
         }
 
         .hero-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
             background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.8));
         }
 
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            color: white;
+        .qty-btn {
+            width: 36px;
+            height: 36px;
+            transition: all 0.2s;
         }
 
-        .event-badge {
-            display: inline-block;
-            padding: 6px 16px;
-            background: #3b82f6;
-            color: white;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 16px;
+        .qty-btn:hover:not(:disabled) {
+            transform: scale(1.1);
         }
 
         .ticket-card {
             position: sticky;
             top: 100px;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            padding: 24px;
         }
 
-        .ticket-type-item {
-            padding: 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            transition: all 0.3s;
-        }
-
-        .ticket-type-item:hover {
-            border-color: #3b82f6;
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
-        }
-
-        .quantity-control {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .qty-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 2px solid #e5e7eb;
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .qty-btn:hover:not(:disabled) {
-            border-color: #3b82f6;
-            background: #3b82f6;
-            color: white;
-        }
-
-        .qty-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        .book-btn {
-            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
-            border: none;
-            color: white;
-            font-weight: 600;
-            padding: 14px;
-            border-radius: 12px;
-            width: 100%;
-            font-size: 16px;
-            transition: transform 0.2s;
-        }
-
-        .book-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
-        }
-
-        .book-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .back-btn {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 8px 20px;
-            border-radius: 24px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .back-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            color: white;
-        }
-
-        .action-btns {
-            display: flex;
-            gap: 12px;
-        }
-
-        .action-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-
-        .action-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .event-info-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border-radius: 24px;
-            margin-right: 16px;
-            margin-bottom: 16px;
-        }
-
-        .available-badge {
-            background: #10b981;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
+        .ticket-list {
+            max-height: 400px;
+            overflow-y: auto;
         }
     </style>
 </head>
 
-<body>
-    <div th:replace="~{common/header :: public-navbar}"></div>
+<body style="background-color: #0f172a;" data-bs-theme="dark">
+    <div th:replace="~{common/header :: public-navbar-dark}"></div>
 
     <!-- Hero Section -->
-    <section class="hero-section-detail"
+    <section class="hero-bg position-relative d-flex align-items-end"
         th:style="'background-image: url(' + (${event.mediaUrl} ?: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30') + ');'">
-        <div class="hero-overlay"></div>
-        <div class="container-xl hero-content">
+        <div class="hero-overlay position-absolute top-0 start-0 w-100 h-100"></div>
+        <div class="container-xl position-relative text-white pb-4">
             <!-- Back Button & Actions -->
             <div class="d-flex justify-content-between align-items-start mb-4">
-                <a th:href="@{/events}" class="back-btn">
+                <a th:href="@{/events}" class="btn btn-outline-light rounded-pill px-4 bg-opacity-25 bg-white">
                     <i class="bi bi-arrow-left me-2"></i>Quay lại
                 </a>
-                <div class="action-btns">
-                    <button class="action-btn" title="Yêu thích">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-light rounded-circle p-2 bg-opacity-25 bg-white"
+                        style="width: 40px; height: 40px;" title="Yêu thích">
                         <i class="bi bi-heart"></i>
                     </button>
-                    <button class="action-btn" title="Chia sẻ">
+                    <button class="btn btn-outline-light rounded-circle p-2 bg-opacity-25 bg-white"
+                        style="width: 40px; height: 40px;" title="Chia sẻ">
                         <i class="bi bi-share"></i>
                     </button>
                 </div>
@@ -207,23 +80,26 @@
 
             <!-- Event Info -->
             <div>
-                <span class="event-badge" th:text="${event.categoryName}">Music Concert</span>
+                <span class="badge bg-primary rounded-pill px-3 py-2 mb-3" th:text="${event.categoryName}">Music
+                    Concert</span>
                 <h1 class="display-4 fw-bold mb-3" th:text="${event.title}">EDM Symphony Night</h1>
-                <h2 class="display-6 fw-light mb-4" th:text="${#temporals.year(event.startTime)}">2026</h2>
+                <h2 class="display-6 fw-light mb-4"
+                    th:text="${event.startTime != null ? #temporals.year(event.startTime) : '2026'}">2026</h2>
 
-                <div class="d-flex flex-wrap">
-                    <div class="event-info-badge">
-                        <i class="bi bi-calendar3"></i>
-                        <span
-                            th:text="${event.startTime != null ? #temporals.format(event.startTime, 'dd/MM/yyyy • HH:mm') : 'TBA'}">
-                            24/10/2026 • 20:00
-                        </span>
-                    </div>
-                    <div class="event-info-badge">
-                        <i class="bi bi-geo-alt"></i>
-                        <span th:text="${event.location}">SVĐ QK7, TP. HCM</span>
-                    </div>
-                </div>
+                <!--                <div class="d-flex flex-wrap gap-3">-->
+                <!--                    <div class="badge bg-white bg-opacity-25 text-white rounded-pill px-3 py-2">-->
+                <!--                        <i class="bi bi-calendar3 me-2"></i>-->
+                <!--                        <span-->
+                <!--                            th:text="${event.startTime != null ? #temporals.format(event.startTime, 'dd/MM/yyyy • HH:mm') : 'TBA'}">-->
+                <!--                            24/10/2026 • 20:00-->
+                <!--                        </span>-->
+                <!--                    </div>-->
+                <!--                    <div class="badge bg-white bg-opacity-25 text-white rounded-pill px-3 py-2">-->
+                <!--                        <i class="bi bi-geo-alt me-2"></i>-->
+                <!--                        <span th:text="${event.location ?: 'Chưa cập nhật'}">SVĐ-->
+                <!--                            QK7, TP. HCM</span>-->
+                <!--                    </div>-->
+                <!--                </div>-->
             </div>
         </div>
     </section>
@@ -234,72 +110,524 @@
             <div class="row">
                 <!-- Left Column: Event Description -->
                 <div class="col-lg-8 mb-4">
-                    <div class="mb-5">
-                        <h3 class="fw-bold mb-3">Giới thiệu sự kiện</h3>
-                        <div class="text-muted lh-lg" th:utext="${event.description}">
-                            Chào mừng đến với EDM Symphony Night 2026 - Sự kiện âm nhạc hoành tráng nhất năm...
+                    <div th:if="${occurrences != null and !occurrences.isEmpty()}" class="mb-5">
+                        <h3 class="fw-bold mb-4">Thời gian & Địa điểm</h3>
+                        <div class="row g-3">
+                            <div th:each="occurrence : ${occurrences}" class="col-12">
+                                <div class="card card-glass-dark border-0 shadow-sm">
+                                    <div class="card-body p-4">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-6 mb-3 mb-md-0">
+                                                <div class="d-flex align-items-start">
+                                                    <i class="bi bi-calendar-event text-primary fs-4 me-3"></i>
+                                                    <div>
+                                                        <h6 class="fw-bold mb-1 text-white">Thời gian</h6>
+                                                        <p class="text-white-50 mb-0"
+                                                            th:text="${occurrence.startTime != null ? #temporals.format(occurrence.startTime, 'dd/MM/yyyy • HH:mm') : 'TBA'}">
+                                                            25/01/2026 • 15:45
+                                                        </p>
+                                                        <small class="text-muted" th:if="${occurrence.endTime != null}"
+                                                            th:text="'Kết thúc: ' + ${#temporals.format(occurrence.endTime, 'dd/MM/yyyy • HH:mm')}">
+                                                            Kết thúc: 22:00
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="d-flex align-items-start">
+                                                    <i class="bi bi-geo-alt-fill text-danger fs-4 me-3"></i>
+                                                    <div>
+                                                        <h6 class="fw-bold mb-1 text-white">Địa điểm</h6>
+                                                        <p class="text-white-50 mb-0" th:text="${occurrence.location}">
+                                                            Tỉnh Đồng Nai, Xã Long Tân
+                                                        </p>
+                                                        <small class="text-muted" th:if="${occurrence.addressDetail}"
+                                                            th:text="${occurrence.addressDetail}">
+                                                            123 Đường ABC
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                    <div class="mb-5">
+                        <h3 class="fw-bold mb-4 text-white">Giới thiệu sự kiện</h3>
+                        <div class="text-white-50 lh-lg" th:utext="${event.description}">
+                            Chào mừng đến với EDM Symphony Night 2026 - Sự kiện âm nhạc hoành tráng nhất năm...
+                        </div>
+                        <style>
+                            /* Description Content Styling - Home */
+                            #event-description-content img {
+                                max-width: 100% !important;
+                                height: auto !important;
+                                display: block;
+                                margin: 10px auto;
+                                border-radius: 0.5rem;
+                            }
 
-                    <!-- TODO: Add artists section if needed -->
+                            #event-description-content table {
+                                width: 100% !important;
+                                max-width: 100% !important;
+                                margin-bottom: 1rem;
+                                background-color: transparent;
+                                border-collapse: collapse;
+                            }
+
+                            #event-description-content table td,
+                            #event-description-content table th {
+                                padding: 0.5rem;
+                                border: 1px solid #dee2e6;
+                            }
+                        </style>
+                    </div>
                 </div>
 
                 <!-- Right Column: Ticket Selection -->
                 <div class="col-lg-4">
-                    <div class="ticket-card">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold mb-0">Chọn vé</h5>
-                            <span class="available-badge">Còn vé</span>
-                        </div>
+                    <div class="ticket-card card card-glass-dark shadow-lg rounded-4 border-0">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold mb-0">Chọn vé</h5>
+                            </div>
 
-                        <form id="ticketForm">
-                            <div th:each="ticket : ${ticketTypes}" class="ticket-type-item">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <div class="flex-grow-1">
-                                        <h6 class="fw-bold mb-0" th:text="${ticket.name}">Vé Phổ thông (GA)</h6>
-                                    </div>
-                                    <div class="text-end">
-                                        <div class="fw-bold"
-                                            th:text="${#numbers.formatInteger(ticket.price, 0, 'COMMA')} + 'đ'">
-                                            500.000đ
+                            <form id="ticketForm">
+                                <!-- Occurrence Selection -->
+                                <div th:if="${occurrences != null and occurrences.size() > 1}" class="mb-3">
+                                    <label class="form-label fw-semibold small">
+                                        <i class="bi bi-calendar-event text-primary me-1"></i>
+                                        Chọn thời gian & địa điểm
+                                    </label>
+                                    <select class="form-select form-select-sm" id="occurrenceSelect" required>
+                                        <option value="">-- Chọn buổi diễn ra --</option>
+                                        <option th:each="occurrence : ${occurrences}" th:value="${occurrence.id}"
+                                            th:text="${(occurrence.startTime != null ? #temporals.format(occurrence.startTime, 'dd/MM/yyyy HH:mm') : 'TBA') + ' - ' + (occurrence.location ?: 'Chưa cập nhật')}">
+                                            25/01/2026 15:45 - Tỉnh Đồng Nai
+                                        </option>
+                                    </select>
+                                    <small class="text-muted d-block mt-1">Vui lòng chọn buổi diễn ra</small>
+                                </div>
+
+                                <!-- Hidden input for single occurrence -->
+                                <input th:if="${occurrences != null and occurrences.size() == 1}" type="hidden"
+                                    id="occurrenceSelect" th:value="${occurrences[0].id}">
+
+                                <!-- Ticket List with Scroll -->
+                                <div class="ticket-list mb-3">
+                                    <div th:each="ticket : ${ticketTypes}"
+                                        th:class="'ticket-item border border-secondary border-opacity-25 rounded-3 p-2 mb-2 ' + (${ticket.availableQuantity <= 0} ? 'border-danger opacity-75' : '')"
+                                        th:data-occurrence-id="${ticket.occurrenceId}"
+                                        th:data-start-time="${ticket.startTime}"
+                                        style="display: none; position: relative;">
+
+                                        <!-- Sold Out Overlay Badge -->
+                                        <div th:if="${ticket.availableQuantity <= 0}" class="ticket-badge-soldout">
+                                            <i class="bi bi-x-circle me-2"></i>Vé đã hết
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div class="flex-grow-1">
+                                                <h6 class="fw-bold mb-1 small" th:text="${ticket.name}">Vé Phổ thông
+                                                    (GA)</h6>
+                                                <!-- Availability indicator with color coding -->
+                                                <small th:if="${ticket.availableQuantity > 10}" class="text-muted">
+                                                    Còn <span th:text="${ticket.availableQuantity}">100</span> vé
+                                                </small>
+                                                <small
+                                                    th:if="${ticket.availableQuantity > 0 && ticket.availableQuantity <= 10}"
+                                                    class="text-warning fw-semibold">
+                                                    Chỉ còn <span th:text="${ticket.availableQuantity}">5</span> vé!
+                                                </small>
+                                                <small th:if="${ticket.availableQuantity <= 0}"
+                                                    class="text-danger fw-semibold">
+                                                    Hết vé
+                                                </small>
+                                                <!-- Show occurrence info for this ticket -->
+                                                <div class="mt-1">
+                                                    <small class="text-primary d-block">
+                                                        <i class="bi bi-calendar3 me-1"></i>
+                                                        <span
+                                                            th:text="${ticket.startTime != null ? #temporals.format(ticket.startTime, 'dd/MM/yyyy HH:mm') : 'TBA'}">25/01/2026
+                                                            15:45</span>
+                                                    </small>
+                                                    <small class="text-muted d-block">
+                                                        <i class="bi bi-geo-alt me-1"></i>
+                                                        <span th:text="${ticket.location}">Đồng Nai</span>
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="fw-bold text-danger"
+                                                    th:text="${#numbers.formatInteger(ticket.price, 0, 'COMMA')} + 'đ'">
+                                                    500.000đ
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted fw-semibold">Số lượng:</small>
+
+                                            <!-- Show quantity controls if available -->
+                                            <div th:if="${ticket.availableQuantity > 0}"
+                                                class="d-flex align-items-center gap-2">
+                                                <button type="button"
+                                                    class="qty-btn btn btn-sm btn-outline-light rounded-circle p-0 minus-btn"
+                                                    th:data-ticket-id="${ticket.id}" th:data-price="${ticket.price}">
+                                                    <i class="bi bi-dash"></i>
+                                                </button>
+                                                <span class="fw-bold qty-display text-white"
+                                                    th:id="'qty-' + ${ticket.id}">0</span>
+                                                <button type="button"
+                                                    class="qty-btn btn btn-sm btn-outline-light rounded-circle p-0 plus-btn"
+                                                    th:data-ticket-id="${ticket.id}" th:data-price="${ticket.price}"
+                                                    th:data-max="${ticket.availableQuantity}">
+                                                    <i class="bi bi-plus"></i>
+                                                </button>
+                                            </div>
+
+                                            <!-- Show 'Sold out' badge if no tickets available -->
+                                            <div th:if="${ticket.availableQuantity <= 0}">
+                                                <span class="badge bg-danger">Sold out</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Warning message when reaching max quantity -->
+                                        <div th:if="${ticket.availableQuantity > 0}"
+                                            class="max-qty-warning text-danger small mt-2"
+                                            th:id="'warning-' + ${ticket.id}" style="display: none;">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>
+                                            <span>Bạn đã đạt giới hạn số lượng vé có thể đặt</span>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div class="d-flex justify-content-between align-items-center mt-2">
-                                    <small class="text-muted">Số lượng:</small>
-                                    <div class="quantity-control">
-                                        <button type="button" class="qty-btn minus-btn" th:data-ticket-id="${ticket.id}"
-                                            th:data-price="${ticket.price}">
-                                            <i class="bi bi-dash"></i>
-                                        </button>
-                                        <span class="fw-bold qty-display" th:id="'qty-' + ${ticket.id}">0</span>
-                                        <button type="button" class="qty-btn plus-btn" th:data-ticket-id="${ticket.id}"
-                                            th:data-price="${ticket.price}" th:data-max="${ticket.availableQuantity}">
-                                            <i class="bi bi-plus"></i>
-                                        </button>
+                                    <!-- No tickets message -->
+                                    <div id="noTicketsMessage" class="text-center text-muted py-4"
+                                        style="display: none;">
+                                        <i class="bi bi-ticket-perforated fs-1 d-block mb-2"></i>
+                                        <p class="mb-0">Vui lòng chọn thời gian & địa điểm để xem vé</p>
                                     </div>
                                 </div>
-                            </div>
 
-                            <hr class="my-3">
+                                <hr class="my-3">
 
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <span class="fw-bold">Tổng cộng:</span>
-                                <span class="fs-4 fw-bold text-primary" id="totalPrice">0đ</span>
-                            </div>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="fw-bold text-white">Tổng cộng:</span>
+                                    <span class="fs-4 fw-bold text-primary" id="totalPrice">0đ</span>
+                                </div>
 
-                            <button type="submit" class="book-btn" id="bookBtn" disabled>
-                                Đặt vé ngay
-                            </button>
-                        </form>
+                                <button type="submit" class="btn btn-gradient btn-lg w-100 rounded-3 fw-semibold"
+                                    style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); color: white; border: none;"
+                                    id="bookBtn" disabled>
+                                    <i class="bi bi-ticket-perforated me-2"></i>Đặt vé ngay
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <footer th:replace="~{common/footer :: footer-dark}"></footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Ticket Selection JS -->
+    <script th:inline="javascript">
+        // Get event ID from URL for storage key
+        const pathParts = window.location.pathname.split('/');
+        const eventId = pathParts[pathParts.length - 1];
+        const storageKey = 'ticketQuantities_' + eventId;
+
+        // Load ticket quantities from sessionStorage or initialize empty object
+        let ticketQuantities = {};
+        try {
+            const saved = sessionStorage.getItem(storageKey);
+            if (saved) {
+                ticketQuantities = JSON.parse(saved);
+            }
+        } catch (e) {
+            console.error('Error loading ticket quantities:', e);
+        }
+
+        // Save ticket quantities to sessionStorage
+        function saveTicketQuantities() {
+            try {
+                sessionStorage.setItem(storageKey, JSON.stringify(ticketQuantities));
+            } catch (e) {
+                console.error('Error saving ticket quantities:', e);
+            }
+        }
+
+        // Get event status and occurrences data from Thymeleaf
+        /*[# th:if="${event != null}"]*/
+        const eventStatus = /*[[${event.status}]]*/ 'APPROVED';
+        /*[/]*/
+
+        // Occurrence selection handler
+        const occurrenceSelect = document.getElementById('occurrenceSelect');
+
+        // Restore selected occurrence from sessionStorage
+        const savedOccurrence = sessionStorage.getItem('selectedOccurrence_' + eventId);
+        if (savedOccurrence && occurrenceSelect && occurrenceSelect.tagName === 'SELECT') {
+            occurrenceSelect.value = savedOccurrence;
+        }
+
+        if (occurrenceSelect && occurrenceSelect.tagName === 'SELECT') {
+            occurrenceSelect.addEventListener('change', function () {
+                const selectedOccurrenceId = this.value;
+                // Save selected occurrence
+                if (selectedOccurrenceId) {
+                    sessionStorage.setItem('selectedOccurrence_' + eventId, selectedOccurrenceId);
+                } else {
+                    sessionStorage.removeItem('selectedOccurrence_' + eventId);
+                }
+                filterTicketsByOccurrence(selectedOccurrenceId);
+                checkBookingAvailability(selectedOccurrenceId);
+            });
+
+            // Show "please select" message initially if no occurrence selected
+            if (!occurrenceSelect.value) {
+                document.getElementById('noTicketsMessage').style.display = 'block';
+            } else {
+                // Restore the previously selected occurrence
+                filterTicketsByOccurrence(occurrenceSelect.value);
+                checkBookingAvailability(occurrenceSelect.value);
+            }
+        } else if (occurrenceSelect) {
+            // Single occurrence - show all tickets for that occurrence
+            const singleOccurrenceId = occurrenceSelect.value;
+            filterTicketsByOccurrence(singleOccurrenceId);
+            checkBookingAvailability(singleOccurrenceId);
+        }
+
+        function checkBookingAvailability(occurrenceId) {
+            const bookBtn = document.getElementById('bookBtn');
+
+            if (!occurrenceId) {
+                // If no occurrence selected, use default behavior
+                return;
+            }
+
+            // Find the selected occurrence's start time from ticket items
+            const ticketItems = document.querySelectorAll('.ticket-item');
+            let occurrenceStartTime = null;
+
+            for (const item of ticketItems) {
+                if (item.dataset.occurrenceId === occurrenceId) {
+                    // Get the start time from the ticket item's data attribute
+                    occurrenceStartTime = item.dataset.startTime;
+                    break;
+                }
+            }
+
+            if (occurrenceStartTime) {
+                const now = new Date();
+                const startTime = new Date(occurrenceStartTime);
+                const hoursDifference = (startTime - now) / (1000 * 60 * 60); // Convert milliseconds to hours
+
+                if (hoursDifference < 3 && hoursDifference >= 0) {
+                    // Less than 3 hours before event starts - disable booking
+                    bookBtn.innerHTML = '<i class="bi bi-exclamation-circle me-2"></i>Sự kiện sắp bắt đầu';
+                    bookBtn.disabled = true;
+                    bookBtn.classList.remove('btn-primary');
+                    bookBtn.classList.add('btn-secondary');
+                } else {
+                    // More than 3 hours away or already started - enable booking
+                    bookBtn.innerHTML = '<i class="bi bi-ticket-perforated me-2"></i>Đặt vé ngay';
+                    bookBtn.classList.remove('btn-secondary');
+                    bookBtn.classList.add('btn-primary');
+                    // Button will be enabled/disabled based on ticket selection
+                }
+            }
+        }
+
+        function filterTicketsByOccurrence(occurrenceId) {
+            const ticketItems = document.querySelectorAll('.ticket-item');
+            const noTicketsMsg = document.getElementById('noTicketsMessage');
+            let visibleCount = 0;
+
+            // DON'T reset quantities - keep them for each occurrence
+            // User can select tickets from multiple occurrences
+
+            if (!occurrenceId) {
+                // No occurrence selected - hide all tickets
+                ticketItems.forEach(item => item.style.display = 'none');
+                noTicketsMsg.style.display = 'block';
+                return;
+            }
+
+            // Show tickets for selected occurrence (including sold-out tickets with dimmed styling)
+            ticketItems.forEach(item => {
+                const itemOccurrenceId = item.dataset.occurrenceId;
+                if (itemOccurrenceId === occurrenceId) {
+                    item.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Show/hide no tickets message
+            noTicketsMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+
+            // Update total to reflect ALL selected tickets (from all occurrences)
+            updateTotal();
+        }
+
+        // Plus button
+        document.querySelectorAll('.plus-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const ticketId = this.dataset.ticketId;
+                const price = parseFloat(this.dataset.price);
+                const max = parseInt(this.dataset.max);
+                const warningEl = document.getElementById('warning-' + ticketId);
+
+                if (!ticketQuantities[ticketId]) {
+                    ticketQuantities[ticketId] = 0;
+                }
+
+                if (ticketQuantities[ticketId] < max) {
+                    ticketQuantities[ticketId]++;
+                    updateDisplay(ticketId);
+                    updateTotal();
+
+                    // Hide warning if shown
+                    if (warningEl) {
+                        warningEl.style.display = 'none';
+                    }
+
+                    // Show warning if now at max
+                    if (ticketQuantities[ticketId] >= max && warningEl) {
+                        warningEl.style.display = 'block';
+                        // Auto-hide after 3 seconds
+                        setTimeout(() => {
+                            warningEl.style.display = 'none';
+                        }, 3000);
+                    }
+                } else {
+                    // Already at max - show warning
+                    if (warningEl) {
+                        warningEl.style.display = 'block';
+                        // Auto-hide after 3 seconds
+                        setTimeout(() => {
+                            warningEl.style.display = 'none';
+                        }, 3000);
+                    }
+                }
+            });
+        });
+
+        // Minus button
+        document.querySelectorAll('.minus-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const ticketId = this.dataset.ticketId;
+                const price = parseFloat(this.dataset.price);
+                const warningEl = document.getElementById('warning-' + ticketId);
+
+                if (ticketQuantities[ticketId] && ticketQuantities[ticketId] > 0) {
+                    ticketQuantities[ticketId]--;
+                    updateDisplay(ticketId);
+                    updateTotal();
+
+                    // Hide warning when decreasing quantity
+                    if (warningEl) {
+                        warningEl.style.display = 'none';
+                    }
+                }
+            });
+        });
+
+        function updateDisplay(ticketId) {
+            const qtyElement = document.getElementById('qty-' + ticketId);
+            if (qtyElement) {
+                qtyElement.textContent = ticketQuantities[ticketId] || 0;
+            }
+            saveTicketQuantities(); // Save whenever display updates
+        }
+
+        // Restore display for saved quantities after page loads
+        function restoreDisplays() {
+            for (const [ticketId, quantity] of Object.entries(ticketQuantities)) {
+                if (quantity > 0) {
+                    const qtyElement = document.getElementById('qty-' + ticketId);
+                    if (qtyElement) {
+                        qtyElement.textContent = quantity;
+                    }
+                }
+            }
+            updateTotal();
+        }
+
+        // Call restore after DOM is ready
+        setTimeout(restoreDisplays, 100);
+
+        function updateTotal() {
+            let total = 0;
+            document.querySelectorAll('.plus-btn').forEach(btn => {
+                const ticketId = btn.dataset.ticketId;
+                const price = parseFloat(btn.dataset.price);
+                const qty = ticketQuantities[ticketId] || 0;
+                total += price * qty;
+            });
+
+            document.getElementById('totalPrice').textContent =
+                total > 0 ? total.toLocaleString('vi-VN') + 'đ' : '0đ';
+
+            // Only enable button if there are tickets selected AND button is not disabled for time restriction
+            const bookBtn = document.getElementById('bookBtn');
+            if (!bookBtn.classList.contains('btn-secondary')) {
+                bookBtn.disabled = total === 0;
+            }
+        }
+
+        // Form submit
+        document.getElementById('ticketForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Get occurrence ID
+            const occurrenceSelect = document.getElementById('occurrenceSelect');
+            const occurrenceId = occurrenceSelect ? occurrenceSelect.value : null;
+
+            // Validate occurrence selection (if multiple occurrences exist)
+            if (occurrenceSelect && occurrenceSelect.tagName === 'SELECT' && !occurrenceId) {
+                alert('Vui lòng chọn thời gian và địa điểm diễn ra sự kiện');
+                return;
+            }
+
+            // Get event ID from URL
+            const pathParts = window.location.pathname.split('/');
+            const eventId = pathParts[pathParts.length - 1];
+
+            // Build URL with ticket quantities
+            const params = new URLSearchParams();
+            let hasTickets = false;
+
+            for (const [ticketId, quantity] of Object.entries(ticketQuantities)) {
+                if (quantity > 0) {
+                    params.append('ticket_' + ticketId, quantity);
+                    hasTickets = true;
+                }
+            }
+
+            // Add occurrence ID if available
+            if (occurrenceId) {
+                params.append('occurrence', occurrenceId);
+            }
+
+            if (hasTickets) {
+                // Clear the saved state before navigating to booking
+                // This prevents the selections from reappearing if user comes back
+                sessionStorage.removeItem(storageKey);
+                sessionStorage.removeItem('selectedOccurrence_' + eventId);
+
+                window.location.href = '/bookings/book/' + eventId + '?' + params.toString();
+            }
+        });
+    </script>
 </body>
 
 </html>

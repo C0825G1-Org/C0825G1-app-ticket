@@ -1,0 +1,179 @@
+<th:block th:fragment="previewModal">
+    <!-- Modal HTML -->
+    <div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-white border-bottom py-3">
+                    <h5 class="modal-title fw-bold" id="previewModalLabel">
+                        <i class="bi bi-eye text-primary me-2"></i>Xem trước Mô tả Sự kiện
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body bg-light p-4">
+                    <div class="container-fluid">
+                        <!-- Simulation of Event Detail Page Description Section -->
+                        <div class="card border-0 shadow-sm rounded-4">
+                            <div class="card-body p-4">
+                                <h5 class="fw-bold mb-3">Mô tả sự kiện</h5>
+                                <!-- Content will be injected here -->
+                                <div class="text-muted" id="previewContent"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white border-top py-3">
+                    <button type="button" class="btn btn-secondary rounded-3 px-4" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Styles -->
+    <style>
+        /* Ensure preview content behaves like frontend */
+        #previewContent img {
+            max-width: 100% !important;
+            height: auto !important;
+            display: block;
+            margin: 0 auto;
+            border-radius: 0.5rem;
+        }
+
+        #previewContent table {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-bottom: 1rem;
+            background-color: transparent;
+            border-collapse: collapse;
+        }
+
+        #previewContent table td,
+        #previewContent table th {
+            padding: 0.5rem;
+            border: 1px solid #dee2e6;
+        }
+
+        /* HIGH Z-INDEX FIX */
+        #previewModal {
+            z-index: 1060 !important;
+            /* Bootstrap default is 1055, go higher */
+        }
+
+        /* Ensure backdrop is below modal but above everything else if needed */
+        .modal-backdrop {
+            z-index: 1050;
+        }
+    </style>
+
+    <!-- Script -->
+    <script>
+        // Global function to open modal manually
+        window.openPreviewModal = function () {
+            // DEBUG LOG
+            console.log("Opening Preview Modal Manual Trigger...");
+
+            try {
+                // 1. Force Sync TinyMCE to Textarea
+                if (typeof tinymce !== 'undefined') {
+                    try {
+                        tinymce.triggerSave();
+                    } catch (e) { console.error("Save trigger failed", e); }
+                }
+
+                // 2. Get Content using best method
+                let content = '';
+                const previewContent = document.getElementById('previewContent');
+                const textarea = document.getElementById('description');
+
+                if (!previewContent) {
+                    console.error("Preview content container not found");
+                    return;
+                }
+
+                try {
+                    // Priority 1: Get raw HTML directly from TinyMCE Body (Best for unsaved content)
+                    if (typeof tinymce !== 'undefined' && tinymce.get('description')) {
+                        console.log("Getting content from TinyMCE Body...");
+                        content = tinymce.get('description').getBody().innerHTML;
+                    }
+                    // Priority 2: Standard getContent()
+                    else if (typeof tinymce !== 'undefined' && tinymce.activeEditor) {
+                        content = tinymce.activeEditor.getContent();
+                    }
+                    // Priority 3: Fallback to textarea
+                    else {
+                        if (textarea) content = textarea.value;
+                    }
+
+                } catch (e) {
+                    console.error("Error getting content:", e);
+                    if (textarea) content = textarea.value;
+                }
+
+                // 3. Update DOM
+                if (content && content.trim().length > 0) {
+                    previewContent.innerHTML = content;
+                } else {
+                    previewContent.innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-pencil-square fs-1 mb-2"></i><p>Chưa có nội dung mô tả...</p></div>';
+                }
+
+                // 4. Open Modal Manually using robust method
+                const modalEl = document.getElementById('previewModal');
+                if (modalEl) {
+                    let modalOpened = false;
+
+                    // Method A: Bootstrap 5 Native API
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        try {
+                            let modal = bootstrap.Modal.getInstance(modalEl);
+                            if (!modal) {
+                                modal = new bootstrap.Modal(modalEl);
+                            }
+                            modal.show();
+                            modalOpened = true;
+                            console.log("Opened using Bootstrap 5 API");
+                        } catch (e) {
+                            console.error("Bootstrap 5 API failed:", e);
+                        }
+                    }
+
+                    // Method B: jQuery / Bootstrap 4 Fallback (if Method A failed or not available)
+                    if (!modalOpened && typeof jQuery !== 'undefined' && jQuery.fn.modal) {
+                        try {
+                            jQuery(modalEl).modal('show');
+                            modalOpened = true;
+                            console.log("Opened using jQuery API");
+                        } catch (e) {
+                            console.error("jQuery API failed:", e);
+                        }
+                    }
+
+                    // Method C: Last Resort - Create a hidden button and click it
+                    if (!modalOpened) {
+                        console.warn("Manual API failed. Trying hidden trigger...");
+                        // Check if we have a hidden trigger already, if not create one
+                        let safeTrigger = document.getElementById('previewModalSafeTrigger');
+                        if (!safeTrigger) {
+                            safeTrigger = document.createElement('button');
+                            safeTrigger.id = 'previewModalSafeTrigger';
+                            safeTrigger.style.display = 'none';
+                            safeTrigger.setAttribute('data-bs-toggle', 'modal');
+                            safeTrigger.setAttribute('data-bs-target', '#previewModal');
+                            // data-toggle for BS4
+                            safeTrigger.setAttribute('data-toggle', 'modal');
+                            safeTrigger.setAttribute('data-target', '#previewModal');
+                            document.body.appendChild(safeTrigger);
+                        }
+                        safeTrigger.click();
+                    }
+                } else {
+                    console.error("Modal element not found (ID: previewModal)");
+                    alert("Lỗi: Không tìm thấy giao diện xem trước.");
+                }
+            } catch (globalError) {
+                console.error("Critical error in openPreviewModal:", globalError);
+                alert("Có lỗi xảy ra: " + globalError.message);
+            }
+        };
+    </script>
+</th:block>

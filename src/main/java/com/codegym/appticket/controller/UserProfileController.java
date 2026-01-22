@@ -15,9 +15,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.codegym.appticket.dto.user.UserInfoUserDetails;
+import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
+import org.springframework.validation.BindingResult;
 
 @Controller
-                        @RequestMapping("/profile")
+@RequestMapping("/profile")
 @RequiredArgsConstructor
 public class UserProfileController {
 
@@ -37,7 +40,7 @@ public class UserProfileController {
         }
         throw new RuntimeException("User not authenticated or unknown principal type");
     }
-    
+
     // Helper to get email from context (safer than trusting client)
     private String getCurrentUserEmail() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -58,14 +61,14 @@ public class UserProfileController {
             Long userId = getCurrentUserId();
             UserDetailDTO userDetail = userService.getUserDetail(userId);
             model.addAttribute("user", userDetail);
-            
+
             // Map to UserProfileDTO for form binding
             UserProfileDTO profileDTO = new UserProfileDTO();
             profileDTO.setFullName(userDetail.getFullName());
             profileDTO.setEmail(userDetail.getEmail());
             profileDTO.setPhoneNumber(userDetail.getPhoneNumber());
             model.addAttribute("userProfileDTO", profileDTO);
-            
+
             return "profile/index";
         } catch (Exception e) {
             return "redirect:/login";
@@ -73,10 +76,10 @@ public class UserProfileController {
     }
 
     @PostMapping("/update")
-    public String updateProfile(@jakarta.validation.Valid @ModelAttribute UserProfileDTO dto, 
-                              org.springframework.validation.BindingResult bindingResult, 
-                              Model model,
-                              RedirectAttributes redirectAttributes) {
+    public String updateProfile(@Valid @ModelAttribute UserProfileDTO dto,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             // Reload user details for the view (header, stats, history)
             try {
@@ -86,7 +89,7 @@ public class UserProfileController {
                 // The invalid dto and bindingResult are automatically in the model
                 return "profile/index";
             } catch (Exception e) {
-                 return "redirect:/login"; // Should not happen for logged in user
+                return "redirect:/login"; // Should not happen for logged in user
             }
         }
 
@@ -102,50 +105,50 @@ public class UserProfileController {
 
     @PostMapping("/password/otp")
     @ResponseBody // Ajax call
-    public org.springframework.http.ResponseEntity<?> sendPasswordOtp(@RequestParam("currentPassword") String currentPassword,
-                                                                    @RequestParam("newPassword") String newPassword,
-                                                                    @RequestParam("confirmPassword") String confirmPassword) {
+    public ResponseEntity<?> sendPasswordOtp(@RequestParam("currentPassword") String currentPassword,
+            @RequestParam("newPassword") String newPassword,
+            @RequestParam("confirmPassword") String confirmPassword) {
         try {
             if (!newPassword.equals(confirmPassword)) {
-                return org.springframework.http.ResponseEntity.badRequest().body("Mật khẩu xác nhận không khớp!");
+                return ResponseEntity.badRequest().body("Mật khẩu xác nhận không khớp!");
             }
-            
+
             Long userId = getCurrentUserId();
             if (!userService.checkPassword(userId, currentPassword)) {
-                return org.springframework.http.ResponseEntity.badRequest().body("Mật khẩu hiện tại không chính xác!");
+                return ResponseEntity.badRequest().body("Mật khẩu hiện tại không chính xác!");
             }
 
             String email = getCurrentUserEmail();
             userService.initiatePasswordReset(email);
-            return org.springframework.http.ResponseEntity.ok("SUCCESS");
+            return ResponseEntity.ok("SUCCESS");
         } catch (Exception e) {
-            return org.springframework.http.ResponseEntity.internalServerError().body("ERROR: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("ERROR: " + e.getMessage());
         }
     }
 
     @PostMapping("/password/change")
     @ResponseBody
-    public org.springframework.http.ResponseEntity<?> changePassword(@RequestParam("otp") String otp, 
-                               @RequestParam("newPassword") String newPassword,
-                               @RequestParam("confirmPassword") String confirmPassword) {
+    public ResponseEntity<?> changePassword(@RequestParam("otp") String otp,
+            @RequestParam("newPassword") String newPassword,
+            @RequestParam("confirmPassword") String confirmPassword) {
         try {
             if (!newPassword.equals(confirmPassword)) {
-                 return org.springframework.http.ResponseEntity.badRequest().body("Mật khẩu xác nhận không khớp!");
+                return ResponseEntity.badRequest().body("Mật khẩu xác nhận không khớp!");
             }
-            
+
             String email = getCurrentUserEmail();
-            
+
             // Verify OTP
             if (userService.verifyPasswordResetOtp(email, otp)) {
                 // Update Password
                 userService.updatePassword(email, newPassword);
-                return org.springframework.http.ResponseEntity.ok("SUCCESS");
+                return ResponseEntity.ok("SUCCESS");
             } else {
-                 return org.springframework.http.ResponseEntity.badRequest().body("Mã OTP không chính xác hoặc đã hết hạn!");
+                return ResponseEntity.badRequest().body("Mã OTP không chính xác hoặc đã hết hạn!");
             }
-            
+
         } catch (Exception e) {
-            return org.springframework.http.ResponseEntity.internalServerError().body("Lỗi đổi mật khẩu: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("Lỗi đổi mật khẩu: " + e.getMessage());
         }
     }
 }

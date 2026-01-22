@@ -14,6 +14,9 @@ public interface IBookingService {
     void cancelBooking(Long bookingId);
     com.codegym.appticket.entity.User getUserByEmail(String email);
     java.util.List<com.codegym.appticket.entity.Ticket> getTicketsByBookingId(Long bookingId);
-    void confirmBooking(Long bookingId);
+    void confirmBooking(Long bookingId, String transactionCode);
     long calculateTotalAmount(Long bookingId);
+    void expireBookings();
+    List<com.codegym.appticket.entity.BookingDetail> getBookingDetailsByBookingId(Long bookingId);
+    int getSoldQuantity(Long ticketTypeId);
 }

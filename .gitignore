@@ -41,3 +41,6 @@ out/
 
 ### Application Properties (chứa credentials riêng mỗi người) ###
 application.properties
+
+### SQL Data Dump ###
+SQL_ticket (2).sql

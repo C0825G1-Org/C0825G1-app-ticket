@@ -1,7 +1,11 @@
 package com.codegym.appticket.controller;
 
 import com.codegym.appticket.dto.user.UserDTO;
-import com.codegym.appticket.dto.user.*;
+import com.codegym.appticket.dto.user.UserSearchDTO;
+import com.codegym.appticket.dto.user.UserStatsDTO;
+import com.codegym.appticket.dto.user.UserDetailDTO;
+import com.codegym.appticket.dto.user.UserCreateDTO;
+import com.codegym.appticket.dto.user.UserUpdateDTO;
 import com.codegym.appticket.entity.Role;
 import com.codegym.appticket.repository.IRoleRepository;
 import com.codegym.appticket.service.IUserService;
@@ -34,14 +38,14 @@ public class AdminUserController {
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
-            Model model
-    ) {
+            Model model) {
         UserSearchDTO searchDTO = new UserSearchDTO(keyword, roleId, status, page, size);
         Page<UserDTO> userPage = userService.searchUsers(searchDTO);
         UserStatsDTO stats = userService.getStats();
         List<Role> roles = userService.getManageableRoles();
 
         model.addAttribute("users", userPage.getContent());
+        model.addAttribute("userPage", userPage); // Add full page object for shared pagination fragment
         model.addAttribute("currentPage", page + 1);
         model.addAttribute("totalPages", userPage.getTotalPages());
         model.addAttribute("totalUsers", stats.getTotalUsers());
@@ -49,13 +53,13 @@ public class AdminUserController {
         model.addAttribute("lockedUsers", stats.getLockedUsers());
         model.addAttribute("newUsers", stats.getNewUsersThisMonth());
         model.addAttribute("pageSize", size);
-        
+
         // Search params để giữ lại khi phân trang
         model.addAttribute("keyword", keyword);
         model.addAttribute("roleId", roleId);
         model.addAttribute("status", status);
         model.addAttribute("roles", roles);
-        model.addAttribute("currentPageNav", "users");
+        model.addAttribute("activeNav", "users");
 
         return "admin/user/list";
     }
@@ -67,15 +71,15 @@ public class AdminUserController {
     public String viewUser(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
         try {
             UserDetailDTO user = userService.getUserDetail(id);
-            
+
             // Không cho xem user đã bị xóa
             if (user.getIsDeleted() != null && user.getIsDeleted()) {
                 redirectAttributes.addFlashAttribute("error", "Người dùng này đã bị xóa!");
                 return "redirect:/admin/users";
             }
-            
+
             model.addAttribute("user", user);
-            model.addAttribute("currentPageNav", "users");
+            model.addAttribute("activeNav", "users");
             return "admin/user/detail";
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -90,7 +94,7 @@ public class AdminUserController {
     public String showCreateForm(Model model) {
         model.addAttribute("user", new UserCreateDTO());
         model.addAttribute("roles", userService.getManageableRoles());
-        model.addAttribute("currentPageNav", "users");
+        model.addAttribute("activeNav", "users");
         return "admin/user/create";
     }
 
@@ -102,11 +106,10 @@ public class AdminUserController {
             @Valid @ModelAttribute("user") UserCreateDTO dto,
             BindingResult bindingResult,
             Model model,
-            RedirectAttributes redirectAttributes
-    ) {
+            RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("roles", userService.getManageableRoles());
-            model.addAttribute("currentPageNav", "users");
+            model.addAttribute("activeNav", "users");
             return "admin/user/create";
         }
 
@@ -117,7 +120,7 @@ public class AdminUserController {
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("roles", userService.getManageableRoles());
-            model.addAttribute("currentPageNav", "users");
+            model.addAttribute("activeNav", "users");
             return "admin/user/create";
         }
     }
@@ -129,11 +132,11 @@ public class AdminUserController {
     public String showEditForm(@PathVariable Long id, Model model) {
         UserUpdateDTO dto = userService.getUserForUpdate(id);
         UserDetailDTO userDetail = userService.getUserDetail(id);
-        
+
         model.addAttribute("user", dto);
         model.addAttribute("userDetail", userDetail);
         model.addAttribute("roles", userService.getManageableRoles());
-        model.addAttribute("currentPageNav", "users");
+        model.addAttribute("activeNav", "users");
         return "admin/user/edit";
     }
 
@@ -146,15 +149,14 @@ public class AdminUserController {
             @Valid @ModelAttribute("user") UserUpdateDTO dto,
             BindingResult bindingResult,
             Model model,
-            RedirectAttributes redirectAttributes
-    ) {
+            RedirectAttributes redirectAttributes) {
         dto.setId(id);
-        
+
         if (bindingResult.hasErrors()) {
             UserDetailDTO userDetail = userService.getUserDetail(id);
             model.addAttribute("userDetail", userDetail);
             model.addAttribute("roles", userService.getManageableRoles());
-            model.addAttribute("currentPageNav", "users");
+            model.addAttribute("activeNav", "users");
             return "admin/user/edit";
         }
 
@@ -167,7 +169,7 @@ public class AdminUserController {
             model.addAttribute("userDetail", userDetail);
             model.addAttribute("error", e.getMessage());
             model.addAttribute("roles", userService.getManageableRoles());
-            model.addAttribute("currentPageNav", "users");
+            model.addAttribute("activeNav", "users");
             return "admin/user/edit";
         }
     }
@@ -176,16 +178,14 @@ public class AdminUserController {
      * Soft delete user
      */
 
-
     /**
      * Khóa tài khoản
      */
     @PostMapping("/{id}/lock")
     public String lockUser(
-            @PathVariable Long id, 
+            @PathVariable Long id,
             @RequestParam("reason") String reason,
-            RedirectAttributes redirectAttributes
-    ) {
+            RedirectAttributes redirectAttributes) {
         try {
             userService.lockUser(id, reason);
             redirectAttributes.addFlashAttribute("success", "Đã khóa tài khoản thành công!");
@@ -200,10 +200,9 @@ public class AdminUserController {
      */
     @PostMapping("/{id}/unlock")
     public String unlockUser(
-            @PathVariable Long id, 
+            @PathVariable Long id,
             @RequestParam("reason") String reason,
-            RedirectAttributes redirectAttributes
-    ) {
+            RedirectAttributes redirectAttributes) {
         try {
             userService.unlockUser(id, reason);
             redirectAttributes.addFlashAttribute("success", "Đã mở khóa tài khoản thành công!");
@@ -220,8 +219,7 @@ public class AdminUserController {
     public String resetPassword(
             @PathVariable Long id,
             @RequestParam String newPassword,
-            RedirectAttributes redirectAttributes
-    ) {
+            RedirectAttributes redirectAttributes) {
         try {
             userService.resetPassword(id, newPassword);
             redirectAttributes.addFlashAttribute("success", "Đã đặt lại mật khẩu thành công!");

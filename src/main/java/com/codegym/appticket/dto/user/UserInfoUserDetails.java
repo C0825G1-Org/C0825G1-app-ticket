@@ -59,6 +59,10 @@ public class UserInfoUserDetails implements UserDetails {
         return user.getEnabled() != null ? user.getEnabled() : true;
     }
 
+    public String getFullName() {
+        return user.getFullName();
+    }
+
     public User getUser() {
         return user;
     }

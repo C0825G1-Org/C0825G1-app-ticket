@@ -1,0 +1,362 @@
+<div th:fragment="guideModal" class="modal fade" id="guideModal" tabindex="-1" aria-labelledby="guideModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-bottom-0 pb-0 bg-dark">
+                <h5 class="modal-title fw-bold text-white" id="guideModalLabel">
+                    <i class="bi bi-book text-primary me-2"></i>Cẩm Nang Soạn Thảo Nội Dung
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body bg-dark pt-4">
+                <!-- Alert Box -->
+                <div class="alert bg-dark text-white border border-secondary shadow-sm rounded-4 mb-4">
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-info-circle-fill fs-4 me-3 text-info"></i>
+                        <div>
+                            <h6 class="fw-bold mb-2 text-white">Lưu ý quan trọng</h6>
+                            <p class="mb-0 small text-white">Vui lòng tuân thủ các hướng dẫn dưới đây để đảm bảo nội
+                                dung
+                                sự kiện
+                                của
+                                bạn hiển thị đẹp mắt và chuyên nghiệp trên tất cả các thiết bị (Desktop, Tablet,
+                                Mobile).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guide Cards -->
+                <div class="row g-4">
+                    <!-- 1. Quản lý Hình Ảnh -->
+                    <div class="col-md-6">
+                        <div class="card bg-white text-dark border-0 shadow-sm rounded-4 h-100">
+                            <div class="card-header bg-white border-bottom py-3">
+                                <h5 class="fw-bold mb-0 text-dark">
+                                    <i class="bi bi-images text-primary me-2"></i>
+                                    1. Quản lý Hình Ảnh
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row">
+                                    <div class="col-6 border-end">
+                                        <div class="mb-3">
+                                            <span class="badge bg-success-subtle text-success mb-2">
+                                                <i class="bi bi-check-lg me-1"></i> NÊN LÀM
+                                            </span>
+                                        </div>
+                                        <ul class="list-unstyled small">
+                                            <li class="mb-2">
+                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                Dùng ảnh .jpg hoặc .webp (&lt; 1MB)
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                Căn giữa và set chiều rộng 100%
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                Sử dụng ảnh có độ phân giải cao
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="mb-3">
+                                            <span class="badge bg-danger-subtle text-danger mb-2">
+                                                <i class="bi bi-x-lg me-1"></i> KHÔNG NÊN
+                                            </span>
+                                        </div>
+                                        <ul class="list-unstyled small">
+                                            <li class="mb-2">
+                                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                                Dán (Paste) trực tiếp từ máy
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                                Dùng ảnh quá dọc (Portrait)
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                                Upload ảnh có dung lượng quá lớn
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="mt-3 p-3 bg-light rounded-3 border">
+                                    <p class="small fw-bold text-dark mb-2">
+                                        <i class="bi bi-lightbulb text-warning me-1"></i> Mẹo nhỏ
+                                    </p>
+                                    <p class="small mb-0 text-secondary">
+                                        Sử dụng nút "Insert/Edit Image" trong TinyMCE để chèn ảnh từ URL hoặc upload.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Bố cục Bảng Biểu -->
+                    <div class="col-md-6">
+                        <div class="card bg-white text-dark border-0 shadow-sm rounded-4 h-100">
+                            <div class="card-header bg-white border-bottom py-3">
+                                <h5 class="fw-bold mb-0 text-dark">
+                                    <i class="bi bi-table text-primary me-2"></i>
+                                    2. Bố cục Bảng Biểu
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row">
+                                    <div class="col-6 border-end">
+                                        <div class="mb-3">
+                                            <span class="badge bg-success-subtle text-success mb-2">
+                                                <i class="bi bi-check-lg me-1"></i> NÊN LÀM
+                                            </span>
+                                        </div>
+                                        <ul class="list-unstyled small">
+                                            <li class="mb-2">
+                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                Tối giản số cột (Khuyên dùng 2-3)
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                Dùng cho so sánh hoặc giá vé
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                Sử dụng responsive table
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="mb-3">
+                                            <span class="badge bg-danger-subtle text-danger mb-2">
+                                                <i class="bi bi-x-lg me-1"></i> KHÔNG NÊN
+                                            </span>
+                                        </div>
+                                        <ul class="list-unstyled small">
+                                            <li class="mb-2">
+                                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                                Đặt Width cố định (vd: 800px)
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                                Chèn bảng phức tạp từ MS Word
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                                Tạo bảng có quá nhiều cột
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="mt-3 p-3 bg-light rounded-3 border">
+                                    <p class="small fw-bold text-secondary mb-2">Ví dụ bảng đơn giản:</p>
+                                    <table class="table table-sm table-bordered mb-0 small">
+                                        <thead class="table-primary">
+                                            <tr class="text-center">
+                                                <th>Hạng vé</th>
+                                                <th>Giá tiền</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Vé VIP</td>
+                                                <td>2.000.000đ</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Vé Thường</td>
+                                                <td>500.000đ</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Định dạng Văn bản -->
+                    <div class="col-md-6">
+                        <div class="card bg-white text-dark border-0 shadow-sm rounded-4 h-100">
+                            <div class="card-header bg-white border-bottom py-3">
+                                <h5 class="fw-bold mb-0 text-dark">
+                                    <i class="bi bi-fonts text-primary me-2"></i>
+                                    3. Định dạng Văn bản
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row">
+                                    <div class="col-6 border-end">
+                                        <div class="mb-3">
+                                            <span class="badge bg-success-subtle text-success mb-2">
+                                                <i class="bi bi-check-lg me-1"></i> NÊN LÀM
+                                            </span>
+                                        </div>
+                                        <ul class="list-unstyled small">
+                                            <li class="mb-2">
+                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                Dùng Heading 3, Heading 4
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                Dùng Ctrl+Shift+V để dán
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                Sử dụng danh sách (bullet points)
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="mb-3">
+                                            <span class="badge bg-danger-subtle text-danger mb-2">
+                                                <i class="bi bi-x-lg me-1"></i> KHÔNG NÊN
+                                            </span>
+                                        </div>
+                                        <ul class="list-unstyled small">
+                                            <li class="mb-2">
+                                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                                Dùng quá nhiều màu sắc
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                                Lạm dụng in đậm (Bold) cả đoạn
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                                Sử dụng font chữ không chuẩn
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="mt-3 p-3 bg-light rounded-3 border">
+                                    <h6 class="text-primary mb-2 fw-bold small">Ví dụ tiêu đề (H3)</h6>
+                                    <p class="mb-0 text-dark small">
+                                        Văn bản mô tả sẽ được hiển thị rõ ràng và mạch lạc khi tuân thủ các quy tắc định
+                                        dạng.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Media & Liên kết -->
+                    <div class="col-md-6">
+                        <div class="card bg-white text-dark border-0 shadow-sm rounded-4 h-100">
+                            <div class="card-header bg-white border-bottom py-3">
+                                <h5 class="fw-bold mb-0 text-dark">
+                                    <i class="bi bi-play-circle text-primary me-2"></i>
+                                    4. Media & Liên kết
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row">
+                                    <div class="col-6 border-end">
+                                        <div class="mb-3">
+                                            <span class="badge bg-success-subtle text-success mb-2">
+                                                <i class="bi bi-check-lg me-1"></i> NÊN LÀM
+                                            </span>
+                                        </div>
+                                        <ul class="list-unstyled small">
+                                            <li class="mb-2">
+                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                Insert Media để nhúng Youtube
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                Link mở trong cửa sổ mới
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                Đặt tên link có ý nghĩa
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="mb-3">
+                                            <span class="badge bg-danger-subtle text-danger mb-2">
+                                                <i class="bi bi-x-lg me-1"></i> KHÔNG NÊN
+                                            </span>
+                                        </div>
+                                        <ul class="list-unstyled small">
+                                            <li class="mb-2">
+                                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                                Dán mã nhúng trực tiếp
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                                Để link dài quá 1 dòng
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                                Nhúng video có dung lượng lớn
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="mt-3 p-3 bg-dark rounded-3 text-center">
+                                    <i class="bi bi-youtube text-danger fs-1"></i>
+                                    <p class="text-white small mb-0 mt-2">Youtube Video Preview</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Best Practices Section -->
+                <div class="card border-0 shadow-sm rounded-4 mt-4">
+                    <div class="card-header bg-primary text-white py-3">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-star-fill me-2"></i>
+                            Các Thực Hành Tốt Nhất
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-start">
+                                    <div class="bg-success-subtle text-success rounded-circle p-2 me-3"
+                                        style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-check-lg fw-bold"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-1">Responsive Design</h6>
+                                        <p class="small text-muted mb-0">Đảm bảo nội dung hiển thị tốt trên mọi thiết bị
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-start">
+                                    <div class="bg-info-subtle text-info rounded-circle p-2 me-3"
+                                        style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-speedometer2 fw-bold"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-1">Tối ưu tốc độ</h6>
+                                        <p class="small text-muted mb-0">Giảm dung lượng ảnh và media để tải nhanh hơn
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-start">
+                                    <div class="bg-warning-subtle text-warning rounded-circle p-2 me-3"
+                                        style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-eye fw-bold"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-1">Dễ đọc</h6>
+                                        <p class="small text-muted mb-0">Sử dụng khoảng trắng và cấu trúc rõ ràng</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>

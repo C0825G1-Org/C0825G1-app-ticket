@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Thông Báo Từ Chối Sự Kiện</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .header {
+            background-color: #dc3545;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+
+        .reason-box {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Sự Kiện Bị Từ Chối</h2>
+        </div>
+        <div class="content">
+            <p>Xin chào <strong th:text="${organizerName}">Organizer</strong>,</p>
+            <p>Rất tiếc, sự kiện của bạn đã bị từ chối phê duyệt bởi quản trị viên.</p>
+
+            <h3>Thông tin sự kiện:</h3>
+            <ul>
+                <li><strong>Tên sự kiện:</strong> <span th:text="${eventTitle}">Tên Sự Kiện</span></li>
+                <li><strong>Thời gian:</strong> <span th:text="${actionDate}">01/01/2026</span></li>
+            </ul>
+
+            <h3>Lý do từ chối:</h3>
+            <div class="reason-box">
+                <p th:text="${reason}">Lý do từ chối...</p>
+            </div>
+
+            <p>Vui lòng kiểm tra lại nội dung sự kiện và tạo lại hoặc chỉnh sửa nếu cần thiết.</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 AppTicket System. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+
+</html>

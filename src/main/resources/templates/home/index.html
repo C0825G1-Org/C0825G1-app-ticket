@@ -10,7 +10,7 @@
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" th:href="@{/css/home.css}">
     <th:block th:replace="~{common/styles :: styles}"></th:block>
@@ -19,75 +19,154 @@
 <body>
 
     <!-- Sidebar -->
-    <div th:replace="~{common/header :: public-navbar}"></div>
+    <div th:replace="~{common/header :: public-navbar-dark}"></div>
 
     <!-- Hero Section -->
-    <section class="hero-section text-center">
-        <div class="container">
-            <span class="badge bg-light text-primary border border-primary-subtle rounded-pill px-3 py-2 mb-4">
+    <section class="hero-section text-center position-relative overflow-hidden">
+        <!-- Floating Orbs Background -->
+        <div class="hero-orbs">
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+            <div class="orb orb-3"></div>
+            <div class="orb orb-4"></div>
+            <div class="orb orb-5"></div>
+            <div class="orb orb-6"></div>
+        </div>
+        <div class="container position-relative" style="z-index: 2;">
+            <span
+                class="badge bg-light text-primary border border-primary-subtle rounded-pill px-3 py-2 mb-4 animate-fade-up"
+                style="animation-delay: 0.1s;">
                 🚀 Nền tảng đặt vé số 1 Việt Nam
             </span>
-            <h1 class="display-3 fw-bold mb-4">
+            <h1 class="display-3 fw-bold mb-4 animate-fade-up" style="animation-delay: 0.2s;">
                 Khám phá & Đặt vé <br>
                 <span class="gradient-text">Sự kiện Đẳng cấp</span>
             </h1>
-            <p class="lead text-muted mb-5 mx-auto" style="max-width: 700px;">
-                Hàng ngàn sự kiện âm nhạc, hội thảo, thể thao đang chờ đón bạn. Trải nghiệm đặt vé dễ dàng, check-in
-                nhanh chóng.
-            </p>
 
             <!-- Search Widget -->
-            <div class="search-widget mx-auto text-start" style="max-width: 900px;">
-                <form class="row g-3">
-                    <div class="col-lg-5">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0 rounded-start-4 ps-3">
-                                <i class="bi bi-search text-muted"></i>
-                            </span>
-                            <input type="text" class="form-control form-control-lg border-start-0 ps-0"
-                                placeholder="Tìm kiếm sự kiện...">
-                        </div>
+            <div class="search-widget mx-auto text-start animate-fade-up shadow-lg rounded-5 overflow-hidden p-2"
+                style="max-width: 900px; animation-delay: 0.3s; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
+                <form method="get" th:action="@{/event/search}" class="row g-2 align-items-center">
+                    <div class="col-lg-4 position-relative search-input-wrapper">
+                        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-4 text-primary fs-5"
+                            style="z-index: 5;"></i>
+                        <input type="text" name="search"
+                            class="form-control form-control-lg border-0 bg-transparent py-3 ps-5 shadow-none"
+                            style="font-size: 1rem;" placeholder="Tìm kiếm sự kiện...">
+                        <div class="position-absolute top-50 end-0 translate-middle-y border-end"
+                            style="height: 60%; right: 0;"></div>
                     </div>
-                    <div class="col-lg-3">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0 rounded-start-4 ps-3">
-                                <i class="bi bi-geo-alt text-muted"></i>
-                            </span>
-                            <select class="form-select form-select-lg border-start-0 ps-0 bg-transparent">
-                                <option>Toàn quốc</option>
-                                <option>Hà Nội</option>
-                                <option>TP. HCM</option>
-                            </select>
-                        </div>
+
+                    <div class="col-lg-3 position-relative search-input-wrapper">
+                        <i class="bi bi-geo-alt position-absolute top-50 start-0 translate-middle-y ms-3 text-primary fs-5"
+                            style="z-index: 5;"></i>
+                        <select name="location"
+                            class="form-select form-select-lg border-0 bg-transparent py-3 ps-5 shadow-none"
+                            style="font-size: 1rem; cursor: pointer;">
+                            <option value="">Toàn quốc</option>
+                            <option value="An Giang">An Giang</option>
+                            <option value="Bà Rịa - Vũng Tàu">Bà Rịa - Vũng Tàu</option>
+                            <option value="Bắc Giang">Bắc Giang</option>
+                            <option value="Bắc Kạn">Bắc Kạn</option>
+                            <option value="Bạc Liêu">Bạc Liêu</option>
+                            <option value="Bắc Ninh">Bắc Ninh</option>
+                            <option value="Bến Tre">Bến Tre</option>
+                            <option value="Bình Định">Bình Định</option>
+                            <option value="Bình Dương">Bình Dương</option>
+                            <option value="Bình Phước">Bình Phước</option>
+                            <option value="Bình Thuận">Bình Thuận</option>
+                            <option value="Cà Mau">Cà Mau</option>
+                            <option value="Cần Thơ">Cần Thơ</option>
+                            <option value="Cao Bằng">Cao Bằng</option>
+                            <option value="Đà Nẵng">Đà Nẵng</option>
+                            <option value="Đắk Lắk">Đắk Lắk</option>
+                            <option value="Đắk Nông">Đắk Nông</option>
+                            <option value="Điện Biên">Điện Biên</option>
+                            <option value="Đồng Nai">Đồng Nai</option>
+                            <option value="Đồng Tháp">Đồng Tháp</option>
+                            <option value="Gia Lai">Gia Lai</option>
+                            <option value="Hà Giang">Hà Giang</option>
+                            <option value="Hà Nam">Hà Nam</option>
+                            <option value="Hà Nội">Hà Nội</option>
+                            <option value="Hà Tĩnh">Hà Tĩnh</option>
+                            <option value="Hải Dương">Hải Dương</option>
+                            <option value="Hải Phòng">Hải Phòng</option>
+                            <option value="Hậu Giang">Hậu Giang</option>
+                            <option value="Hòa Bình">Hòa Bình</option>
+                            <option value="Hưng Yên">Hưng Yên</option>
+                            <option value="Khánh Hòa">Khánh Hòa</option>
+                            <option value="Kiên Giang">Kiên Giang</option>
+                            <option value="Kon Tum">Kon Tum</option>
+                            <option value="Lai Châu">Lai Châu</option>
+                            <option value="Lâm Đồng">Lâm Đồng</option>
+                            <option value="Lạng Sơn">Lạng Sơn</option>
+                            <option value="Lào Cai">Lào Cai</option>
+                            <option value="Long An">Long An</option>
+                            <option value="Nam Định">Nam Định</option>
+                            <option value="Nghệ An">Nghệ An</option>
+                            <option value="Ninh Bình">Ninh Bình</option>
+                            <option value="Ninh Thuận">Ninh Thuận</option>
+                            <option value="Phú Thọ">Phú Thọ</option>
+                            <option value="Phú Yên">Phú Yên</option>
+                            <option value="Quảng Bình">Quảng Bình</option>
+                            <option value="Quảng Nam">Quảng Nam</option>
+                            <option value="Quảng Ngãi">Quảng Ngãi</option>
+                            <option value="Quảng Ninh">Quảng Ninh</option>
+                            <option value="Quảng Trị">Quảng Trị</option>
+                            <option value="Sóc Trăng">Sóc Trăng</option>
+                            <option value="Sơn La">Sơn La</option>
+                            <option value="Tây Ninh">Tây Ninh</option>
+                            <option value="Thái Bình">Thái Bình</option>
+                            <option value="Thái Nguyên">Thái Nguyên</option>
+                            <option value="Thanh Hóa">Thanh Hóa</option>
+                            <option value="Thành phố Huế">Thành phố Huế</option>
+                            <option value="Tiền Giang">Tiền Giang</option>
+                            <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
+                            <option value="Trà Vinh">Trà Vinh</option>
+                            <option value="Tuyên Quang">Tuyên Quang</option>
+                            <option value="Vĩnh Long">Vĩnh Long</option>
+                            <option value="Vĩnh Phúc">Vĩnh Phúc</option>
+                            <option value="Yên Bái">Yên Bái</option>
+                        </select>
+                        <div class="position-absolute top-50 end-0 translate-middle-y border-end d-none d-lg-block"
+                            style="height: 60%; right: 0;"></div>
                     </div>
+
+                    <div class="col-lg-3 position-relative search-input-wrapper">
+                        <i class="bi bi-tag position-absolute top-50 start-0 translate-middle-y ms-3 text-primary fs-5"
+                            style="z-index: 5;"></i>
+                        <select name="category"
+                            class="form-select form-select-lg border-0 bg-transparent py-3 ps-5 shadow-none"
+                            style="font-size: 1rem; cursor: pointer;">
+                            <option value="">Tất cả danh mục</option>
+                            <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"></option>
+                        </select>
+                    </div>
+
                     <div class="col-lg-2">
-                        <div class="input-group">
-                            <input type="date" class="form-control form-control-lg rounded-4 text-muted">
-                        </div>
-                    </div>
-                    <div class="col-lg-2">
-                        <button type="button" onclick="window.location.href='events.html'"
-                            class="btn btn-gradient btn-lg w-100 rounded-4 fw-bold h-100">
-                            Tìm
+                        <button type="submit"
+                            class="btn btn-gradient btn-lg w-100 rounded-4 fw-bold shadow-sm btn-shine"
+                            style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border: none; padding: 0.8rem 0; transition: transform 0.2s;">
+                            Tìm kiếm
                         </button>
                     </div>
                 </form>
             </div>
 
-            <div class="mt-4 text-muted small fw-medium">
-                Phổ biến: <a href="#" class="text-decoration-underline text-dark mx-1">Sơn Tùng M-TP</a> <a href="#"
-                    class="text-decoration-underline text-dark mx-1">Ed Sheeran</a>
-            </div>
+            <p class="lead fw-medium mt-4 mx-auto text-light animate-fade-up"
+                style="max-width: 700px; animation-delay: 0.4s; opacity: 0.9;">
+                Hàng ngàn sự kiện âm nhạc, hội thảo, thể thao đang chờ đón bạn. Trải nghiệm đặt vé dễ dàng, check-in
+                nhanh chóng.
+            </p>
         </div>
     </section>
 
-    </section>
-
     <!-- Trending Events (Bảng xếp hạng) -->
-    <section class="py-5 bg-white">
+    <section class="py-5 section-dark">
         <div class="container">
             <div class="text-center mb-5">
-                <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-2 mb-2">HOT TRENDING</span>
+                <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-2 mb-2 floating">HOT
+                    TRENDING</span>
                 <h2 class="fw-bold">Bảng Xếp Hạng Sự Kiện</h2>
                 <p class="text-muted">Top những sự kiện được săn đón nhiều nhất tuần qua</p>
             </div>
@@ -109,15 +188,15 @@
                     <!-- Carousel Inner (Slides) -->
                     <div class="carousel-inner rounded-4 shadow-lg overflow-hidden">
                         <div th:each="event, iterStat : ${trendingEvents}"
-                            th:class="${iterStat.index == 0} ? 'carousel-item active' : 'carousel-item'">
+                            th:class="${iterStat.index == 0 ? 'carousel-item active' : 'carousel-item'}">
 
                             <!-- Event Card -->
                             <!-- Chưa fix -->
                             <div class="position-relative text-white" style="min-height: 500px; cursor: pointer;"
-                                th:onclick="'window.location.href=\'/events/' + ${event.id} + '\''">
+                                th:onclick="'window.location.href=\'/event/' + ${event.id} + '\''">
 
                                 <!-- Background Image -->
-                                <img th:src="${event.image != null and !event.image.isEmpty()} ? ${event.image} : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200'"
+                                <img th:src="${(event.image != null and !event.image.isEmpty()) ? event.image : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200'}"
                                     class="d-block w-100 h-100 object-fit-cover position-absolute top-0 start-0"
                                     th:alt="${event.title}" style="filter: brightness(0.5);">
 
@@ -128,11 +207,11 @@
                                         <div class="row">
                                             <div class="col-lg-8">
                                                 <!-- Ranking Badge -->
-                                                <span class="badge mb-3"
-                                                    th:class="${iterStat.index == 0} ? 'bg-warning text-dark fs-5 px-4 py-2' : 'bg-secondary fs-6 px-3 py-2'"
+                                                <div class="badge d-inline-block mb-4 bg-warning text-dark fs-5 px-3 py-2 rounded-pill pulse-glow"
+                                                    style="width: fit-content; margin-bottom: 1rem !important;"
                                                     th:text="'#' + ${iterStat.index + 1} + ${iterStat.index == 0 ? ' Nổi bật nhất' : ' Trending'}">
-                                                    #1 Nổi bật nhất
-                                                </span>
+                                                    #1 Top Trending
+                                                </div>
 
                                                 <!-- Title -->
                                                 <h1 class="display-4 fw-bold mb-3" th:text="${event.title}">
@@ -140,11 +219,11 @@
                                                 </h1>
 
                                                 <!-- Description -->
-                                                <p class="fs-5 mb-4 text-light d-none d-md-block"
-                                                    th:text="${event.description}"
-                                                    style="max-width: 600px; opacity: 0.9;">
+                                                <div class="fs-5 mb-4 text-light d-none d-md-block description-clamp"
+                                                    th:utext="${event.description}"
+                                                    style="display: -webkit-box !important; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; max-width: 600px; opacity: 0.9; overflow: hidden;">
                                                     Trải nghiệm không khí sôi động cùng dàn DJ Top 100 thế giới.
-                                                </p>
+                                                </div>
 
                                                 <!-- Event Info -->
                                                 <div class="d-flex flex-wrap gap-4 mb-3">
@@ -177,7 +256,7 @@
                                                 <!--Chưa fix-->
                                                 <button
                                                     class="btn btn-warning btn-lg px-5 py-3 rounded-pill fw-bold mt-3"
-                                                    th:onclick="'event.stopPropagation(); window.location.href=\'/events/' + ${event.id} + '\''">
+                                                    th:onclick="'event.stopPropagation(); window.location.href=\'/event/' + ${event.id} + '\''">
                                                     <i class="bi bi-ticket-perforated me-2"></i>
                                                     Đặt vé ngay
                                                 </button>
@@ -213,7 +292,7 @@
     </section>
 
     <!-- Upcoming Events -->
-    <section class="py-5 bg-light-subtle">
+    <section class="py-5 section-dark">
         <div class="container">
             <div class="d-flex justify-content-between align-items-end mb-4">
                 <div>
@@ -229,11 +308,11 @@
                 <div th:each="event : ${upcomingEvents}" class="col-md-6 col-lg-3">
                     <div class="card card-event h-100 border-0 shadow-sm"
                         style="cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease;"
-                        th:onclick="'window.location.href=\'/events/' + ${event.id} + '\''">
+                        th:onclick="'window.location.href=\'/event/' + ${event.id} + '\''">
 
                         <!-- Event Image -->
                         <div class="position-relative overflow-hidden">
-                            <img th:src="${event.image != null and !event.image.isEmpty()} ? ${event.image} : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800'"
+                            <img th:src="${(event.image != null and !event.image.isEmpty()) ? event.image : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800'}"
                                 class="card-img-top" th:alt="${event.title}"
                                 style="height: 200px; object-fit: cover; transition: transform 0.3s ease;">
 
@@ -262,27 +341,39 @@
                         <!-- Event Info -->
                         <div class="card-body p-4 d-flex flex-column">
                             <!-- Title -->
-                            <h5 class="card-title fw-bold mb-3"
-                                style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;"
-                                th:text="${event.title}">
+                            <h5 class="card-title fw-bold mb-3" style="display: -webkit-box;
+                                    -webkit-line-clamp: 2;
+                                    -webkit-box-orient: vertical;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    line-height: 1.4em;
+                                    min-height: calc(1.4em * 2);
+                                 " th:utext="${event.title}">
                                 EDM Symphony Night
                             </h5>
 
                             <!-- Location -->
-                            <div class="text-muted small mb-3">
+                            <div class="text-muted small mb-3 text-truncate">
                                 <i class="bi bi-geo-alt-fill text-primary me-1"></i>
                                 <span th:text="${event.location ?: 'TBA'}">TP. Hồ Chí Minh</span>
+                                <span th:if="${event.locationCount != null and event.locationCount > 1}"
+                                    th:text="' và ' + ${event.locationCount - 1} + ' địa điểm khác'">
+                                    và 1 địa điểm khác
+                                </span>
                             </div>
 
                             <!-- Price -->
-                            <div
-                                class="mt-auto d-flex justify-content-between align-items-center pt-3 border-top border-light">
-                                <small class="text-muted">Từ</small>
-                                <span class="fw-bold text-danger" th:text="${event.minPrice != null and event.minPrice > 0} ? 
-                                               (#numbers.formatInteger(event.minPrice, 0, 'COMMA') + 'đ') : 
-                                               'Miễn phí'">
-                                    500.000đ
-                                </span>
+                            <div class="mt-auto pt-3 border-top border-light">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <small class="text-muted d-block" style="font-size: 0.75rem;">Giá vé</small>
+                                        <span class="fw-bold text-danger fs-5"
+                                            th:text="${(event.minPrice != null and event.minPrice > 0) ? (#numbers.formatInteger(event.minPrice, 0, 'COMMA') + 'đ') : 'Miễn phí'}">
+                                            500.000đ
+                                        </span>
+                                    </div>
+                                    <i class="bi bi-arrow-right-circle text-primary fs-4"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -297,7 +388,7 @@
         </div>
     </section>
 
-    <footer th:replace="~{common/footer :: footer}"></footer>
+    <footer th:replace="~{common/footer :: footer-dark}"></footer>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

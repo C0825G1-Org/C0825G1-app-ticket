@@ -18,37 +18,34 @@ import java.util.List;
 public class EventUpdateDTO {
 
     @NotBlank(message = "Tiêu đề không được để trống")
-    @Size(max = 255, message = "Tiêu đề không được vượt quá 255 ký tự")
+    @Size(min = 10, max = 255, message = "Tiêu đề phải từ 10 đến 255 ký tự")
     private String title;
 
     @NotBlank(message = "Mô tả không được để trống")
+    @Size(min = 50, message = "Mô tả phải có ít nhất 50 ký tự")
     private String description;
-
-    @NotBlank(message = "Địa điểm không được để trống")
-    @Size(max = 255, message = "Địa điểm không được vượt quá 255 ký tự")
-    private String location;
 
     @NotNull(message = "Danh mục sự kiện không được để trống")
     private Long categoryId;
 
-    @NotNull(message = "Trạng thái không được để trống")
+    // @NotNull(message = "Trạng thái không được để trống") - Removed as status is
+    // not editable in form
     private EventStatus status;
 
     @Valid
     @Builder.Default
-    private List<EventTimeDTO> eventTimes = new ArrayList<>();
+    private List<EventOccurrenceDTO> eventOccurrences = new ArrayList<>();
 
     @Valid
     @Builder.Default
     private List<EventMediaDTO> eventMedias = new ArrayList<>();
-
-    @Valid
-    @Builder.Default
-    private List<TicketTypeDTO> ticketTypes = new ArrayList<>();
 
     // Media URLs (Uploaded from Frontend)
     private String bannerUrl;
     private String logoUrl;
     private String ticketMapUrl;
     private List<String> galleryUrls;
+
+    // Optional: For Admin to assign/change organizer
+    private Long organizerId;
 }

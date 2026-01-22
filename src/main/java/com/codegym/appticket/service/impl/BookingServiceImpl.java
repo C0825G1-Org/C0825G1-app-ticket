@@ -1,13 +1,26 @@
 package com.codegym.appticket.service.impl;
 
-import com.codegym.appticket.entity.*;
-import com.codegym.appticket.repository.*;
+import com.codegym.appticket.entity.Booking;
+import com.codegym.appticket.entity.BookingDetail;
+import com.codegym.appticket.entity.BookingStatus;
+import com.codegym.appticket.entity.Event;
+import com.codegym.appticket.entity.Ticket;
+import com.codegym.appticket.entity.TicketType;
+import com.codegym.appticket.entity.User;
+import com.codegym.appticket.entity.QRCode;
+import com.codegym.appticket.repository.BookingDetailRepository;
+import com.codegym.appticket.repository.BookingRepository;
+import com.codegym.appticket.repository.EventRepository;
+import com.codegym.appticket.repository.TicketRepository;
+import com.codegym.appticket.repository.TicketTypeRepository;
+import com.codegym.appticket.repository.UserRepository;
+import com.codegym.appticket.repository.QRCodeRepository;
 import com.codegym.appticket.service.IBookingService;
+import com.codegym.appticket.service.IEmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -22,8 +35,8 @@ public class BookingServiceImpl implements IBookingService {
     private final TicketTypeRepository ticketTypeRepository;
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
-    private final com.codegym.appticket.repository.QRCodeRepository qrCodeRepository;
-    private final com.codegym.appticket.service.IEmailService emailService;
+    private final QRCodeRepository qrCodeRepository;
+    private final IEmailService emailService;
 
     @Override
     public Event getEventById(Long eventId) {
@@ -32,37 +45,47 @@ public class BookingServiceImpl implements IBookingService {
 
     @Override
     public List<TicketType> getTicketTypesByEventId(Long eventId) {
-        return ticketTypeRepository.findByEventId(eventId);
+        return ticketTypeRepository.findByEventOccurrence_Event_Id(eventId);
     }
 
     @Override
     @Transactional
     public Booking createBooking(Long eventId, Long userId, Map<Long, Integer> ticketQuantities) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         Booking booking = new Booking();
         booking.setUser(user);
         booking.setStatus(BookingStatus.PENDING); // Chờ thanh toán
+        booking.setBookingTime(java.time.LocalDateTime.now());
         booking = bookingRepository.save(booking);
 
         for (Map.Entry<Long, Integer> entry : ticketQuantities.entrySet()) {
             Long ticketTypeId = entry.getKey();
             Integer quantity = entry.getValue();
 
-            if (quantity <= 0) continue;
+            if (quantity <= 0)
+                continue;
 
             TicketType ticketType = ticketTypeRepository.findById(ticketTypeId)
                     .orElseThrow(() -> new RuntimeException("Ticket type not found"));
 
-            if (ticketType.getQuantity() < quantity) {
-                throw new RuntimeException("Not enough tickets for: " + ticketType.getName());
+            // if (ticketType.getQuantity() < quantity) {
+            //     throw new RuntimeException("Not enough tickets for: " + ticketType.getName());
+            // }
+
+            // // Giảm số lượng vé trong kho
+            // ticketType.setQuantity(ticketType.getQuantity() - quantity);
+            // ticketTypeRepository.save(ticketType);
+            // Calculate available quantity (quantity - sold)
+            int sold = getSoldQuantity(ticketType.getId());
+            int available = ticketType.getQuantity() - sold;
+            
+            if (available < quantity) {
+                throw new RuntimeException("Not enough tickets available for: " + ticketType.getName() 
+                    + ". Available: " + available + ", Requested: " + quantity);
             }
 
-            // Giảm số lượng vé trong kho
-            ticketType.setQuantity(ticketType.getQuantity() - quantity);
-            ticketTypeRepository.save(ticketType);
-
-            // Tạo chi tiết booking
+            // Tạo chi tiết booking (quantity field remains unchanged)
             BookingDetail detail = new BookingDetail();
             detail.setBooking(booking);
             detail.setTicketType(ticketType);
@@ -79,14 +102,12 @@ public class BookingServiceImpl implements IBookingService {
                 ticket = ticketRepository.save(ticket);
 
                 // Tác vụ bổ sung: Sinh dữ liệu mã QR
-                com.codegym.appticket.entity.QRCode qr = new com.codegym.appticket.entity.QRCode();
+                QRCode qr = new QRCode();
                 qr.setTicket(ticket);
                 qr.setQrData("TICKET-" + ticketCode);
                 qrCodeRepository.save(qr);
             }
         }
-
-        // Đã xóa gửi email ở đây, chuyển sang confirmBooking
 
         return booking;
     }
@@ -109,18 +130,21 @@ public class BookingServiceImpl implements IBookingService {
         booking.setStatus(BookingStatus.CANCELLED);
         bookingRepository.save(booking);
 
-        // Hoàn lại số lượng vé
-        List<BookingDetail> details = bookingDetailRepository.findByBookingId(bookingId);
-        for (BookingDetail detail : details) {
-            TicketType tt = detail.getTicketType();
-            tt.setQuantity(tt.getQuantity() + detail.getQuantity());
-            ticketTypeRepository.save(tt);
-        }
+        //         // Hoàn lại số lượng vé
+        // List<BookingDetail> details = bookingDetailRepository.findByBookingId(bookingId);
+        // for (BookingDetail detail : details) {
+        //     TicketType tt = detail.getTicketType();
+        //     tt.setQuantity(tt.getQuantity() + detail.getQuantity());
+        //     ticketTypeRepository.save(tt);
+        // }
+        // No need to restore quantity - it's calculated dynamically from booking_details
+        // Available quantity will automatically increase when status = CANCELLED is excluded from calculations
     }
 
     @Override
     public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
     }
 
     @Override
@@ -130,17 +154,22 @@ public class BookingServiceImpl implements IBookingService {
 
     @Override
     @Transactional
-    public void confirmBooking(Long bookingId) {
+    public void confirmBooking(Long bookingId, String transactionCode) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
-        if (booking.getStatus() == BookingStatus.SUCCESS) return;
+        if (booking.getStatus() == BookingStatus.SUCCESS)
+            return;
 
         booking.setStatus(BookingStatus.SUCCESS);
+        if (transactionCode != null) {
+            booking.setTransactionCode(transactionCode);
+        }
         bookingRepository.save(booking);
 
         // Gửi email xác nhận
         emailService.sendBookingConfirmation(booking);
+        emailService.sendInvoiceWithPdf(booking);
     }
 
     @Override
@@ -151,5 +180,32 @@ public class BookingServiceImpl implements IBookingService {
             total = total.add(d.getTicketType().getPrice().multiply(new java.math.BigDecimal(d.getQuantity())));
         }
         return total.longValue();
+    }
+
+    @Override
+    @Transactional
+    public void expireBookings() {
+        java.time.LocalDateTime threshold = java.time.LocalDateTime.now().minusMinutes(15);
+        List<Booking> expiredBookings = bookingRepository.findByStatusAndBookingTimeBefore(BookingStatus.PENDING, threshold);
+        
+        for (Booking booking : expiredBookings) {
+            cancelBooking(booking.getId());
+            System.out.println("Expired booking cancelled: " + booking.getId());
+        }
+    }
+
+    @Override
+    public List<BookingDetail> getBookingDetailsByBookingId(Long bookingId) {
+        return bookingDetailRepository.findByBookingId(bookingId);
+    }
+
+    @Override
+    public int getSoldQuantity(Long ticketTypeId) {
+        List<BookingDetail> details = bookingDetailRepository.findByTicketType_Id(ticketTypeId);
+        return details.stream()
+                .filter(detail -> detail.getBooking().getStatus() == BookingStatus.SUCCESS || 
+                                 detail.getBooking().getStatus() == BookingStatus.PENDING)
+                .mapToInt(BookingDetail::getQuantity)
+                .sum();
     }
 }

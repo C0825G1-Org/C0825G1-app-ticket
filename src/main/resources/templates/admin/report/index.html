@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{common/layout :: admin-head('Báo cáo thống kê')}">
+</head>
+
+<body>
+    <div th:replace="~{common/layout :: admin-layout(~{::.report-content})}">
+        <div class="report-content">
+            <div class="row">
+                <!-- Sidebar Filters -->
+                <div class="col-md-3 mb-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h5 class="card-title mb-0 fw-bold"><i class="bi bi-calendar-range text-primary"></i> Bộ lọc
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <!-- Quick Filters -->
+                            <div class="p-3">
+                                <label class="form-label small text-muted fw-bold">Khoảng thời gian:</label>
+                                <select class="form-select" onchange="handleFilterChange(this)">
+                                    <option value="today" th:selected="${preset == 'today'}">Today (Hôm nay)</option>
+                                    <option value="yesterday" th:selected="${preset == 'yesterday'}">Yesterday (Hôm qua)
+                                    </option>
+                                    <option value="last_7_days" th:selected="${preset == 'last_7_days'}">Last 7 days (7
+                                        ngày qua)</option>
+                                    <option value="last_30_days" th:selected="${preset == 'last_30_days'}">Last 30 days
+                                        (30 ngày qua)</option>
+                                    <option value="this_month" th:selected="${preset == 'this_month'}">This month (Tháng
+                                        này)</option>
+                                    <option value="last_month" th:selected="${preset == 'last_month'}">Last month (Tháng
+                                        trước)</option>
+                                    <option value="this_year" th:selected="${preset == 'this_year'}">This year (Năm nay)
+                                    </option>
+                                    <option value="custom" th:selected="${preset == 'custom'}">Custom range (Tùy
+                                        chọn)...</option>
+                                </select>
+                            </div>
+
+                            <script>
+                                function handleFilterChange(select) {
+                                    const value = select.value;
+                                    const customForm = document.getElementById('customRangeForm');
+
+                                    if (value === 'custom') {
+                                        customForm.style.display = 'block';
+                                    } else {
+                                        customForm.style.display = 'none';
+                                        // Redirect to preset
+                                        const currentUrl = new URL(window.location.href);
+                                        currentUrl.searchParams.set('preset', value);
+
+                                        // Keep compareType if exists
+                                        // Remove startDate/endDate if switching to preset
+                                        currentUrl.searchParams.delete('startDate');
+                                        currentUrl.searchParams.delete('endDate');
+
+                                        window.location.href = currentUrl.toString();
+                                    }
+                                }
+                            </script>
+
+                            <!-- Custom Range Inputs (Hidden by default unless 'custom' is active) -->
+                            <div id="customRangeForm" class="p-3 bg-light border-top"
+                                th:style="${preset == 'custom'} ? '' : 'display: none;'">
+                                <form th:action="@{/admin/reports}" method="get">
+                                    <input type="hidden" name="preset" value="custom">
+                                    <div class="mb-2">
+                                        <label class="form-label small text-muted">Từ ngày</label>
+                                        <input type="date" name="startDate" class="form-control form-control-sm"
+                                            th:value="${startDate}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small text-muted">Đến ngày</label>
+                                        <input type="date" name="endDate" class="form-control form-control-sm"
+                                            th:value="${endDate}">
+                                    </div>
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary btn-sm">Áp dụng</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comparison Toggle -->
+                    <div class="card border-0 shadow-sm mt-3">
+                        <div class="card-body">
+                            <form th:action="@{/admin/reports}" method="get" id="compareForm">
+                                <input type="hidden" name="preset" th:value="${preset}">
+                                <input type="hidden" name="startDate" th:value="${startDate}">
+                                <input type="hidden" name="endDate" th:value="${endDate}">
+
+                                <label class="form-label fw-bold small text-uppercase text-muted">So sánh với:</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="compareType" id="compareNone"
+                                        value="none" th:checked="${compareType == 'none'}"
+                                        onchange="this.form.submit()">
+                                    <label class="form-check-label" for="compareNone">
+                                        Không so sánh
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="compareType" id="comparePrevious"
+                                        value="previous_period"
+                                        th:checked="${compareType == 'previous_period' or compareType == null}"
+                                        onchange="this.form.submit()">
+                                    <label class="form-check-label" for="comparePrevious">
+                                        Kỳ trước (Mặc định)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="compareType" id="compareYear"
+                                        value="same_period_last_year"
+                                        th:checked="${compareType == 'same_period_last_year'}"
+                                        onchange="this.form.submit()">
+                                    <label class="form-check-label" for="compareYear">
+                                        Cùng kỳ năm ngoái
+                                    </label>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mt-3">
+                        <button type="button" id="btnExport" onclick="exportReportWithCharts()" class="btn btn-success">
+                            <i class="bi bi-file-earmark-spreadsheet"></i> Xuất Excel (Kèm Báo cáo)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Main Content -->
+                <div class="col-md-9">
+                    <h4 class="mb-4 fw-bold">Thống kê tổng quan</h4>
+
+                    <!-- Summary Cards -->
+                    <div class="row g-4 mb-4">
+                        <!-- Revenue Card -->
+                        <div class="col-md-3">
+                            <div class="card border-0 shadow-sm h-100 text-white"
+                                style="background: linear-gradient(135deg, #0d6efd, #0dcaf0);">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <p class="mb-0 opacity-75 small">Doanh thu</p>
+                                            <h4 class="fw-bold mb-0"
+                                                th:text="${summary.totalRevenue} != null ? ${#numbers.formatDecimal(summary.totalRevenue, 0, 'COMMA', 0, 'POINT')} + ' đ' : '0 đ'">
+                                                500M</h4>
+                                        </div>
+                                        <div class="fs-4 opacity-50"><i class="bi bi-currency-dollar"></i></div>
+                                    </div>
+                                    <div class="mt-2 small">
+                                        <span
+                                            th:class="${summary.revenueChange >= 0} ? 'text-white' : 'text-danger fw-bold'"
+                                            class="badge bg-white bg-opacity-25"
+                                            th:text="${(summary.revenueChange >= 0 ? '↑ ' : '↓ ') + #numbers.formatDecimal(summary.revenueChange >= 0 ? summary.revenueChange : summary.revenueChange * -1, 1, 1)} + '%'">↑
+                                            15%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bookings Card -->
+                        <div class="col-md-3">
+                            <div class="card border-0 shadow-sm h-100 text-white"
+                                style="background: linear-gradient(135deg, #198754, #20c997);">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <p class="mb-0 opacity-75 small">Bookings</p>
+                                            <h4 class="fw-bold mb-0" th:text="${summary.totalBookings}">2,345</h4>
+                                        </div>
+                                        <div class="fs-4 opacity-50"><i class="bi bi-ticket-perforated"></i></div>
+                                    </div>
+                                    <div class="mt-2 small">
+                                        <span
+                                            th:class="${summary.bookingsChange >= 0} ? 'text-white' : 'text-danger fw-bold'"
+                                            class="badge bg-white bg-opacity-25"
+                                            th:text="${(summary.bookingsChange >= 0 ? '↑ ' : '↓ ') + #numbers.formatDecimal(summary.bookingsChange >= 0 ? summary.bookingsChange : summary.bookingsChange * -1, 1, 1)} + '%'">↑
+                                            8%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Events Card -->
+                        <div class="col-md-3">
+                            <div class="card border-0 shadow-sm h-100 text-white"
+                                style="background: linear-gradient(135deg, #fd7e14, #ffc107);">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <p class="mb-0 opacity-75 small">Sự kiện</p>
+                                            <h4 class="fw-bold mb-0" th:text="${summary.totalEvents}">567</h4>
+                                        </div>
+                                        <div class="fs-4 opacity-50"><i class="bi bi-calendar-event"></i></div>
+                                    </div>
+                                    <div class="mt-2 small">
+                                        <span
+                                            th:class="${summary.eventsChange >= 0} ? 'text-white' : 'text-danger fw-bold'"
+                                            class="badge bg-white bg-opacity-25"
+                                            th:text="${(summary.eventsChange >= 0 ? '↑ ' : '↓ ') + #numbers.formatDecimal(summary.eventsChange >= 0 ? summary.eventsChange : summary.eventsChange * -1, 1, 1)} + '%'">↑
+                                            12%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Users Card -->
+                        <div class="col-md-3">
+                            <div class="card border-0 shadow-sm h-100 text-white"
+                                style="background: linear-gradient(135deg, #6610f2, #d63384);">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <p class="mb-0 opacity-75 small">Users</p>
+                                            <h4 class="fw-bold mb-0" th:text="${summary.totalUsers}">12,890</h4>
+                                        </div>
+                                        <div class="fs-4 opacity-50"><i class="bi bi-people"></i></div>
+                                    </div>
+                                    <div class="mt-2 small">
+                                        <span
+                                            th:class="${summary.usersChange >= 0} ? 'text-white' : 'text-danger fw-bold'"
+                                            class="badge bg-white bg-opacity-25"
+                                            th:text="${(summary.usersChange >= 0 ? '↑ ' : '↓ ') + #numbers.formatDecimal(summary.usersChange >= 0 ? summary.usersChange : summary.usersChange * -1, 1, 1)} + '%'">↑
+                                            25%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row 1 -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-8">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-white border-0 py-3">
+                                    <h5 class="card-title mb-0 fw-bold"><i class="bi bi-graph-up text-primary"></i> Biểu
+                                        đồ
+                                        doanh
+                                        thu
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="revenueChart" style="height: 300px;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-white border-0 py-3">
+                                    <h5 class="card-title mb-0 fw-bold"><i class="bi bi-pie-chart text-success"></i>
+                                        Danh mục sự
+                                        kiện
+                                    </h5>
+                                </div>
+                                <div class="card-body d-flex align-items-center justify-content-center"
+                                    id="categoryChartContainer">
+                                    <canvas id="categoryChart" style="max-height: 280px;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row 2 -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-white border-0 py-3">
+                                    <h5 class="card-title mb-0 fw-bold"><i class="bi bi-bar-chart text-warning"></i> Xu
+                                        hướng
+                                        Booking
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="bookingChart" style="height: 250px;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-white border-0 py-3">
+                                    <h5 class="card-title mb-0 fw-bold"><i class="bi bi-person-plus text-info"></i> Tăng
+                                        trưởng
+                                        người
+                                        dùng</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="userChart" style="height: 250px;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Tables -->
+                    <div class="row g-4">
+                        <!-- Top Events -->
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm">
+                                <div
+                                    class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                                    <h5 class="card-title mb-0 fw-bold">Top 10 Sự kiện bán chạy</h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th class="ps-3">#</th>
+                                                    <th>Sự kiện</th>
+                                                    <th>Danh mục</th>
+                                                    <th class="text-end">Vé bán</th>
+                                                    <th class="text-end pe-3">Doanh thu</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:each="event, stat : ${topEvents}">
+                                                    <td class="ps-3 fw-bold" th:text="${stat.count}">1</td>
+                                                    <td>
+                                                        <div class="fw-semibold text-truncate" style="max-width: 150px;"
+                                                            th:text="${event.title}">Concert ABC
+                                                        </div>
+                                                    </td>
+                                                    <td><span class="badge bg-secondary bg-opacity-10 text-secondary"
+                                                            th:text="${event.categoryName}">Music</span></td>
+                                                    <td class="text-end" th:text="${event.ticketsSold}">450</td>
+                                                    <td class="text-end pe-3 fw-bold text-success"
+                                                        th:text="${event.revenue != null} ? ${#numbers.formatDecimal(event.revenue, 0, 'COMMA', 0, 'POINT')} + ' đ' : '0 đ'">
+                                                        45M
+                                                    </td>
+                                                </tr>
+                                                <tr th:if="${#lists.isEmpty(topEvents)}">
+                                                    <td colspan="5" class="text-center py-4 text-muted">Chưa có dữ liệu
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Organizers -->
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm">
+                                <div
+                                    class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                                    <h5 class="card-title mb-0 fw-bold">Top 10 Organizer hiệu quả</h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th class="ps-3">#</th>
+                                                    <th>Organizer</th>
+                                                    <th>Events</th>
+                                                    <th class="text-end pe-3">Tổng Doanh thu</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:each="org, stat : ${topOrganizers}">
+                                                    <td class="ps-3 fw-bold" th:text="${stat.count}">1</td>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2"
+                                                                style="width: 32px; height: 32px; font-size: 14px;">
+                                                                <span
+                                                                    th:text="${#strings.substring(org.fullName, 0, 1)}">A</span>
+                                                            </div>
+                                                            <div>
+                                                                <div class="fw-semibold" th:text="${org.fullName}">
+                                                                    Nguyễn Văn A
+                                                                </div>
+                                                                <div class="small text-muted" th:text="${org.email}">
+                                                                    a@gmail.com
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-center" th:text="${org.eventCount}">12</td>
+                                                    <td class="text-end pe-3 fw-bold text-primary"
+                                                        th:text="${org.totalRevenue != null} ? ${#numbers.formatDecimal(org.totalRevenue, 0, 'COMMA', 0, 'POINT')} + ' đ' : '0 đ'">
+                                                        120M
+                                                    </td>
+                                                </tr>
+                                                <tr th:if="${#lists.isEmpty(topOrganizers)}">
+                                                    <td colspan="4" class="text-center py-4 text-muted">Chưa có dữ liệu
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart.js -->
+                    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                    <!-- Hidden Data Container -->
+                    <div id="chartData" th:data-revenue="${revenueChart}" th:data-booking="${bookingChart}"
+                        th:data-category="${categoryChart}" th:data-user="${userChart}" style="display: none;"></div>
+
+                    <!-- Chart.js -->
+                    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                    <script>
+                        // DEBUG: Confirm script execution
+                        // console.log('Script starting...');
+                        // alert('Script starting...');
+
+                        const dataDiv = document.getElementById('chartData');
+
+                        let revenueChartData = {}, bookingChartData = {}, categoryChartData = {}, userChartData = {};
+
+                        try {
+                            const revAttr = dataDiv.getAttribute('data-revenue');
+                            // console.log('Raw Revenue Attr:', revAttr);
+
+                            if (revAttr && revAttr !== '{}') {
+                                revenueChartData = JSON.parse(revAttr);
+                            }
+
+                            bookingChartData = JSON.parse(dataDiv.getAttribute('data-booking') || '{}');
+                            categoryChartData = JSON.parse(dataDiv.getAttribute('data-category') || '{}');
+                            userChartData = JSON.parse(dataDiv.getAttribute('data-user') || '{}');
+
+                            // console.log('Parsed Revenue Data:', revenueChartData);
+
+                            if (!revenueChartData.labels || revenueChartData.labels.length === 0) {
+                                console.warn("Chart Data Empty");
+                            }
+                        } catch (e) {
+                            console.error('JSON Parse Error:', e);
+                            alert('Lỗi dữ liệu biểu đồ: ' + e.message);
+                        }
+
+                        // --- Common Options ---
+                        const commonOptions = {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: true, position: 'bottom' }
+                            }
+                        };
+
+                        // Register global instances
+                        window.reportCharts = {};
+
+                        // --- Helper to build datasets ---
+                        function buildDatasets(chartData, type, colorC, colorP) {
+                            const datasets = [{
+                                label: chartData.datasetLabel,
+                                data: chartData.data,
+                                borderColor: colorC,
+                                backgroundColor: type === 'line' ? colorC + '1A' : colorC, // 10% opacity for line fill
+                                borderWidth: type === 'line' ? 2 : 0,
+                                fill: type === 'line',
+                                tension: 0.3,
+                                borderRadius: type === 'bar' ? 4 : 0
+                            }];
+
+                            if (chartData.previousData && chartData.previousData.length > 0) {
+                                datasets.push({
+                                    label: chartData.previousDatasetLabel,
+                                    data: chartData.previousData,
+                                    borderColor: colorP || '#858796',
+                                    backgroundColor: type === 'line' ? (colorP || '#858796') + '1A' : (colorP || '#858796'),
+                                    borderWidth: type === 'line' ? 2 : 0,
+                                    borderDash: type === 'line' ? [5, 5] : [], // Dashed for previous line
+                                    fill: type === 'line',
+                                    tension: 0.3,
+                                    borderRadius: type === 'bar' ? 4 : 0
+                                });
+                            }
+                            return datasets;
+                        }
+
+                        // 1. Revenue Chart (Line)
+                        window.reportCharts.revenue = new Chart(document.getElementById('revenueChart'), {
+                            type: 'line',
+                            data: {
+                                labels: revenueChartData.labels,
+                                datasets: buildDatasets(revenueChartData, 'line', '#0d6efd', '#6c757d')
+                            },
+                            options: {
+                                ...commonOptions,
+                                scales: {
+                                    y: { beginAtZero: true, ticks: { callback: (val) => val.toLocaleString('vi-VN') + 'đ' } }
+                                }
+                            }
+                        });
+
+                        // 2. Category Chart (Dual Pie Logic)
+                        const catContainer = document.getElementById('categoryChartContainer');
+                        // Clear container if needed or handle existing canvas? 
+                        // Existing canvas id='categoryChart' is there.
+
+                        if (categoryChartData.previousData && categoryChartData.previousData.length > 0) {
+                            // Dual Charts Mode
+                            // Remove existing canvas to rebuild structure
+                            catContainer.innerHTML = '';
+
+                            // Container for Side-by-Side
+                            catContainer.className = "card-body d-flex align-items-center justify-content-center gap-2";
+
+                            // Chart 1 (Current)
+                            const div1 = document.createElement('div');
+                            div1.style.width = '50%';
+                            div1.style.height = '280px';
+                            div1.style.position = 'relative';
+                            const c1 = document.createElement('canvas');
+                            div1.appendChild(c1);
+
+                            // Chart 2 (Previous)
+                            const div2 = document.createElement('div');
+                            div2.style.width = '50%';
+                            div2.style.height = '280px';
+                            div2.style.position = 'relative';
+                            const c2 = document.createElement('canvas');
+                            div2.appendChild(c2);
+
+                            catContainer.appendChild(div1);
+                            catContainer.appendChild(div2);
+
+                            // Render Current
+                            new Chart(c1, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: categoryChartData.labels,
+                                    datasets: [{
+                                        data: categoryChartData.data,
+                                        backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'],
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    ...commonOptions,
+                                    plugins: { legend: { display: false }, title: { display: true, text: 'Kỳ này' } }
+                                }
+                            });
+
+                            // Render Previous
+                            new Chart(c2, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: categoryChartData.labels,
+                                    datasets: [{
+                                        data: categoryChartData.previousData,
+                                        backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'], // Same colors
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    ...commonOptions,
+                                    plugins: { legend: { display: false }, title: { display: true, text: categoryChartData.previousDatasetLabel } }
+                                }
+                            });
+
+                        } else {
+                            // Single Chart Mode (Default)
+                            window.reportCharts.category = new Chart(document.getElementById('categoryChart'), {
+                                type: 'doughnut',
+                                data: {
+                                    labels: categoryChartData.labels,
+                                    datasets: [{
+                                        data: categoryChartData.data,
+                                        backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'],
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { position: 'right' } }
+                                }
+                            });
+                        }
+
+                        // 3. Booking Chart (Bar)
+                        window.reportCharts.booking = new Chart(document.getElementById('bookingChart'), {
+                            type: 'bar',
+                            data: {
+                                labels: bookingChartData.labels,
+                                datasets: buildDatasets(bookingChartData, 'bar', '#20c997', '#6c757d')
+                            },
+                            options: commonOptions
+                        });
+
+                        // 4. User Growth Chart (Line)
+                        window.reportCharts.user = new Chart(document.getElementById('userChart'), {
+                            type: 'line',
+                            data: {
+                                labels: userChartData.labels,
+                                datasets: buildDatasets(userChartData, 'line', '#d63384', '#6c757d')
+                            },
+                            options: commonOptions
+                        });
+                        /*]]>*/
+
+                        function exportReportWithCharts() {
+                            const startDate = "[[${startDate}]]";
+                            const endDate = "[[${endDate}]]";
+                            const compareType = document.querySelector('input[name="compareType"]:checked').value;
+
+                            // Redirect to GET endpoint
+                            window.location.href = `/admin/reports/export?startDate=${startDate}&endDate=${endDate}&compareType=${compareType}`;
+                        }
+                    </script>
+                </div>
+            </div>
+</body>
+
+</html>

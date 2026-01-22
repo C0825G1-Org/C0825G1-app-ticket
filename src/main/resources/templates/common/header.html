@@ -44,11 +44,11 @@
             <!-- Authenticated User Menu -->
             <div class="d-flex gap-2 align-items-center" sec:authorize="isAuthenticated()">
                 <!-- My Tickets Link -->
-                <a th:href="@{/tickets}"
-                    class="btn btn-link text-decoration-none text-dark fw-medium d-none d-lg-flex align-items-center gap-1">
-                    <i class="bi bi-ticket-perforated"></i>
-                    Vé của tôi
-                </a>
+                <!--                <a th:href="@{/tickets/my-tickets}"-->
+                <!--                    class="btn btn-link text-decoration-none text-dark fw-medium d-none d-lg-flex align-items-center gap-1">-->
+                <!--                    <i class="bi bi-ticket-perforated"></i>-->
+                <!--                    Vé của tôi-->
+                <!--                </a>-->
 
                 <!-- User Profile Dropdown -->
                 <div class="dropdown">
@@ -56,7 +56,7 @@
                         class="btn btn-link text-decoration-none text-dark fw-medium dropdown-toggle d-flex align-items-center gap-2"
                         type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-person-circle fs-5"></i>
-                        <span sec:authentication="name">User</span>
+                        <span sec:authentication="principal.fullName">User</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end mt-2" aria-labelledby="userDropdown">
                         <li>
@@ -65,8 +65,96 @@
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item" th:href="@{/tickets}">
+                            <a class="dropdown-item" th:href="@{/tickets/my-tickets}">
                                 <i class="bi bi-ticket-perforated me-2"></i>Vé của tôi
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" th:href="@{/user/events}">
+                                <i class="bi bi-calendar-event me-2"></i>Sự kiện của tôi
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <form th:action="@{/logout}" method="post" class="d-inline">
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Dark Navbar Fragment -->
+<nav th:fragment="public-navbar-dark" class="navbar navbar-expand-lg navbar-dark fixed-top navbar-dark-glass">
+    <div class="container-xl">
+        <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-4" th:href="@{/}">
+            <div class="rounded-3 d-flex align-items-center justify-content-center text-white"
+                style="width: 40px; height: 40px; background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));">
+                E
+            </div>
+            EventPro
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0 fw-medium">
+                <li class="nav-item">
+                    <a class="nav-link"
+                        th:classappend="${#strings.equals(currentPage, 'home')} ? 'active text-primary' : ''"
+                        th:href="@{/}">Trang chủ</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link"
+                        th:classappend="${#strings.equals(currentPage, 'events')} ? 'active text-primary' : ''"
+                        th:href="@{/events}">Sự kiện</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/contact}">Liên hệ</a>
+                </li>
+            </ul>
+
+            <!-- Guest Menu (Not logged in) -->
+            <div class="d-flex gap-2 align-items-center" sec:authorize="!isAuthenticated()">
+                <a th:href="@{/login}" class="btn btn-link text-decoration-none text-light fw-medium d-none d-lg-block">
+                    Đăng nhập
+                </a>
+                <a th:href="@{/register}" class="btn btn-light rounded-pill px-4 py-2 fw-medium shadow-sm">
+                    Đăng ký
+                </a>
+            </div>
+
+            <!-- Authenticated User Menu -->
+            <div class="d-flex gap-2 align-items-center" sec:authorize="isAuthenticated()">
+                <!-- User Profile Dropdown -->
+                <div class="dropdown">
+                    <button
+                        class="btn btn-link text-decoration-none text-light fw-medium dropdown-toggle d-flex align-items-center gap-2"
+                        type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle fs-5"></i>
+                        <span sec:authentication="principal.fullName">User</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end mt-2" aria-labelledby="userDropdown">
+                        <li>
+                            <a class="dropdown-item" th:href="@{/profile}">
+                                <i class="bi bi-person me-2"></i>Tài khoản
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" th:href="@{/tickets/my-tickets}">
+                                <i class="bi bi-ticket-perforated me-2"></i>Vé của tôi
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" th:href="@{/user/events}">
+                                <i class="bi bi-calendar-event me-2"></i>Sự kiện của tôi
                             </a>
                         </li>
                         <li>

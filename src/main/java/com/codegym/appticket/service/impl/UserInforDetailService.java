@@ -17,10 +17,20 @@ public class UserInforDetailService implements UserDetailsService {
     @Override
     @org.springframework.transaction.annotation.Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmailAndNotDeleted(email);
-        if (user == null) {
-            throw new UsernameNotFoundException("User not found");
+        
+        // Thử tìm user mà không kèm điều kiện isDeleted trước để debug
+        java.util.Optional<User> userOptional = userRepository.findByEmail(email);
+        
+        if (userOptional.isEmpty()) {
+            throw new UsernameNotFoundException("User not found: " + email);
         }
+
+        User user = userOptional.get();
+
+        if (Boolean.TRUE.equals(user.getIsDeleted())) {
+            throw new UsernameNotFoundException("User has been deleted");
+        }
+
         UserInfoUserDetails userInfoUserDetails = new UserInfoUserDetails(user);
         return userInfoUserDetails;
     }

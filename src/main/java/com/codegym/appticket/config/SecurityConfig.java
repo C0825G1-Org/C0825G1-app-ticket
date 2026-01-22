@@ -24,6 +24,9 @@ public class SecurityConfig {
     private CustomLoginSuccessHandler customLoginSuccessHandler;
 
     @Autowired
+    private CustomLoginFailureHandler customLoginFailureHandler;
+
+    @Autowired
     private com.codegym.appticket.service.impl.CustomOAuth2UserService customOAuth2UserService;
 
     @Bean
@@ -33,9 +36,9 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider(userDetailsService);
-        authenticationProvider.setPasswordEncoder(passwordEncoder());
-        return authenticationProvider;
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
     }
 
     @Bean
@@ -46,7 +49,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests((authorizeHttpRequests) ->
                         authorizeHttpRequests
                                 .requestMatchers("/", "/login", "/register", "/forgot-password", "/verify-forgot-password", "/reset-password", "/verify-otp", "/error/**").permitAll()
-                                .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**", "/webjars/**", "/events", "/event/**").permitAll()
+                                .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**", "/webjars/**", "/events", "/event/**", "/contact").permitAll()
                                 .requestMatchers("/admin/users/**", "/admin/reports/**").hasAnyAuthority("ADMIN")
                                 .requestMatchers("/admin/**").hasAnyAuthority("ADMIN", "STAFF")
                                 .anyRequest().authenticated())
@@ -58,6 +61,7 @@ public class SecurityConfig {
                                 .failureUrl("/login?error=true")
                                 .loginProcessingUrl("/login")
                                 .successHandler(customLoginSuccessHandler)
+                                .failureHandler(customLoginFailureHandler)
                                 .permitAll())
                 .rememberMe((remember) ->
                         remember

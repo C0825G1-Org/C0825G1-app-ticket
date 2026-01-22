@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{common/layout :: head('Tạo sự kiện mới')}">
+</head>
+<link rel="stylesheet" href="/css/wizard-custom.css">
+<script th:src="@{'https://cdn.tiny.cloud/1/' + ${tinyMceApiKey} + '/tinymce/6/tinymce.min.js'}"
+    referrerpolicy="origin"></script>
+
+<body style="background-color: #0f172a;" data-bs-theme="dark">
+    <!-- Apply Dark Theme to Body content wrapper -->
+    <div th:replace="~{common/layout :: user-layout(~{::content})}">
+        <div th:fragment="content">
+            <div class="container-xl mt-5 pt-5 mb-5">
+
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-0 text-white">Tạo sự kiện mới</h4>
+                        <p class="text-white-50 small mb-0">Nhập thông tin chi tiết để tạo sự kiện mới</p>
+                    </div>
+                    <a th:href="@{/user/events}" class="btn btn-outline-light rounded-3">
+                        <i class="bi bi-arrow-left me-2"></i> Quay lại
+                    </a>
+                </div>
+
+                <div class="row justify-content-center">
+                    <div class="col-lg-10">
+
+                        <!-- Error/Success Messages -->
+                        <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+                        <!-- Wizard Steps Indicator -->
+                        <div class="step-indicator">
+                            <div class="step-item active" id="step-indicator-1">
+                                <div class="step-circle">1</div>
+                                <div class="text-start ms-2">
+                                    <div class="small text-uppercase text-muted" style="font-size: 0.7rem;">Bước 1</div>
+                                    <div class="step-label">Thông tin</div>
+                                </div>
+                            </div>
+                            <div class="step-line"></div>
+                            <div class="step-item" id="step-indicator-2">
+                                <div class="step-circle">2</div>
+                                <div class="text-start ms-2">
+                                    <div class="small text-uppercase text-muted" style="font-size: 0.7rem;">Bước 2</div>
+                                    <div class="step-label">Hình ảnh</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form id="createEventForm" method="POST">
+                            <!-- Hidden Status Input -->
+                            <input type="hidden" name="status" id="eventStatus" value="PENDING">
+
+                            <!-- STEP 1: EVENT INFO -->
+                            <div id="step-info">
+                                <!-- Basic Info -->
+                                <div class="card card-glass-dark border-0 shadow-sm rounded-4 mb-4">
+                                    <div
+                                        class="card-header bg-transparent border-bottom border-secondary border-opacity-25 py-3">
+                                        <h5 class="fw-bold mb-0 text-white">
+                                            <i class="bi bi-info-circle text-primary me-2"></i>
+                                            Thông tin cơ bản
+                                        </h5>
+                                    </div>
+                                    <div class="card-body p-4">
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-medium text-white">Tên sự kiện <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text"
+                                                class="form-control form-control-lg bg-dark text-white border-secondary border-opacity-50"
+                                                name="title" placeholder="VD: Đêm nhạc Acoustic" required>
+                                            <div class="text-danger small error-message" id="error-title"></div>
+                                        </div>
+
+                                        <!-- Organizer Section Removed for User: Automaticaly set to self -->
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-medium text-white">Danh mục <span
+                                                    class="text-danger">*</span></label>
+                                            <select
+                                                class="form-select form-select-lg bg-dark text-white border-secondary border-opacity-50"
+                                                name="categoryId" required>
+                                                <option value="">-- Chọn danh mục --</option>
+                                                <option th:each="cat : ${categories}" th:value="${cat.id}"
+                                                    th:text="${cat.name}">Category</option>
+                                            </select>
+                                            <div class="text-danger small error-message" id="error-categoryId"></div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-medium text-white">Mô tả sự kiện <span
+                                                    class="text-danger">*</span></label>
+                                            <textarea
+                                                class="form-control bg-dark text-white border-secondary border-opacity-50"
+                                                rows="5" name="description" id="description"
+                                                placeholder="Mô tả chi tiết..."></textarea>
+                                            <div class="form-text text-muted mt-2">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#guideModal">Xem hướng dẫn soạn thảo nội dung <i class="bi bi-eye ms-1"></i></a>
+                                            </div>
+                                            <div class="text-danger small error-message" id="error-description"></div>
+                                        </div>
+
+
+
+                                    </div>
+                                </div>
+
+                                <!-- Event Occurrences (New) -->
+                                <div class="card card-glass-dark border-0 shadow-sm rounded-4 mb-4">
+                                    <div
+                                        class="card-header bg-transparent border-bottom border-secondary border-opacity-25 py-3 d-flex justify-content-between align-items-center">
+                                        <h5 class="fw-bold mb-0 text-white">
+                                            <i class="bi bi-geo-alt text-primary me-2"></i>
+                                            Thời gian & Địa điểm
+                                        </h5>
+                                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                            onclick="addEventOccurrence()">
+                                            <i class="bi bi-plus-lg"></i> Thêm lịch trình
+                                        </button>
+                                    </div>
+                                    <div class="card-body p-4" id="eventOccurrencesContainer">
+                                        <!-- Populated by JS -->
+                                    </div>
+                                </div>
+
+
+
+                                <!-- Next Button for Step 1 -->
+                                <div class="d-flex justify-content-end mb-5 gap-3">
+                                    <button type="button" class="btn btn-primary btn-lg rounded-3 px-5 fw-bold"
+                                        onclick="nextStep()">
+                                        Tiếp tục <i class="bi bi-arrow-right ms-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- STEP 2: MEDIA -->
+                            <div id="step-media" class="d-none">
+                                <div class="card card-glass-dark border-0 shadow-sm rounded-4 mb-4">
+                                    <div
+                                        class="card-header bg-transparent border-bottom border-secondary border-opacity-25 py-3">
+                                        <h5 class="fw-bold mb-0 text-white">
+                                            <i class="bi bi-images text-primary me-2"></i>
+                                            Hình ảnh & Truyền thông
+                                        </h5>
+                                    </div>
+                                    <div class="card-body p-4">
+                                        <!-- Hidden Inputs for URLs -->
+                                        <input type="hidden" name="bannerUrl" id="bannerUrl">
+                                        <input type="hidden" name="logoUrl" id="logoUrl">
+                                        <input type="hidden" name="ticketMapUrl" id="ticketMapUrl">
+                                        <div id="galleryUrlsContainer"></div>
+
+                                        <div class="mb-5">
+                                            <label class="form-label fw-medium mb-3 text-white">Banner Sự kiện (Bắt
+                                                buộc) <span class="text-danger">*</span></label>
+                                            <div class="preview-container mb-2"
+                                                onclick="document.getElementById('bannerFile').click()">
+                                                <img id="preview-banner" class="preview-image">
+                                                <div class="preview-placeholder" id="placeholder-banner">
+                                                    <i class="bi bi-card-image fs-1 d-block mb-2"></i>
+                                                    <div class="small">Nhấn để tải lên ảnh bìa</div>
+                                                </div>
+                                            </div>
+                                            <input type="file" class="form-control d-none" id="bannerFile"
+                                                accept="image/*" required
+                                                onchange="previewFile(this, 'preview-banner', 'placeholder-banner')">
+                                        </div>
+
+                                        <div class="row mb-5">
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-medium mb-3 text-white">Logo Sự kiện (Bắt
+                                                    buộc) <span class="text-danger">*</span></label>
+                                                <div class="preview-container mb-2"
+                                                    onclick="document.getElementById('logoFile').click()"
+                                                    style="height: 150px;">
+                                                    <img id="preview-logo" class="preview-image"
+                                                        style="object-fit: contain;">
+                                                    <div class="preview-placeholder" id="placeholder-logo">
+                                                        <i class="bi bi-box-seam fs-2 d-block mb-2"></i>
+                                                        <div class="small">Nhấn tải logo</div>
+                                                    </div>
+                                                </div>
+                                                <input type="file" class="form-control d-none" id="logoFile"
+                                                    accept="image/*" required
+                                                    onchange="previewFile(this, 'preview-logo', 'placeholder-logo')">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-medium mb-3 text-white">Sơ đồ vị trí (Bắt
+                                                    buộc) <span class="text-danger">*</span></label>
+                                                <div class="preview-container mb-2"
+                                                    onclick="document.getElementById('ticketMapFile').click()"
+                                                    style="height: 150px;">
+                                                    <img id="preview-map" class="preview-image"
+                                                        style="object-fit: contain;">
+                                                    <div class="preview-placeholder" id="placeholder-map">
+                                                        <i class="bi bi-map fs-2 d-block mb-2"></i>
+                                                        <div class="small">Nhấn tải sơ đồ</div>
+                                                    </div>
+                                                </div>
+                                                <input type="file" class="form-control d-none" id="ticketMapFile"
+                                                    accept="image/*" required
+                                                    onchange="previewFile(this, 'preview-map', 'placeholder-map')">
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-medium text-white">Thư viện ảnh/video khác (Tùy
+                                                chọn)</label>
+                                            <input type="file" class="form-control mb-3" id="galleryFiles" multiple
+                                                accept="image/*,video/*"
+                                                onchange="previewGallery(this, 'gallery-preview-grid')">
+                                            <div id="gallery-preview-grid" class="gallery-grid"></div>
+                                            <div class="form-text text-muted">Có thể chọn nhiều file. Tối đa 10 files.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Buttons for Step 2 -->
+                                <div class="d-flex gap-3 justify-content-end mb-5">
+                                    <button type="button" class="btn btn-outline-light btn-lg rounded-3 px-5"
+                                        onclick="prevStep()">
+                                        <i class="bi bi-arrow-left me-2"></i> Quay lại
+                                    </button>
+                                    <button type="submit" class="btn btn-outline-light btn-lg rounded-3 px-4"
+                                        onclick="setDraft()">
+                                        <i class="bi bi-save me-2"></i> Lưu nháp
+                                    </button>
+                                    <button type="submit" class="btn btn-gradient btn-lg rounded-3 px-5 fw-bold"
+                                        style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); border: none; color: white;">
+                                        <i class="bi bi-check-lg me-2"></i> Tạo sự kiện
+                                    </button>
+                                </div>
+                            </div>
+
+                        </form>
+                        <!-- Shared Cloudinary Logic -->
+                        <script src="/js/cloudinary-upload.js"></script>
+
+                        <script>
+                            // --- GLOBAL DEFINITIONS & API CONFIG ---
+                            document.addEventListener('DOMContentLoaded', function () {
+                                // SweetAlert Toast Config
+                                const Toast = Swal.mixin({
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false,
+                                    timer: 3000,
+                                    timerProgressBar: true,
+                                    didOpen: (toast) => {
+                                        toast.onmouseenter = Swal.stopTimer;
+                                        toast.onmouseleave = Swal.resumeTimer;
+                                    }
+                                });
+
+                                // TinyMCE Init
+                                if (typeof tinymce !== 'undefined') {
+                                    tinymce.init({
+                                        selector: '#description',
+                                        height: 300,
+                                        plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help wordcount',
+                                        toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+                                        content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+                                    });
+                                }
+
+                                // Form Submit Logic
+                                document.getElementById('createEventForm').addEventListener('submit', async function (e) {
+                                    e.preventDefault();
+                                    if (typeof tinymce !== 'undefined' && tinymce.get('description')) {
+                                        tinymce.get('description').save();
+                                    }
+
+                                    // REMOVE VALIDATION IF DRAFT
+                                    const eventStatus = document.getElementById('eventStatus').value;
+                                    if (eventStatus === 'DRAFT') {
+                                        // Skip file count validation or make it optional?
+                                        // Draft should normally allow anything, but max file count is safeguard. Let's keep max 10 check for safety or skip it too?
+                                        // Let's keep hard limits but skip 'required'
+                                    } else {
+                                        // Only validate gallery if NOT draft
+                                        const galleryInput = document.getElementById('galleryFiles');
+                                        if (galleryInput.files.length > 10) {
+                                            Toast.fire({ icon: 'warning', title: 'Tối đa 10 file.' });
+                                            return;
+                                        }
+                                    }
+                                    const submitBtn = e.submitter; // Get the specific button clicked
+                                    const originalBtnText = submitBtn.innerHTML;
+                                    setButtonLoading(submitBtn, 'Đang xử lý...');
+
+                                    try {
+                                        const bannerFile = document.getElementById('bannerFile').files[0];
+                                        const logoFile = document.getElementById('logoFile').files[0];
+                                        const ticketMapFile = document.getElementById('ticketMapFile').files[0];
+                                        const galleryFiles = document.getElementById('galleryFiles').files;
+                                        const uploadPromises = [];
+                                        if (bannerFile) uploadPromises.push(uploadToCloudinary(bannerFile).then(url => document.getElementById('bannerUrl').value = url));
+                                        if (logoFile) uploadPromises.push(uploadToCloudinary(logoFile).then(url => document.getElementById('logoUrl').value = url));
+                                        if (ticketMapFile) uploadPromises.push(uploadToCloudinary(ticketMapFile).then(url => document.getElementById('ticketMapUrl').value = url));
+                                        if (galleryFiles.length > 0) {
+                                            const galleryContainer = document.getElementById('galleryUrlsContainer');
+                                            galleryContainer.innerHTML = '';
+                                            for (let i = 0; i < galleryFiles.length; i++) {
+                                                uploadPromises.push(uploadToCloudinary(galleryFiles[i]).then(url => {
+                                                    const input = document.createElement('input');
+                                                    input.type = 'hidden';
+                                                    input.name = 'galleryUrls';
+                                                    input.value = url;
+                                                    galleryContainer.appendChild(input);
+                                                }));
+                                            }
+                                        }
+                                        await Promise.all(uploadPromises);
+
+                                        // Submit to backend
+                                        setButtonLoading(submitBtn, 'Đang tạo...');
+                                        const formData = new FormData(this);
+                                        const searchParams = new URLSearchParams();
+                                        for (const [key, value] of formData) {
+                                            if (value instanceof File) continue;
+                                            searchParams.append(key, value);
+                                        }
+                                        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                                        const response = await fetch('/user/events/create', {
+                                            method: 'POST',
+                                            headers: { [csrfHeader]: csrfToken },
+                                            body: searchParams
+                                        });
+                                        const data = await response.json();
+
+                                        if (data.status === 'success') {
+                                            Toast.fire({ icon: 'success', title: 'Tạo thành công!' });
+                                            setTimeout(() => window.location.href = data.redirectUrl, 1500);
+                                        } else if (data.status === 'validation_error') {
+                                            document.querySelectorAll('.error-message').forEach(el => !el.id.includes('error-') ? el.remove() : el.textContent = '');
+                                            document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                                            for (const [field, message] of Object.entries(data.errors)) {
+                                                const errorDiv = document.getElementById('error-' + field);
+                                                if (errorDiv) {
+                                                    errorDiv.textContent = message;
+                                                    const input = document.querySelector(`[name="${field}"]`);
+                                                    if (input) input.classList.add('is-invalid');
+                                                } else {
+                                                    const input = document.querySelector(`[name="${field}"]`);
+                                                    if (input) {
+                                                        input.classList.add('is-invalid');
+                                                        let dynamicError = input.nextElementSibling;
+                                                        if (!dynamicError || !dynamicError.classList.contains('error-message')) {
+                                                            dynamicError = document.createElement('div');
+                                                            dynamicError.className = 'text-danger small error-message';
+                                                            input.parentNode.insertBefore(dynamicError, input.nextSibling);
+                                                        }
+                                                        dynamicError.textContent = message;
+                                                    }
+                                                }
+                                            }
+                                            Toast.fire({ icon: 'error', title: 'Kiểm tra lại thông tin.' });
+                                        } else {
+                                            Toast.fire({ icon: 'error', title: data.message });
+                                        }
+                                    } catch (e) {
+                                        console.error(e);
+                                        Toast.fire({ icon: 'error', title: e.message });
+                                    } finally {
+                                        submitBtn.innerHTML = originalBtnText;
+                                        submitBtn.disabled = false;
+                                    }
+                                });
+
+                                // Initialize
+                                showStep(1);
+                            });
+
+                            // --- GLOBAL DEFINITIONS & API CONFIG ---
+                            const API_BASE = 'https://provinces.open-api.vn/api/v2';
+                            const locationCache = { provinces: null, districts: {}, wards: {} };
+
+                            async function fetchProvinces() {
+                                if (locationCache.provinces) return locationCache.provinces;
+                                try {
+                                    const response = await fetch(`${API_BASE}/p/`);
+                                    const data = await response.json();
+                                    locationCache.provinces = data;
+                                    return data;
+                                } catch (e) { console.error('Error fetching provinces:', e); return []; }
+                            }
+
+                            // Global helper functions
+                            window.previewFile = function (input, imgId, placeholderId) {
+                                const file = input.files[0];
+                                const img = document.getElementById(imgId);
+                                const placeholder = document.getElementById(placeholderId);
+                                if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = function (e) {
+                                        img.src = e.target.result;
+                                        img.style.display = 'block';
+                                        img.style.objectFit = 'contain';
+                                        if (placeholder) placeholder.style.display = 'none';
+                                    }
+                                    reader.readAsDataURL(file);
+                                }
+                            };
+
+                            window.previewGallery = function (input, gridId) {
+                                const grid = document.getElementById(gridId);
+                                grid.innerHTML = '';
+                                if (input.files) {
+                                    Array.from(input.files).forEach(file => {
+                                        const item = document.createElement('div');
+                                        item.className = 'gallery-item';
+                                        const reader = new FileReader();
+                                        reader.onload = function (e) {
+                                            if (file.type.startsWith('video/')) {
+                                                const video = document.createElement('video');
+                                                video.src = e.target.result;
+                                                video.controls = false;
+                                                item.appendChild(video);
+                                            } else {
+                                                const img = document.createElement('img');
+                                                img.src = e.target.result;
+                                                item.appendChild(img);
+                                            }
+                                        }
+                                        reader.readAsDataURL(file);
+                                        grid.appendChild(item);
+                                    });
+                                }
+                            };
+
+                            window.removeRow = function (btn, type) {
+                                if (type === 'occurrence') {
+                                    const item = btn.closest('.event-occurrence-item');
+                                    if (item) item.remove();
+                                    window.reindexEventOccurrences();
+                                } else if (type === 'ticket') {
+                                    // Remove ticket row
+                                    const row = btn.closest('.ticket-type-row');
+                                    // Need to find which occurrence this belongs to, to reindex that occurrence's tickets
+                                    const occurrenceItem = row.closest('.event-occurrence-item');
+                                    if (row) row.remove();
+
+                                    // Reindex tickets for this occurrence only? 
+                                    // Actually reindexEventOccurrences handles everything recursively
+                                    window.reindexEventOccurrences();
+                                }
+                            };
+
+                            window.addEventOccurrence = async function () {
+                                const container = document.getElementById('eventOccurrencesContainer');
+                                if (!container) return;
+                                const idx = document.querySelectorAll('.event-occurrence-item').length;
+                                const item = document.createElement('div');
+                                item.className = 'card mb-3 border border-secondary border-opacity-25 bg-transparent event-occurrence-item';
+                                item.innerHTML = `
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <h6 class="fw-bold text-white-50">Lịch trình #${idx + 1}</h6>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this, 'occurrence')">
+                                                <i class="bi bi-trash"></i> Xóa
+                                            </button>
+                                        </div>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-medium text-white">Bắt đầu <span class="text-danger">*</span></label>
+                                                <input type="datetime-local" class="form-control bg-dark text-white border-secondary border-opacity-50" name="eventOccurrences[${idx}].startTime" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-medium text-white">Kết thúc <span class="text-danger">*</span></label>
+                                                <input type="datetime-local" class="form-control bg-dark text-white border-secondary border-opacity-50" name="eventOccurrences[${idx}].endTime" required>
+                                            </div>
+                                            <div class="col-12"><hr class="my-1 border-secondary"></div>
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-medium text-white">Tỉnh/Thành phố <span class="text-danger">*</span></label>
+                                                <select class="form-select province-select bg-dark text-white border-secondary border-opacity-50" name="eventOccurrences[${idx}].provinceCode" required data-index="${idx}" onchange="onProvinceChange(this, ${idx})">
+                                                    <option value="">-- Chọn Tỉnh/Thành --</option>
+                                                </select>
+                                                <input type="hidden" name="eventOccurrences[${idx}].provinceName" class="province-name">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-medium text-white">Phường/Xã <span class="text-danger">*</span></label>
+                                                <select class="form-select ward-select bg-dark text-white border-secondary border-opacity-50" name="eventOccurrences[${idx}].wardCode" required disabled onchange="onWardChange(this, ${idx})">
+                                                    <option value="">-- Chọn Phường/Xã --</option>
+                                                </select>
+                                                <input type="hidden" name="eventOccurrences[${idx}].wardName" class="ward-name">
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label small fw-medium text-white">Địa chỉ chi tiết <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control bg-dark text-white border-secondary border-opacity-50" name="eventOccurrences[${idx}].addressDetail" placeholder="Số nhà, Tên đường..." required>
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label small fw-medium text-white">Link Bản đồ (Tùy chọn)</label>
+                                                <input type="text" class="form-control bg-dark text-white border-secondary border-opacity-50" name="eventOccurrences[${idx}].mapLink" placeholder="https://maps.google.com/...">
+                                            </div>
+                                            
+                                            <!-- Nested Ticket Types -->
+                                            <div class="col-12 mt-3">
+                                                <div class="card inner-card border-0 bg-transparent">
+                                                    <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center px-0">
+                                                        <h6 class="fw-bold mb-0 text-primary">Các loại vé cho lịch trình này</h6>
+                                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addTicketType(${idx})">
+                                                            <i class="bi bi-plus"></i> Thêm vé
+                                                        </button>
+                                                    </div>
+                                                    <div class="card-body px-0" id="ticket-container-${idx}">
+                                                        <!-- Tickets will be added here -->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                                container.appendChild(item);
+
+                                const provinceSelect = item.querySelector('.province-select');
+                                const provinces = await fetchProvinces();
+                                provinces.forEach(p => {
+                                    const option = document.createElement('option');
+                                    option.value = p.code;
+                                    option.textContent = p.name;
+                                    provinceSelect.appendChild(option);
+                                });
+
+                                // Add one default ticket
+                                addTicketType(idx);
+                            };
+
+                            window.addTicketType = function (occIdx) {
+                                const container = document.getElementById(`ticket-container-${occIdx}`);
+                                if (!container) return; // safety
+                                const ticketIdx = container.querySelectorAll('.ticket-type-row').length;
+
+                                const row = document.createElement('div');
+                                row.className = 'row g-2 mb-2 ticket-type-row align-items-end';
+                                row.innerHTML = `
+                                    <div class="col-md-5">
+                                        <label class="form-label small text-white-50">Tên vé</label>
+                                        <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50"
+                                               name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].name" 
+                                               placeholder="VD: VIP" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small text-white-50">Giá (VNĐ)</label>
+                                        <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50"
+                                               name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].price" 
+                                               min="0" placeholder="0" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small text-white-50">Số lượng</label>
+                                        <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50"
+                                               name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].quantity" 
+                                               min="1" placeholder="100" required>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="removeRow(this, 'ticket')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                `;
+                                container.appendChild(row);
+                            };
+
+                            window.onProvinceChange = async function (select, idx) {
+                                const provinceCode = select.value;
+                                const provinceName = select.options[select.selectedIndex].text;
+                                const row = select.closest('.row');
+                                row.querySelector('.province-name').value = provinceName;
+                                const wardSelect = row.querySelector('.ward-select');
+                                wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                                wardSelect.disabled = true;
+
+                                if (provinceCode) {
+                                    try {
+                                        // API v2 with depth=2 returns wards directly (flattened)
+                                        const response = await fetch(`${API_BASE}/p/${provinceCode}?depth=2`);
+                                        const data = await response.json();
+                                        const wards = data.wards || [];
+
+                                        // Sort alphabetically
+                                        wards.sort((a, b) => a.name.localeCompare(b.name));
+
+                                        wards.forEach(w => {
+                                            const option = document.createElement('option');
+                                            option.value = w.code;
+                                            option.textContent = w.name;
+                                            wardSelect.appendChild(option);
+                                        });
+                                        wardSelect.disabled = false;
+                                    } catch (e) { console.error('Error fetching wards:', e); }
+                                }
+                            };
+
+                            window.onWardChange = function (select, idx) {
+                                const wardName = select.options[select.selectedIndex].text;
+                                const row = select.closest('.row');
+                                row.querySelector('.ward-name').value = wardName;
+                            };
+
+                            window.reindexEventOccurrences = function () {
+                                const items = document.querySelectorAll('.event-occurrence-item');
+                                items.forEach((item, idx) => {
+                                    item.querySelector('.fw-bold.text-muted').innerText = `Lịch trình #${idx + 1}`;
+                                    const provSel = item.querySelector('.province-select');
+                                    provSel.name = `eventOccurrences[${idx}].provinceCode`;
+                                    provSel.setAttribute('onchange', `onProvinceChange(this, ${idx})`);
+                                    item.querySelector('.province-name').name = `eventOccurrences[${idx}].provinceName`;
+                                    const wardSel = item.querySelector('.ward-select');
+                                    wardSel.name = `eventOccurrences[${idx}].wardCode`;
+                                    wardSel.setAttribute('onchange', `onWardChange(this, ${idx})`);
+                                    item.querySelector('.ward-name').name = `eventOccurrences[${idx}].wardName`;
+                                    item.querySelector('input[name$=".startTime"]').name = `eventOccurrences[${idx}].startTime`;
+                                    item.querySelector('input[name$=".endTime"]').name = `eventOccurrences[${idx}].endTime`;
+                                    item.querySelector('input[name$=".addressDetail"]').name = `eventOccurrences[${idx}].addressDetail`;
+                                    item.querySelector('input[name$=".mapLink"]').name = `eventOccurrences[${idx}].mapLink`;
+
+                                    // Reindex nested tickets
+                                    const ticketContainer = item.querySelector('[id^="ticket-container-"]');
+                                    ticketContainer.id = `ticket-container-${idx}`;
+                                    const addBtn = item.querySelector('button[onclick^="addTicketType"]');
+                                    addBtn.setAttribute('onclick', `addTicketType(${idx})`);
+
+                                    const ticketRows = ticketContainer.querySelectorAll('.ticket-type-row');
+                                    ticketRows.forEach((tr, tIdx) => {
+                                        tr.querySelector('input[name$=".name"]').name = `eventOccurrences[${idx}].ticketTypes[${tIdx}].name`;
+                                        tr.querySelector('input[name$=".price"]').name = `eventOccurrences[${idx}].ticketTypes[${tIdx}].price`;
+                                        tr.querySelector('input[name$=".quantity"]').name = `eventOccurrences[${idx}].ticketTypes[${tIdx}].quantity`;
+                                    });
+                                });
+                            };
+
+                            window.showStep = function (step) {
+                                document.getElementById('step-info').classList.toggle('d-none', step !== 1);
+                                document.getElementById('step-media').classList.toggle('d-none', step !== 2);
+                                document.getElementById('step-indicator-1').classList.toggle('active', step >= 1);
+                                document.getElementById('step-indicator-2').classList.toggle('active', step >= 2);
+                                window.scrollTo(0, 0);
+                            };
+
+                            window.nextStep = function () {
+                                const stepInfo = document.getElementById('step-info');
+                                const inputs = stepInfo.querySelectorAll('input:not([disabled]), select:not([disabled]), textarea:not([disabled])');
+                                let isValid = true;
+                                for (const input of inputs) {
+                                    if (!input.checkValidity()) {
+                                        input.reportValidity();
+                                        isValid = false;
+                                        break;
+                                    }
+                                }
+                                if (isValid) showStep(2);
+                            };
+
+                            window.prevStep = function () { showStep(1); };
+
+                            window.saveAsDraft = function () {
+                                document.getElementById('eventStatus').value = 'DRAFT';
+                                // Remove 'required' attributes to allow draft saving
+                                document.querySelectorAll('[required]').forEach(el => {
+                                    el.removeAttribute('required');
+                                    el.classList.remove('is-invalid');
+                                });
+                                // Remove client-side checks classes if any
+                                document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                                document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+
+                                // Trigger submit
+                                // No manual submit needed if button is type="submit"
+                            };
+                            // Default submit button handles PENDING automatically as default value is PENDING
+                            // But we removed setPublish onclick. Ensure defaults.
+                            // The default value of hidden input is PENDING. So normal submit works fine.
+                        </script>
+
+                        <!-- Include Guide & Preview modals (admin fragments) -->
+                        <div th:replace="~{admin/event/fragments/guide-modal :: guideModal}"></div>
+                        <div th:replace="~{admin/event/fragments/preview-modal :: previewModal}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
+
