@@ -21,6 +21,7 @@ public class CategoryController {
     @GetMapping
     public String showCategories(Model model){
         model.addAttribute("categories", categoryService.getAllCategories());
+        model.addAttribute("activeNav", "categories");
         return "admin/category/list";
     }
 
