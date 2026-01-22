@@ -241,7 +241,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
             """, nativeQuery = true)
     EventDetailDTO findEventDetailById(@Param("eventId") Long eventId);
 
-    // Get ticket types for an event
+    // Get ticket types for an event (including sold-out tickets)
     @Query(value = """
                 SELECT
                     tt.id AS id,
@@ -254,13 +254,13 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                 FROM ticket_types tt
                 JOIN event_occurrences eo ON tt.event_occurrence_id = eo.id
                 LEFT JOIN booking_details bd ON bd.ticket_type_id = tt.id
-                LEFT JOIN bookings b ON b.id = bd.booking_id AND b.status = 'SUCCESS'
+                LEFT JOIN bookings b ON b.id = bd.booking_id
                 LEFT JOIN locations l ON l.id = eo.location_id
                 LEFT JOIN wards w ON w.code = l.ward_code
                 LEFT JOIN provinces p ON p.code = w.province_code
                 WHERE eo.event_id = :eventId
+                  AND (b.id IS NULL OR b.status = 'SUCCESS')
                 GROUP BY tt.id, tt.name, tt.price, tt.quantity, eo.id, eo.start_time, p.name
-                HAVING availableQuantity > 0
                 ORDER BY eo.start_time ASC, tt.price ASC
             """, nativeQuery = true)
     List<TicketTypeDTO> findTicketTypesByEventId(@Param("eventId") Long eventId);

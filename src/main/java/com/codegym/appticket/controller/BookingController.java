@@ -121,6 +121,16 @@ public class BookingController {
 
         model.addAttribute("ticketTypes", ticketTypes);
         model.addAttribute("preSelectedQuantities", preSelectedQuantities);
+        
+        // Calculate available quantity for each ticket type (quantity - sold)
+        Map<Long, Integer> ticketAvailability = new HashMap<>();
+        for (TicketType tt : ticketTypes) {
+            int sold = bookingService.getSoldQuantity(tt.getId());
+            int available = tt.getQuantity() - sold;
+            ticketAvailability.put(tt.getId(), Math.max(0, available)); // Ensure non-negative
+        }
+        model.addAttribute("ticketAvailability", ticketAvailability);
+        
         return "booking/form";
     }
 

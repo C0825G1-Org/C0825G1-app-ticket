@@ -59,7 +59,7 @@ public class AdminUserController {
         model.addAttribute("roleId", roleId);
         model.addAttribute("status", status);
         model.addAttribute("roles", roles);
-        model.addAttribute("currentPageNav", "users");
+        model.addAttribute("activeNav", "users");
 
         return "admin/user/list";
     }
@@ -79,7 +79,7 @@ public class AdminUserController {
             }
 
             model.addAttribute("user", user);
-            model.addAttribute("currentPageNav", "users");
+            model.addAttribute("activeNav", "users");
             return "admin/user/detail";
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -94,7 +94,7 @@ public class AdminUserController {
     public String showCreateForm(Model model) {
         model.addAttribute("user", new UserCreateDTO());
         model.addAttribute("roles", userService.getManageableRoles());
-        model.addAttribute("currentPageNav", "users");
+        model.addAttribute("activeNav", "users");
         return "admin/user/create";
     }
 
@@ -109,7 +109,7 @@ public class AdminUserController {
             RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("roles", userService.getManageableRoles());
-            model.addAttribute("currentPageNav", "users");
+            model.addAttribute("activeNav", "users");
             return "admin/user/create";
         }
 
@@ -120,7 +120,7 @@ public class AdminUserController {
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("roles", userService.getManageableRoles());
-            model.addAttribute("currentPageNav", "users");
+            model.addAttribute("activeNav", "users");
             return "admin/user/create";
         }
     }
@@ -136,7 +136,7 @@ public class AdminUserController {
         model.addAttribute("user", dto);
         model.addAttribute("userDetail", userDetail);
         model.addAttribute("roles", userService.getManageableRoles());
-        model.addAttribute("currentPageNav", "users");
+        model.addAttribute("activeNav", "users");
         return "admin/user/edit";
     }
 
@@ -156,7 +156,7 @@ public class AdminUserController {
             UserDetailDTO userDetail = userService.getUserDetail(id);
             model.addAttribute("userDetail", userDetail);
             model.addAttribute("roles", userService.getManageableRoles());
-            model.addAttribute("currentPageNav", "users");
+            model.addAttribute("activeNav", "users");
             return "admin/user/edit";
         }
 
@@ -169,7 +169,7 @@ public class AdminUserController {
             model.addAttribute("userDetail", userDetail);
             model.addAttribute("error", e.getMessage());
             model.addAttribute("roles", userService.getManageableRoles());
-            model.addAttribute("currentPageNav", "users");
+            model.addAttribute("activeNav", "users");
             return "admin/user/edit";
         }
     }

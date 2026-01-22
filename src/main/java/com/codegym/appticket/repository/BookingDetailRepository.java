@@ -14,4 +14,5 @@ public interface BookingDetailRepository extends JpaRepository<BookingDetail, Lo
     java.util.List<BookingDetail> findByBookingIdWithAssociations(Long bookingId);
 
     java.util.List<BookingDetail> findByBookingId(Long bookingId);
+    java.util.List<BookingDetail> findByTicketType_Id(Long ticketTypeId);
 }
