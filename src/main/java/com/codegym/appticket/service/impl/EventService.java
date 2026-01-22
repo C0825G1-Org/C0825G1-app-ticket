@@ -1143,7 +1143,7 @@ public class EventService implements IEventService {
                         throw new IllegalStateException(
                                         "Không có sự kiện nào đủ điều kiện để xóa. Chỉ có thể xóa sự kiện đã bị hủy hoặc từ chối.");
                 } else if (deletedCount < ids.size()) {
-                        throw new IllegalStateException("Đã xóa " + deletedCount + "/" + ids.size()
+                        throw new IllegalStateException("Chỉ có thể xóa " + deletedCount + "/" + ids.size()
                                         + " sự kiện. Chỉ có thể xóa sự kiện đã bị hủy hoặc từ chối.");
                 }
         }
@@ -1171,7 +1171,7 @@ public class EventService implements IEventService {
                         throw new IllegalStateException(
                                         "Không có sự kiện nào đủ điều kiện để duyệt. Chỉ có thể duyệt sự kiện đang chờ duyệt.");
                 } else if (approvedCount < ids.size()) {
-                        throw new IllegalStateException("Đã duyệt " + approvedCount + "/" + ids.size()
+                        throw new IllegalStateException("Chỉ có thể duyệt " + approvedCount + "/" + ids.size()
                                         + " sự kiện. Chỉ có thể duyệt sự kiện đang chờ duyệt.");
                 }
         }
