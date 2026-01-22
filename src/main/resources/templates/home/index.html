@@ -274,8 +274,15 @@
                         <div class="card-body p-4 d-flex flex-column">
                             <!-- Title -->
                             <h5 class="card-title fw-bold mb-3"
-                                style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 48px;"
-                                th:text="${event.title}">
+                                style="display: -webkit-box;
+                                    -webkit-line-clamp: 2;
+                                    -webkit-box-orient: vertical;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    line-height: 1.4em;
+                                    min-height: calc(1.4em * 2);
+                                 "
+                                th:utext="${event.title}">
                                 EDM Symphony Night
                             </h5>
 
