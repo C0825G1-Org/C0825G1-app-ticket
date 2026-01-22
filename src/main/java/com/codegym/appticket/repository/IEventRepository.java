@@ -378,7 +378,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
               AND l.longitude IS NOT NULL
               AND eo.start_time > NOW()
               AND (:hasExcludeFilter = 0 OR p.name NOT IN :excludeLocationVariants)
-            HAVING distance < 160
+            HAVING distance > 0 AND distance < 160
             ORDER BY distance ASC
             LIMIT :limit
             """, nativeQuery = true)

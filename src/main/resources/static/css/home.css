@@ -307,10 +307,41 @@ body {
   padding: 1rem 1.25rem;
 }
 
+/* Ensure select dropdowns have consistent appearance */
+.form-select-lg {
+  background-color: transparent;
+  padding-right: 3rem; /* More space for dropdown arrow */
+  padding-left: 0.5rem; /* Reduce left padding when border-start-0 */
+  color: #1e293b; /* Consistent text color */
+  font-weight: 400; /* Normal weight */
+}
+
+/* For selects with border-start-0 in input-group */
+.input-group .form-select.border-start-0 {
+  padding-left: 0;
+  color: #1e293b; /* Match text color */
+}
+
 .form-control:focus,
 .form-select:focus {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 0.25rem rgba(217, 70, 239, 0.15);
+}
+
+/* Input group focus - wrap entire group with border */
+.input-group:focus-within {
+  box-shadow: 0 0 0 0.25rem rgba(217, 70, 239, 0.15);
+  border-radius: 1rem;
+}
+
+.input-group:focus-within .input-group-text {
+  border-color: var(--primary-color);
+}
+
+.input-group:focus-within .form-control,
+.input-group:focus-within .form-select {
+  border-color: var(--primary-color);
+  box-shadow: none; /* Remove individual shadow, only keep group shadow */
 }
 
 /* Card Hover Effect */
