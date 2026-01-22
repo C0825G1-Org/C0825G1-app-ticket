@@ -14,9 +14,9 @@ body {
 
 /* Glass Navbar */
 .navbar-glass {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* Dark Glass Navbar */
@@ -631,4 +631,203 @@ body {
     border-color: rgba(255, 255, 255, 0.1);
     color: #64748b;
     /* Slate 500 */
+}
+
+/* Dark Glass Card */
+.card-glass-dark {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-radius: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-glass-dark:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.card-glass-dark .card-title {
+    color: #fff;
+}
+
+.card-glass-dark .text-muted {
+    color: #94a3b8 !important;
+    /* Slate 400 */
+}
+
+/* Nearby Event Card Special Effect */
+.nearby-event-card {
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.8));
+    border: 1px solid rgba(217, 70, 239, 0.3);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.nearby-event-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #d946ef, #8b5cf6, #3b82f6);
+}
+
+.nearby-event-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px -5px rgba(217, 70, 239, 0.2), 0 8px 10px -6px rgba(217, 70, 239, 0.1);
+    border-color: rgba(217, 70, 239, 0.6);
+}
+
+/* Custom Dark Tabs */
+.nav-tabs .nav-link {
+    color: rgba(255, 255, 255, 0.6);
+    border: none;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.2);
+    isolation: isolate;
+}
+
+.nav-tabs .nav-link.active {
+    background: transparent !important;
+    color: #fff !important;
+    border-bottom: 3px solid #d946ef !important;
+    /* Primary Purple */
+}
+
+/* Glass Stat Card with Animation */
+.glass-stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.glass-stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
+    border-color: rgba(217, 70, 239, 0.4);
+    /* Purple hint */
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Wizard Dark Theme */
+[data-bs-theme="dark"] .step-circle {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.5);
+}
+
+[data-bs-theme="dark"] .step-item.active .step-circle {
+    background-color: #d946ef;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(217, 70, 239, 0.4);
+}
+
+[data-bs-theme="dark"] .step-label {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+[data-bs-theme="dark"] .step-item.active .step-label {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(217, 70, 239, 0.4);
+}
+
+[data-bs-theme="dark"] .step-line {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme="dark"] .preview-container {
+    background-color: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme="dark"] .preview-container:hover {
+    border-color: #d946ef;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-bs-theme="dark"] .preview-placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+[data-bs-theme="dark"] .tox .tox-statusbar {
+    background-color: #1e293b !important;
+    /* Slate 800 */
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* --- Hero Search Animations --- */
+
+/* 1. Widget Hover Lift */
+.search-widget {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.search-widget:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 2. Input Focus Effects */
+.search-input-wrapper {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+/* Icon transition */
+.search-input-wrapper i {
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.3s ease;
+}
+
+/* When input is focused */
+.search-input-wrapper:focus-within i {
+    transform: translateY(-50%) scale(1.2);
+    color: var(--primary-color) !important;
+}
+
+.search-input-wrapper:focus-within input,
+.search-input-wrapper:focus-within select {
+    background-color: rgba(var(--primary-rgb), 0.02) !important;
+}
+
+/* 3. Button Shine Effect */
+.btn-shine {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-shine::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
+    transform: skewX(-25deg);
+    transition: none;
+}
+
+.btn-shine:hover::after {
+    animation: shine 0.75s;
+}
+
+@keyframes shine {
+    0% {
+        left: -100%;
+    }
+
+    100% {
+        left: 200%;
+    }
 }

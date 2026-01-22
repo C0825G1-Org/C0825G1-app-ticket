@@ -44,52 +44,53 @@
             </h1>
 
             <!-- Search Widget -->
-            <div class="search-widget mx-auto text-start animate-fade-up"
-                style="max-width: 900px; animation-delay: 0.3s; background: rgba(255, 255, 255, 0.95);">
-                <form method="get" th:action="@{/event/search}" class="row g-3">
-                    <div class="col-lg-4">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0 rounded-start-4 ps-3">
-                                <i class="bi bi-search text-muted"></i>
-                            </span>
-                            <input type="text" name="search" class="form-control form-control-lg border-start-0 ps-0"
-                                placeholder="Tìm kiếm sự kiện...">
-                        </div>
-                    </div>
-                    <div class="col-lg-3">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0 rounded-start-4 ps-3">
-                                <i class="bi bi-geo-alt text-muted"></i>
-                            </span>
-                            <select name="location"
-                                class="form-select form-select-lg border-start-0 ps-0 bg-transparent">
-                                <option value="">Toàn quốc</option>
-                                <option value="Hà Nội">Hà Nội</option>
-                                <option value="Ho Chi Minh">TP. Hồ Chí Minh</option>
-                                <option value="Đà Nẵng">Đà Nẵng</option>
-                                <option value="Hải Phòng">Hải Phòng</option>
-                                <option value="Cần Thơ">Cần Thơ</option>
-                                <option value="Nha Trang">Nha Trang</option>
-                            </select>
-                        </div>
+            <div class="search-widget mx-auto text-start animate-fade-up shadow-lg rounded-5 overflow-hidden p-2"
+                style="max-width: 900px; animation-delay: 0.3s; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
+                <form method="get" th:action="@{/event/search}" class="row g-2 align-items-center">
+                    <div class="col-lg-4 position-relative search-input-wrapper">
+                        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-4 text-primary fs-5"
+                            style="z-index: 5;"></i>
+                        <input type="text" name="search"
+                            class="form-control form-control-lg border-0 bg-transparent py-3 ps-5 shadow-none"
+                            style="font-size: 1rem;" placeholder="Tìm kiếm sự kiện...">
+                        <div class="position-absolute top-50 end-0 translate-middle-y border-end"
+                            style="height: 60%; right: 0;"></div>
                     </div>
 
-                    <div class="col-lg-3">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0 rounded-start-4 ps-3">
-                                <i class="bi bi-tag text-muted"></i>
-                            </span>
-                            <select name="category"
-                                class="form-select form-select-lg border-start-0 ps-0 bg-transparent">
-                                <option value="">Tất cả danh mục</option>
-                                <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}">
-                                </option>
-                            </select>
-                        </div>
+                    <div class="col-lg-3 position-relative search-input-wrapper">
+                        <i class="bi bi-geo-alt position-absolute top-50 start-0 translate-middle-y ms-3 text-primary fs-5"
+                            style="z-index: 5;"></i>
+                        <select name="location"
+                            class="form-select form-select-lg border-0 bg-transparent py-3 ps-5 shadow-none"
+                            style="font-size: 1rem; cursor: pointer;">
+                            <option value="">Toàn quốc</option>
+                            <option value="Hà Nội">Hà Nội</option>
+                            <option value="Ho Chi Minh">TP. Hồ Chí Minh</option>
+                            <option value="Đà Nẵng">Đà Nẵng</option>
+                            <option value="Hải Phòng">Hải Phòng</option>
+                            <option value="Cần Thơ">Cần Thơ</option>
+                            <option value="Nha Trang">Nha Trang</option>
+                        </select>
+                        <div class="position-absolute top-50 end-0 translate-middle-y border-end d-none d-lg-block"
+                            style="height: 60%; right: 0;"></div>
                     </div>
+
+                    <div class="col-lg-3 position-relative search-input-wrapper">
+                        <i class="bi bi-tag position-absolute top-50 start-0 translate-middle-y ms-3 text-primary fs-5"
+                            style="z-index: 5;"></i>
+                        <select name="category"
+                            class="form-select form-select-lg border-0 bg-transparent py-3 ps-5 shadow-none"
+                            style="font-size: 1rem; cursor: pointer;">
+                            <option value="">Tất cả danh mục</option>
+                            <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"></option>
+                        </select>
+                    </div>
+
                     <div class="col-lg-2">
-                        <button type="submit" class="btn btn-gradient btn-lg w-100 rounded-4 fw-bold h-100">
-                            Tìm
+                        <button type="submit"
+                            class="btn btn-gradient btn-lg w-100 rounded-4 fw-bold shadow-sm btn-shine"
+                            style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border: none; padding: 0.8rem 0; transition: transform 0.2s;">
+                            Tìm kiếm
                         </button>
                     </div>
                 </form>
@@ -283,16 +284,14 @@
                         <!-- Event Info -->
                         <div class="card-body p-4 d-flex flex-column">
                             <!-- Title -->
-                            <h5 class="card-title fw-bold mb-3"
-                                style="display: -webkit-box;
+                            <h5 class="card-title fw-bold mb-3" style="display: -webkit-box;
                                     -webkit-line-clamp: 2;
                                     -webkit-box-orient: vertical;
                                     overflow: hidden;
                                     text-overflow: ellipsis;
                                     line-height: 1.4em;
                                     min-height: calc(1.4em * 2);
-                                 "
-                                th:utext="${event.title}">
+                                 " th:utext="${event.title}">
                                 EDM Symphony Night
                             </h5>
 

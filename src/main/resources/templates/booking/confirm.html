@@ -3,31 +3,34 @@
 
 <head th:replace="~{common/layout :: head('Xác nhận đặt vé')}"></head>
 
-<body>
+<body style="background-color: #0f172a;" data-bs-theme="dark">
     <div th:replace="~{common/layout :: user-layout(~{:: .booking-confirm})}">
         <div class="booking-confirm container py-5">
             <div class="row justify-content-center">
                 <div class="col-md-6">
-                    <div class="card shadow-sm border-0">
+                    <div class="card card-glass-dark border-0">
                         <div class="card-body p-4 text-center">
-                            <h3 class="mb-4">Xác nhận thông tin đặt vé</h3>
-                            <div class="text-start mb-4">
+                            <h3 class="mb-4 text-white">Xác nhận thông tin đặt vé</h3>
+                            <div class="text-start mb-4 text-white-50">
                                 <p><strong>Khách hàng</strong> <span
                                         th:text="${currentUser != null ? (currentUser.fullName != null && !currentUser.fullName.isEmpty() ? currentUser.fullName : currentUser.email) : 'Chưa đăng nhập'}"></span>
                                 </p>
                                 <p><strong>Số điện thoại:</strong> <span
                                         th:text="${currentUser != null && currentUser.phoneNumber != null && !currentUser.phoneNumber.isEmpty() ? currentUser.phoneNumber : 'Chưa cập nhật'}"></span>
                                 </p>
-                                <hr>
-                                <p><strong>Sự kiện:</strong> <span th:text="${event.title}"></span></p>
+                                <hr class="border-secondary">
+                                <p><strong>Sự kiện:</strong> <span th:text="${event.title}" class="text-white"></span>
+                                </p>
                                 <p><strong>Thời gian:</strong> <span
-                                        th:text="${#temporals.format(startTime, 'HH:mm dd/MM/yyyy')}"></span></p>
-                                <p><strong>Địa điểm:</strong> <span th:text="${location}"></span></p>
-                                <hr>
-                                <h6>Danh sách vé đã chọn:</h6>
-                                <div th:each="entry : ${selectedTickets}" class="d-flex justify-content-between mb-2">
+                                        th:text="${#temporals.format(startTime, 'HH:mm dd/MM/yyyy')}"
+                                        class="text-white"></span></p>
+                                <p><strong>Địa điểm:</strong> <span th:text="${location}" class="text-white"></span></p>
+                                <hr class="border-secondary">
+                                <h6 class="text-white">Danh sách vé đã chọn:</h6>
+                                <div th:each="entry : ${selectedTickets}"
+                                    class="d-flex justify-content-between mb-2 text-white">
                                     <span th:text="${entry.key.name} + ' (x' + ${entry.value} + ')'"></span>
-                                    <span
+                                    <span class="text-primary fw-bold"
                                         th:text="${#numbers.formatDecimal(entry.key.price * entry.value, 0, 'COMMA', 0, 'POINT')} + ' VND'"></span>
                                 </div>
                             </div>
@@ -42,9 +45,11 @@
                                 </th:block>
 
                                 <div class="d-grid gap-2">
-                                    <button type="submit" class="btn btn-success btn-lg">Xác nhận và Thanh toán</button>
-                                    <button type="button" class="btn btn-outline-secondary"
-                                        onclick="history.back()">Quay lại chỉnh sửa</button>
+                                    <button type="submit" class="btn btn-gradient btn-lg fw-bold text-white shadow-lg"
+                                        style="background: linear-gradient(to right, #10b981, #059669); border: none;">Xác
+                                        nhận và Thanh toán</button>
+                                    <button type="button" class="btn btn-outline-light" onclick="history.back()">Quay
+                                        lại chỉnh sửa</button>
                                 </div>
                             </form>
                         </div>

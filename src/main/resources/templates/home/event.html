@@ -318,61 +318,79 @@
                             </p>
                         </div>
                         <!-- Danh sách sự kiện theo hàng ngang -->
-                        <div th:if="${nearbyEvents != null and !nearbyEvents.isEmpty()}" class="row g-4 mb-4">
-                            <div th:each="event : ${nearbyEvents}" class="col-md-6 col-lg-4">
-                                <div class="card card-event h-100 border-0 shadow-sm" style="cursor: pointer;"
-                                    th:onclick="'window.location.href=\'/event/' + ${event.id} + '\''">
+                        <div th:if="${nearbyEvents != null and !nearbyEvents.isEmpty()}">
+                            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
+                                <div th:each="event : ${nearbyEvents}" class="col">
+                                    <div class="card h-100 shadow-sm nearby-event-card"
+                                        th:onclick="'window.location.href=\'/event/' + ${event.id} + '\''"
+                                        style="cursor: pointer; transition: transform 0.2s;">
+                                        <!-- Hình ảnh sự kiện -->
+                                        <img th:src="${event.image != null and !event.image.isEmpty()} ? ${event.image} : 'https://via.placeholder.com/300x200'"
+                                            th:alt="${event.title}" class="card-img-top"
+                                            style="height: 150px; object-fit: cover;">
 
-                                    <!-- Event Image -->
-                                    <div class="position-relative overflow-hidden">
-                                        <img th:src="${event.image != null and !event.image.isEmpty()} ? ${event.image} : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800'"
-                                            class="card-img-top" th:alt="${event.title}"
-                                            style="height: 180px; object-fit: cover;">
+                                        <!-- Nội dung -->
+                                        <div class="card-body p-3">
+                                            <h6 class="fw-bold mb-2 text-truncate" th:text="${event.title}">Event Title
+                                            </h6>
 
-                                        <!-- Category Badge -->
-                                        <span th:if="${event.categoryName != null}"
-                                            class="position-absolute top-0 start-0 m-3 badge"
-                                            th:classappend="${event.categoryName == 'Music'} ? 'bg-primary' : 
-                                                              (${event.categoryName == 'Business'} ? 'bg-info' : 
-                                                              (${event.categoryName == 'Art'} ? 'bg-danger' : 'bg-secondary'))" th:text="${event.categoryName}">
-                                            Music
-                                        </span>
-                                    </div>
-
-                                    <!-- Event Info -->
-                                    <div class="card-body p-3 d-flex flex-column">
-                                        <!-- Title -->
-                                        <h6 class="card-title fw-bold mb-2"
-                                            style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 48px;"
-                                            th:text="${event.title}">
-                                            Event Title
-                                        </h6>
-
-                                        <!-- Location -->
-                                        <div class="small text-muted mb-3 text-truncate">
-                                            <i class="bi bi-geo-alt-fill me-1"></i>
-                                            <span th:text="${event.location ?: 'TBA'}">Location</span>
-                                        </div>
-
-                                        <!-- Distance Badge -->
-                                        <div class="mb-2">
-                                            <span class="badge bg-success">
-                                                <i class="bi bi-pin-map-fill"></i>
-                                                <span
-                                                    th:text="${#numbers.formatDecimal(event.distance, 1, 1)} + ' km'">0.0
-                                                    km</span>
-                                            </span>
-                                        </div>
-
-                                        <!-- Occurrence count with toggle -->
-                                        <div th:if="${event.occurrences != null and !event.occurrences.isEmpty()}"
-                                            class="occurrence-section mt-auto pt-2 border-top">
-                                            <p class="small mb-0">
-                                                <i class="bi bi-calendar-event text-primary"></i>
-                                                <span class="fw-semibold"
-                                                    th:text="${event.occurrences.size()} + ' suất diễn'">3 suất
-                                                    diễn</span>
+                                            <p class="mb-2 small text-muted">
+                                                <i class="bi bi-geo-alt-fill text-primary"></i>
+                                                <span th:text="${event.location}">Location</span>
                                             </p>
+
+                                            <div class="d-flex gap-1 flex-wrap mb-2">
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-pin-map-fill"></i>
+                                                    <span
+                                                        th:text="${#numbers.formatDecimal(event.distance, 1, 1)} + ' km'">0.0
+                                                        km</span>
+                                                </span>
+                                                <span th:if="${event.categoryName != null}" class="badge bg-secondary"
+                                                    th:text="${event.categoryName}">Category</span>
+                                            </div>
+
+                                            <!-- Occurrence count with toggle -->
+                                            <div th:if="${event.occurrences != null and !event.occurrences.isEmpty()}"
+                                                class="occurrence-section mt-2 pt-2 border-top">
+                                                <!-- Clickable summary -->
+                                                <p class="small mb-0" style="cursor: pointer;"
+                                                    th:data-bs-toggle="'collapse'"
+                                                    th:data-bs-target="'#occurrences-' + ${event.id}">
+                                                    <i class="bi bi-calendar-event text-primary"></i>
+                                                    <span class="fw-semibold"
+                                                        th:text="${event.occurrences.size()} + ' suất diễn'">3 suất
+                                                        diễn</span>
+                                                    <i class="bi bi-chevron-down text-muted ms-1"
+                                                        style="font-size: 0.7rem;"></i>
+                                                    <small class="text-muted ms-1">(click xem chi tiết)</small>
+                                                </p>
+
+                                                <!-- Collapsible occurrence list
+                                                <div class="collapse" th:id="'occurrences-' + ${event.id}">
+                                                    <div class="occurrence-items mt-2"
+                                                        style="max-height: 120px; overflow-y: auto;">
+                                                        <div th:each="occ, iterStat : ${event.occurrences}"
+                                                            class="occurrence-item small mb-1 pb-1"
+                                                            th:classappend="${!iterStat.last} ? 'border-bottom' : ''">
+                                                            <div class="d-flex align-items-start gap-1">
+                                                                <i class="bi bi-clock text-primary mt-1"
+                                                                    style="font-size: 0.75rem;"></i>
+                                                                <div class="flex-grow-1">
+                                                                    <div class="fw-semibold"
+                                                                        th:text="${#temporals.format(occ.eventDate, 'dd/MM/yyyy HH:mm')}">
+                                                                        25/01/2026 19:00
+                                                                    </div>
+                                                                    <div class="text-muted" style="font-size: 0.7rem;"
+                                                                        th:text="${occ.addressDetail}">
+                                                                        Địa chỉ chi tiết
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div> -->
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

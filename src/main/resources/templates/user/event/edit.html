@@ -7,19 +7,19 @@
 <script th:src="@{'https://cdn.tiny.cloud/1/' + ${tinyMceApiKey} + '/tinymce/6/tinymce.min.js'}"
     referrerpolicy="origin"></script>
 
-<body>
+<body style="background-color: #0f172a;" data-bs-theme="dark">
     <div th:replace="~{common/layout :: user-layout(~{::content})}">
         <div th:fragment="content">
-            <div class="container-xl mt-5 pt-5 mb-5">
+            <div class="container-xl mt-5 pt-5 mb-5" data-bs-theme="dark">
 
                 <!-- Header -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h4 class="fw-bold mb-0">Chỉnh sửa sự kiện</h4>
-                        <p class="text-muted small mb-0">Cập nhật thông tin sự kiện</p>
+                        <h4 class="fw-bold mb-0 text-white">Chỉnh sửa sự kiện</h4>
+                        <p class="text-white-50 small mb-0">Cập nhật thông tin sự kiện</p>
                     </div>
                     <div class="d-flex gap-2">
-                        <a th:href="@{/user/events}" class="btn btn-outline-secondary rounded-3">
+                        <a th:href="@{/user/events}" class="btn btn-outline-light rounded-3">
                             <i class="bi bi-arrow-left me-2"></i> Quay lại
                         </a>
                     </div>
@@ -35,7 +35,8 @@
                             <div class="step-item active" id="step-indicator-1">
                                 <div class="step-circle">1</div>
                                 <div class="text-start ms-2">
-                                    <div class="small text-uppercase text-muted" style="font-size: 0.7rem;">Bước 1</div>
+                                    <div class="small text-uppercase text-white-50" style="font-size: 0.7rem;">Bước 1
+                                    </div>
                                     <div class="step-label">Thông tin</div>
                                 </div>
                             </div>
@@ -43,7 +44,8 @@
                             <div class="step-item" id="step-indicator-2">
                                 <div class="step-circle">2</div>
                                 <div class="text-start ms-2">
-                                    <div class="small text-uppercase text-muted" style="font-size: 0.7rem;">Bước 2</div>
+                                    <div class="small text-uppercase text-white-50" style="font-size: 0.7rem;">Bước 2
+                                    </div>
                                     <div class="step-label">Hình ảnh</div>
                                 </div>
                             </div>
@@ -55,18 +57,20 @@
                             <!-- STEP 1: INFO -->
                             <div id="step-info">
                                 <!-- Basic Info -->
-                                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                                    <div class="card-header bg-white border-bottom py-3">
-                                        <h5 class="fw-bold mb-0"><i
+                                <div class="card card-glass-dark border-0 shadow-sm rounded-4 mb-4">
+                                    <div
+                                        class="card-header bg-transparent border-bottom border-secondary border-opacity-25 py-3">
+                                        <h5 class="fw-bold mb-0 text-white"><i
                                                 class="bi bi-info-circle text-primary me-2"></i>Thông
                                             tin cơ bản</h5>
                                     </div>
                                     <div class="card-body p-4">
                                         <div class="mb-3">
-                                            <label class="form-label fw-medium">Tên sự kiện <span
+                                            <label class="form-label fw-medium text-white">Tên sự kiện <span
                                                     class="text-danger">*</span></label>
-                                            <input type="text" class="form-control form-control-lg" th:field="*{title}"
-                                                required>
+                                            <input type="text"
+                                                class="form-control form-control-lg bg-dark text-white border-secondary border-opacity-50"
+                                                th:field="*{title}" required>
                                             <div class="text-danger small error-message" id="error-title"></div>
                                         </div>
 
@@ -74,20 +78,23 @@
                                         <input type="hidden" th:field="*{organizerId}">
 
                                         <div class="mb-3">
-                                            <label class="form-label fw-medium">Danh mục <span
+                                            <label class="form-label fw-medium text-white">Danh mục <span
                                                     class="text-danger">*</span></label>
-                                            <select class="form-select form-select-lg" th:field="*{categoryId}"
-                                                required>
+                                            <select
+                                                class="form-select form-select-lg bg-dark text-white border-secondary border-opacity-50"
+                                                th:field="*{categoryId}" required>
                                                 <option th:each="cat : ${categories}" th:value="${cat.id}"
                                                     th:text="${cat.name}">Category</option>
                                             </select>
                                             <div class="text-danger small error-message" id="error-categoryId"></div>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label fw-medium">Mô tả sự kiện <span
+                                            <label class="form-label fw-medium text-white">Mô tả sự kiện <span
                                                     class="text-danger">*</span></label>
-                                            <textarea class="form-control" rows="5" th:field="*{description}"
-                                                id="description" placeholder="Mô tả chi tiết..."></textarea>
+                                            <textarea
+                                                class="form-control bg-dark text-white border-secondary border-opacity-50"
+                                                rows="5" th:field="*{description}" id="description"
+                                                placeholder="Mô tả chi tiết..."></textarea>
                                             <div class="text-danger small error-message" id="error-description"></div>
                                         </div>
 
@@ -95,22 +102,22 @@
                                         <!-- Status: Users cannot change status directly here, backend handles logic (e.g. keep or reset to pending) -->
                                         <!-- Only show current status -->
                                         <div class="mb-3">
-                                            <label class="form-label fw-medium">Trạng thái hiện tại: </label>
+                                            <label class="form-label fw-medium text-white">Trạng thái hiện tại: </label>
                                             <span class="badge"
-                                                th:classappend="${eventUpdateDTO.status.name() == 'PENDING' ? 'bg-warning' : (eventUpdateDTO.status.name() == 'APPROVED' ? 'bg-success' : 'bg-danger')}"
+                                                th:classappend="${eventUpdateDTO.status.name() == 'PENDING' ? 'bg-warning text-dark' : (eventUpdateDTO.status.name() == 'APPROVED' ? 'bg-success' : 'bg-danger')}"
                                                 th:text="${eventUpdateDTO.status}">PENDING</span>
                                             <input type="hidden" th:field="*{status}">
-                                            <div class="form-text text-muted">Việc chỉnh sửa có thể sẽ thay đổi trạng
+                                            <div class="form-text text-white-50">Việc chỉnh sửa có thể sẽ thay đổi trạng
                                                 thái
                                                 của sự kiện (nếu đã được duyệt).</div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                                <div class="card card-glass-dark border-0 shadow-sm rounded-4 mb-4">
                                     <div
-                                        class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                                        <h5 class="fw-bold mb-0">
+                                        class="card-header bg-transparent border-bottom border-secondary border-opacity-25 py-3 d-flex justify-content-between align-items-center">
+                                        <h5 class="fw-bold mb-0 text-white">
                                             <i class="bi bi-geo-alt text-primary me-2"></i>
                                             Thời gian & Địa điểm
                                         </h5>
@@ -120,11 +127,11 @@
                                         </button>
                                     </div>
                                     <div class="card-body p-4" id="eventOccurrencesContainer">
-                                        <div class="card mb-3 border bg-light event-occurrence-item"
+                                        <div class="card mb-3 border border-secondary border-opacity-25 bg-transparent event-occurrence-item"
                                             th:each="occ, stat : *{eventOccurrences}">
                                             <div class="card-body">
                                                 <div class="d-flex justify-content-between mb-2">
-                                                    <h6 class="fw-bold text-muted">Lịch trình #<span
+                                                    <h6 class="fw-bold text-white-50">Lịch trình #<span
                                                             th:text="${stat.count}">1</span></h6>
                                                     <input type="hidden" th:name="|eventOccurrences[${stat.index}].id|"
                                                         th:value="${occ.id}">
@@ -135,29 +142,32 @@
                                                 </div>
                                                 <div class="row g-3">
                                                     <div class="col-md-6">
-                                                        <label class="form-label small fw-medium">Bắt đầu <span
-                                                                class="text-danger">*</span></label>
-                                                        <input type="datetime-local" class="form-control"
+                                                        <label class="form-label small fw-medium text-white">Bắt đầu
+                                                            <span class="text-danger">*</span></label>
+                                                        <input type="datetime-local"
+                                                            class="form-control bg-dark text-white border-secondary border-opacity-50"
                                                             th:name="|eventOccurrences[${stat.index}].startTime|"
                                                             th:value="${#temporals.format(occ.startTime, 'yyyy-MM-dd''T''HH:mm')}"
                                                             required>
                                                     </div>
                                                     <div class="col-md-6">
-                                                        <label class="form-label small fw-medium">Kết thúc <span
-                                                                class="text-danger">*</span></label>
-                                                        <input type="datetime-local" class="form-control"
+                                                        <label class="form-label small fw-medium text-white">Kết thúc
+                                                            <span class="text-danger">*</span></label>
+                                                        <input type="datetime-local"
+                                                            class="form-control bg-dark text-white border-secondary border-opacity-50"
                                                             th:name="|eventOccurrences[${stat.index}].endTime|"
                                                             th:value="${#temporals.format(occ.endTime, 'yyyy-MM-dd''T''HH:mm')}"
                                                             required>
                                                     </div>
                                                     <div class="col-12">
-                                                        <hr class="my-1">
+                                                        <hr class="my-1 border-secondary">
                                                     </div>
                                                     <!-- Location Selects with Data Attributes for Restoration -->
                                                     <div class="col-md-4">
-                                                        <label class="form-label small fw-medium">Tỉnh/Thành phố <span
-                                                                class="text-danger">*</span></label>
-                                                        <select class="form-select province-select"
+                                                        <label class="form-label small fw-medium text-white">Tỉnh/Thành
+                                                            phố <span class="text-danger">*</span></label>
+                                                        <select
+                                                            class="form-select province-select bg-dark text-white border-secondary border-opacity-50"
                                                             th:name="|eventOccurrences[${stat.index}].provinceCode|"
                                                             th:attr="data-selected-code=${occ.provinceCode}"
                                                             th:data-index="${stat.index}"
@@ -174,9 +184,10 @@
                                                     </div>
 
                                                     <div class="col-md-4">
-                                                        <label class="form-label small fw-medium">Phường/Xã <span
-                                                                class="text-danger">*</span></label>
-                                                        <select class="form-select ward-select"
+                                                        <label class="form-label small fw-medium text-white">Phường/Xã
+                                                            <span class="text-danger">*</span></label>
+                                                        <select
+                                                            class="form-select ward-select bg-dark text-white border-secondary border-opacity-50"
                                                             th:name="|eventOccurrences[${stat.index}].wardCode|"
                                                             th:attr="data-selected-code=${occ.wardCode}" disabled
                                                             th:onchange="|onWardChange(this, ${stat.index})|" required>
@@ -188,17 +199,20 @@
                                                     </div>
 
                                                     <div class="col-12">
-                                                        <label class="form-label small fw-medium">Địa chỉ chi tiết <span
-                                                                class="text-danger">*</span></label>
-                                                        <input type="text" class="form-control"
+                                                        <label class="form-label small fw-medium text-white">Địa chỉ chi
+                                                            tiết <span class="text-danger">*</span></label>
+                                                        <input type="text"
+                                                            class="form-control bg-dark text-white border-secondary border-opacity-50"
                                                             th:name="|eventOccurrences[${stat.index}].addressDetail|"
                                                             th:value="${occ.addressDetail}"
                                                             placeholder="Số 1 Đại Cồ Việt" required>
                                                     </div>
                                                     <div class="col-12">
-                                                        <label class="form-label small fw-medium">Link Bản đồ (Tùy
+                                                        <label class="form-label small fw-medium text-white">Link Bản đồ
+                                                            (Tùy
                                                             chọn)</label>
-                                                        <input type="text" class="form-control"
+                                                        <input type="text"
+                                                            class="form-control bg-dark text-white border-secondary border-opacity-50"
                                                             th:name="|eventOccurrences[${stat.index}].mapLink|"
                                                             th:value="${occ.mapLink}"
                                                             placeholder="https://maps.google.com/...">
@@ -206,7 +220,7 @@
 
                                                     <!-- Nested Ticket Types -->
                                                     <div class="col-12 mt-3">
-                                                        <div class="card inner-card border-0 bg-white">
+                                                        <div class="card inner-card border-0 bg-transparent">
                                                             <div
                                                                 class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center px-0">
                                                                 <h6 class="fw-bold mb-0 text-primary">Các loại vé</h6>
@@ -223,26 +237,28 @@
                                                                     <div class="col-md-5">
                                                                         <input type="hidden"
                                                                             th:field="*{eventOccurrences[__${stat.index}__].ticketTypes[__${tStat.index}__].id}">
-                                                                        <label class="form-label small text-muted">Tên
+                                                                        <label
+                                                                            class="form-label small text-white-50">Tên
                                                                             vé</label>
                                                                         <input type="text"
-                                                                            class="form-control form-control-sm"
+                                                                            class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50"
                                                                             th:field="*{eventOccurrences[__${stat.index}__].ticketTypes[__${tStat.index}__].name}"
                                                                             required>
                                                                     </div>
                                                                     <div class="col-md-3">
-                                                                        <label class="form-label small text-muted">Giá
+                                                                        <label
+                                                                            class="form-label small text-white-50">Giá
                                                                             (VNĐ)</label>
                                                                         <input type="number"
-                                                                            class="form-control form-control-sm"
+                                                                            class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50"
                                                                             th:field="*{eventOccurrences[__${stat.index}__].ticketTypes[__${tStat.index}__].price}"
                                                                             min="0" required>
                                                                     </div>
                                                                     <div class="col-md-3">
-                                                                        <label class="form-label small text-muted">Số
+                                                                        <label class="form-label small text-white-50">Số
                                                                             lượng</label>
                                                                         <input type="number"
-                                                                            class="form-control form-control-sm"
+                                                                            class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50"
                                                                             th:field="*{eventOccurrences[__${stat.index}__].ticketTypes[__${tStat.index}__].quantity}"
                                                                             min="1" required>
                                                                     </div>
@@ -276,9 +292,11 @@
 
                             <!-- STEP 2: MEDIA -->
                             <div id="step-media" class="d-none">
-                                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                                    <div class="card-header bg-white border-bottom py-3">
-                                        <h5 class="fw-bold mb-0"><i class="bi bi-images text-primary me-2"></i>Hình ảnh
+                                <div class="card card-glass-dark border-0 shadow-sm rounded-4 mb-4">
+                                    <div
+                                        class="card-header bg-transparent border-bottom border-secondary border-opacity-25 py-3">
+                                        <h5 class="fw-bold mb-0 text-white"><i
+                                                class="bi bi-images text-primary me-2"></i>Hình ảnh
                                             &
                                             Truyền thông</h5>
                                     </div>
@@ -289,8 +307,8 @@
                                         <div id="galleryUrlsContainer"></div>
 
                                         <div class="mb-5">
-                                            <label class="form-label fw-medium mb-3">Banner Sự kiện (Bắt buộc) <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label fw-medium mb-3 text-white">Banner Sự kiện (Bắt
+                                                buộc) <span class="text-danger">*</span></label>
                                             <div class="preview-container mb-2"
                                                 onclick="document.getElementById('bannerFile').click()">
                                                 <img id="preview-banner" class="preview-image" th:src="*{bannerUrl}"
@@ -308,7 +326,7 @@
 
                                         <div class="row mb-5">
                                             <div class="col-md-6">
-                                                <label class="form-label fw-medium mb-3">Logo Sự kiện</label>
+                                                <label class="form-label fw-medium mb-3 text-white">Logo Sự kiện</label>
                                                 <div class="preview-container mb-2"
                                                     onclick="document.getElementById('logoFile').click()"
                                                     style="height: 150px;">
@@ -326,7 +344,7 @@
                                                     onchange="previewFile(this, 'preview-logo', 'placeholder-logo')">
                                             </div>
                                             <div class="col-md-6">
-                                                <label class="form-label fw-medium mb-3">Sơ đồ vị trí</label>
+                                                <label class="form-label fw-medium mb-3 text-white">Sơ đồ vị trí</label>
                                                 <div class="preview-container mb-2"
                                                     onclick="document.getElementById('ticketMapFile').click()"
                                                     style="height: 150px;">
@@ -346,7 +364,7 @@
                                         </div>
 
                                         <div class="mb-3">
-                                            <label class="form-label fw-medium">Thư viện ảnh/video</label>
+                                            <label class="form-label fw-medium text-white">Thư viện ảnh/video</label>
                                             <!-- Old Gallery Display -->
                                             <div class="d-flex flex-wrap gap-2 mb-3">
                                                 <div th:each="url, stat : *{galleryUrls}"
@@ -362,11 +380,13 @@
                                                 </div>
                                             </div>
 
-                                            <input type="file" class="form-control mb-3" id="galleryFiles" multiple
-                                                accept="image/*,video/*"
+                                            <input type="file"
+                                                class="form-control mb-3 bg-dark text-white border-secondary border-opacity-50"
+                                                id="galleryFiles" multiple accept="image/*,video/*"
                                                 onchange="previewGallery(this, 'gallery-preview-grid')">
                                             <div id="gallery-preview-grid" class="gallery-grid"></div>
-                                            <div class="form-text text-muted">Có thể chọn nhiều file. Tối đa 10 files.
+                                            <div class="form-text text-white-50">Có thể chọn nhiều file. Tối đa 10
+                                                files.
                                             </div>
                                         </div>
                                     </div>
@@ -374,7 +394,7 @@
 
                                 <!-- Buttons for Step 2 -->
                                 <div class="d-flex gap-3 justify-content-end mb-5">
-                                    <button type="button" class="btn btn-outline-secondary btn-lg rounded-3 px-5"
+                                    <button type="button" class="btn btn-outline-light btn-lg rounded-3 px-5"
                                         onclick="prevStep()">
                                         <i class="bi bi-arrow-left me-2"></i> Quay lại
                                     </button>
@@ -469,20 +489,20 @@
                                 row.className = 'row g-2 mb-2 ticket-type-row align-items-end';
                                 row.innerHTML = `
                                     <div class="col-md-5">
-                                        <label class="form-label small text-muted">Tên vé</label>
-                                        <input type="text" class="form-control form-control-sm" 
+                                        <label class="form-label small text-white-50">Tên vé</label>
+                                        <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50" 
                                                name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].name" 
                                                placeholder="VD: VIP" required>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label small text-muted">Giá (VNĐ)</label>
-                                        <input type="number" class="form-control form-control-sm" 
+                                        <label class="form-label small text-white-50">Giá (VNĐ)</label>
+                                        <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50" 
                                                name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].price" 
                                                min="0" placeholder="0" required>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label small text-muted">Số lượng</label>
-                                        <input type="number" class="form-control form-control-sm" 
+                                        <label class="form-label small text-white-50">Số lượng</label>
+                                        <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50" 
                                                name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].quantity" 
                                                min="1" placeholder="100" required>
                                     </div>
@@ -500,51 +520,51 @@
                                 if (!container) return;
                                 const idx = document.querySelectorAll('.event-occurrence-item').length;
                                 const item = document.createElement('div');
-                                item.className = 'card mb-3 border bg-light event-occurrence-item';
+                                item.className = 'card mb-3 border border-secondary border-opacity-25 bg-transparent event-occurrence-item';
                                 item.innerHTML = `
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between mb-2">
-                                            <h6 class="fw-bold text-muted">Lịch trình #${idx + 1}</h6>
+                                            <h6 class="fw-bold text-white-50">Lịch trình #${idx + 1}</h6>
                                             <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this, 'occurrence')">
                                                 <i class="bi bi-trash"></i> Xóa
                                             </button>
                                         </div>
                                         <div class="row g-3">
                                             <div class="col-md-6">
-                                                <label class="form-label small fw-medium">Bắt đầu <span class="text-danger">*</span></label>
-                                                <input type="datetime-local" class="form-control" name="eventOccurrences[${idx}].startTime" required>
+                                                <label class="form-label small fw-medium text-white">Bắt đầu <span class="text-danger">*</span></label>
+                                                <input type="datetime-local" class="form-control bg-dark text-white border-secondary border-opacity-50" name="eventOccurrences[${idx}].startTime" required>
                                             </div>
                                             <div class="col-md-6">
-                                                <label class="form-label small fw-medium">Kết thúc <span class="text-danger">*</span></label>
-                                                <input type="datetime-local" class="form-control" name="eventOccurrences[${idx}].endTime" required>
+                                                <label class="form-label small fw-medium text-white">Kết thúc <span class="text-danger">*</span></label>
+                                                <input type="datetime-local" class="form-control bg-dark text-white border-secondary border-opacity-50" name="eventOccurrences[${idx}].endTime" required>
                                             </div>
-                                            <div class="col-12"><hr class="my-1"></div>
+                                            <div class="col-12"><hr class="my-1 border-secondary"></div>
                                             <div class="col-md-6">
-                                                <label class="form-label small fw-medium">Tỉnh/Thành phố <span class="text-danger">*</span></label>
-                                                <select class="form-select province-select" name="eventOccurrences[${idx}].provinceCode" required data-index="${idx}" onchange="onProvinceChange(this, ${idx})">
+                                                <label class="form-label small fw-medium text-white">Tỉnh/Thành phố <span class="text-danger">*</span></label>
+                                                <select class="form-select province-select bg-dark text-white border-secondary border-opacity-50" name="eventOccurrences[${idx}].provinceCode" required data-index="${idx}" onchange="onProvinceChange(this, ${idx})">
                                                     <option value="">-- Chọn Tỉnh/Thành --</option>
                                                 </select>
                                                 <input type="hidden" name="eventOccurrences[${idx}].provinceName" class="province-name">
                                             </div>
                                             <div class="col-md-6">
-                                                <label class="form-label small fw-medium">Phường/Xã <span class="text-danger">*</span></label>
-                                                <select class="form-select ward-select" name="eventOccurrences[${idx}].wardCode" required disabled onchange="onWardChange(this, ${idx})">
+                                                <label class="form-label small fw-medium text-white">Phường/Xã <span class="text-danger">*</span></label>
+                                                <select class="form-select ward-select bg-dark text-white border-secondary border-opacity-50" name="eventOccurrences[${idx}].wardCode" required disabled onchange="onWardChange(this, ${idx})">
                                                     <option value="">-- Chọn Phường/Xã --</option>
                                                 </select>
                                                 <input type="hidden" name="eventOccurrences[${idx}].wardName" class="ward-name">
                                             </div>
                                             <div class="col-12">
-                                                <label class="form-label small fw-medium">Địa chỉ chi tiết <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="eventOccurrences[${idx}].addressDetail" placeholder="Số nhà, Tên đường..." required>
+                                                <label class="form-label small fw-medium text-white">Địa chỉ chi tiết <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control bg-dark text-white border-secondary border-opacity-50" name="eventOccurrences[${idx}].addressDetail" placeholder="Số nhà, Tên đường..." required>
                                             </div>
                                             <div class="col-12">
-                                                <label class="form-label small fw-medium">Link Bản đồ (Tùy chọn)</label>
-                                                <input type="text" class="form-control" name="eventOccurrences[${idx}].mapLink" placeholder="https://maps.google.com/...">
+                                                <label class="form-label small fw-medium text-white">Link Bản đồ (Tùy chọn)</label>
+                                                <input type="text" class="form-control bg-dark text-white border-secondary border-opacity-50" name="eventOccurrences[${idx}].mapLink" placeholder="https://maps.google.com/...">
                                             </div>
 
                                             <!-- Nested Ticket Types -->
                                             <div class="col-12 mt-3">
-                                                <div class="card inner-card border-0 bg-white">
+                                                <div class="card inner-card border-0 bg-transparent">
                                                     <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center px-0">
                                                         <h6 class="fw-bold mb-0 text-primary">Các loại vé</h6>
                                                         <button type="button" class="btn btn-sm btn-outline-primary" onclick="addTicketType(${idx})">

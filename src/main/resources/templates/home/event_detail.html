@@ -53,7 +53,7 @@
     </style>
 </head>
 
-<body>
+<body style="background-color: #0f172a;" data-bs-theme="dark">
     <div th:replace="~{common/header :: public-navbar-dark}"></div>
 
     <!-- Hero Section -->
@@ -114,15 +114,15 @@
                         <h3 class="fw-bold mb-4">Thời gian & Địa điểm</h3>
                         <div class="row g-3">
                             <div th:each="occurrence : ${occurrences}" class="col-12">
-                                <div class="card border-0 shadow-sm">
+                                <div class="card card-glass-dark border-0 shadow-sm">
                                     <div class="card-body p-4">
                                         <div class="row align-items-center">
                                             <div class="col-md-6 mb-3 mb-md-0">
                                                 <div class="d-flex align-items-start">
                                                     <i class="bi bi-calendar-event text-primary fs-4 me-3"></i>
                                                     <div>
-                                                        <h6 class="fw-bold mb-1">Thời gian</h6>
-                                                        <p class="text-muted mb-0"
+                                                        <h6 class="fw-bold mb-1 text-white">Thời gian</h6>
+                                                        <p class="text-white-50 mb-0"
                                                             th:text="${occurrence.startTime != null ? #temporals.format(occurrence.startTime, 'dd/MM/yyyy • HH:mm') : 'TBA'}">
                                                             25/01/2026 • 15:45
                                                         </p>
@@ -137,8 +137,8 @@
                                                 <div class="d-flex align-items-start">
                                                     <i class="bi bi-geo-alt-fill text-danger fs-4 me-3"></i>
                                                     <div>
-                                                        <h6 class="fw-bold mb-1">Địa điểm</h6>
-                                                        <p class="text-muted mb-0" th:text="${occurrence.location}">
+                                                        <h6 class="fw-bold mb-1 text-white">Địa điểm</h6>
+                                                        <p class="text-white-50 mb-0" th:text="${occurrence.location}">
                                                             Tỉnh Đồng Nai, Xã Long Tân
                                                         </p>
                                                         <small class="text-muted" th:if="${occurrence.addressDetail}"
@@ -155,8 +155,8 @@
                         </div>
                     </div>
                     <div class="mb-5">
-                        <h3 class="fw-bold mb-4">Giới thiệu sự kiện</h3>
-                        <div class="text-muted lh-lg" th:utext="${event.description}">
+                        <h3 class="fw-bold mb-4 text-white">Giới thiệu sự kiện</h3>
+                        <div class="text-white-50 lh-lg" th:utext="${event.description}">
                             Chào mừng đến với EDM Symphony Night 2026 - Sự kiện âm nhạc hoành tráng nhất năm...
                         </div>
                     </div>
@@ -164,7 +164,7 @@
 
                 <!-- Right Column: Ticket Selection -->
                 <div class="col-lg-4">
-                    <div class="ticket-card card shadow-lg rounded-4 border-0">
+                    <div class="ticket-card card card-glass-dark shadow-lg rounded-4 border-0">
                         <div class="card-body p-3">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="fw-bold mb-0">Chọn vé</h5>
@@ -195,7 +195,7 @@
                                 <!-- Ticket List with Scroll -->
                                 <div class="ticket-list mb-3">
                                     <div th:each="ticket : ${ticketTypes}"
-                                        th:class="'ticket-item border border-2 rounded-3 p-2 mb-2 ' + (${ticket.availableQuantity <= 0} ? 'border-danger opacity-75' : 'border-light')"
+                                        th:class="'ticket-item border border-secondary border-opacity-25 rounded-3 p-2 mb-2 ' + (${ticket.availableQuantity <= 0} ? 'border-danger opacity-75' : '')"
                                         th:data-occurrence-id="${ticket.occurrenceId}"
                                         th:data-start-time="${ticket.startTime}" style="display: none;">
                                         <div class="d-flex justify-content-between align-items-start mb-2">
@@ -244,13 +244,14 @@
                                             <div th:if="${ticket.availableQuantity > 0}"
                                                 class="d-flex align-items-center gap-2">
                                                 <button type="button"
-                                                    class="qty-btn btn btn-sm btn-outline-secondary rounded-circle p-0 minus-btn"
+                                                    class="qty-btn btn btn-sm btn-outline-light rounded-circle p-0 minus-btn"
                                                     th:data-ticket-id="${ticket.id}" th:data-price="${ticket.price}">
                                                     <i class="bi bi-dash"></i>
                                                 </button>
-                                                <span class="fw-bold qty-display" th:id="'qty-' + ${ticket.id}">0</span>
+                                                <span class="fw-bold qty-display text-white"
+                                                    th:id="'qty-' + ${ticket.id}">0</span>
                                                 <button type="button"
-                                                    class="qty-btn btn btn-sm btn-outline-secondary rounded-circle p-0 plus-btn"
+                                                    class="qty-btn btn btn-sm btn-outline-light rounded-circle p-0 plus-btn"
                                                     th:data-ticket-id="${ticket.id}" th:data-price="${ticket.price}"
                                                     th:data-max="${ticket.availableQuantity}">
                                                     <i class="bi bi-plus"></i>
@@ -283,11 +284,12 @@
                                 <hr class="my-3">
 
                                 <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <span class="fw-bold">Tổng cộng:</span>
+                                    <span class="fw-bold text-white">Tổng cộng:</span>
                                     <span class="fs-4 fw-bold text-primary" id="totalPrice">0đ</span>
                                 </div>
 
-                                <button type="submit" class="btn btn-primary btn-lg w-100 rounded-3 fw-semibold"
+                                <button type="submit" class="btn btn-gradient btn-lg w-100 rounded-3 fw-semibold"
+                                    style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); color: white; border: none;"
                                     id="bookBtn" disabled>
                                     <i class="bi bi-ticket-perforated me-2"></i>Đặt vé ngay
                                 </button>
