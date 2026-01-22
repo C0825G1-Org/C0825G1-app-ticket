@@ -44,12 +44,17 @@
                         </h6>
 
                         <!-- Description -->
-                        <div class="card-text small text-muted mb-2 text-truncate"
-                            style="display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; min-height: 48px;"
-                            th:utext="${event.description}">
-                            Đêm nhạc gieo hưởng kết hợp điện tử.
+                        <div class="card-text small text-muted mb-2"
+                             style="display: -webkit-box;
+                                    -webkit-line-clamp: 2;
+                                    -webkit-box-orient: vertical;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    line-height: 1.4em;
+                                    min-height: calc(1.4em * 2);
+                                 "
+                             th:utext="${event.description}">
                         </div>
-
                         <!-- Location -->
                         <div class="small text-muted mb-3 text-truncate">
                             <i class="bi bi-geo-alt-fill me-1"></i>
