@@ -18,6 +18,7 @@
         font-family: 'Outfit', sans-serif;
     }
 </style>
+
 <body>
 
     <!-- Sidebar -->
@@ -63,12 +64,12 @@
         <!-- Content -->
         <div class="container-fluid p-4">
 
-<!--            <div class="d-flex justify-content-end align-items-center mb-4">-->
-<!--                <a href="/admin/categories/create" class="btn btn-primary rounded-3"-->
-<!--                    style="background-color: var(&#45;&#45;primary-color); border: none;">-->
-<!--                    <i class="bi bi-plus-circle me-2"></i>Thêm danh mục mới-->
-<!--                </a>-->
-<!--            </div>-->
+            <!--            <div class="d-flex justify-content-end align-items-center mb-4">-->
+            <!--                <a href="/admin/categories/create" class="btn btn-primary rounded-3"-->
+            <!--                    style="background-color: var(&#45;&#45;primary-color); border: none;">-->
+            <!--                    <i class="bi bi-plus-circle me-2"></i>Thêm danh mục mới-->
+            <!--                </a>-->
+            <!--            </div>-->
             <div th:replace="~{common/layout :: fab-button('/admin/categories/create')}"></div>
 
             <!-- Success/Error Messages -->
@@ -99,8 +100,7 @@
                             <tbody>
                                 <tr th:each="category : ${categories}">
                                     <td class="px-4 py-3">
-                                        <span
-                                            th:text="${category.id}">1</span>
+                                        <span th:text="${category.id}">1</span>
                                     </td>
                                     <td class="px-4 py-3">
                                         <div class="d-flex align-items-center gap-3">
@@ -117,35 +117,30 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-end">
-                                        <div class="d-flex justify-content-end gap-1">
-<!--                                            <a th:href="@{/admin/categories/{id}/edit(id=${category.id})}"-->
-<!--                                                class="btn btn-sm btn-outline-primary rounded-start-3"-->
-<!--                                                title="Chỉnh sửa">-->
-<!--                                                <i class="bi bi-pencil"></i>-->
-<!--                                            </a>-->
-<!--                                            <button type="button" class="btn btn-sm btn-outline-danger rounded-end-3"-->
-<!--                                                data-bs-toggle="modal"-->
-<!--                                                th:data-bs-target="'#deleteModal' + ${category.id}" title="Xóa">-->
-<!--                                                <i class="bi bi-trash"></i>-->
-<!--                                            </button>-->
-
-                                            <!-- Nút Edit -->
-                                            <a th:href="@{/admin/categories/{id}/edit(id=${category.id})}"
-                                               class="btn btn-sm btn-light border rounded-3"
-                                               title="Chỉnh sửa">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-
-                                            <!-- Nút Delete -->
-                                            <button type="button"
-                                                    class="btn btn-sm btn-light border text-danger rounded-3"
-                                                    data-bs-toggle="modal"
-                                                    th:data-bs-target="'#deleteModal' + ${category.id}"
-                                                    th:data-id="${category.id}"
-                                                    th:data-name="${category.name}"
-                                                    title="Xóa">
-                                                <i class="bi bi-trash"></i>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary rounded-3 dropdown-toggle"
+                                                type="button" data-bs-toggle="dropdown">
+                                                Hành động
                                             </button>
+                                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm">
+                                                <li>
+                                                    <a th:href="@{/admin/categories/{id}/edit(id=${category.id})}"
+                                                        class="dropdown-item">
+                                                        <i class="bi bi-pencil me-2"></i>Chỉnh sửa
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <hr class="dropdown-divider">
+                                                </li>
+                                                <li>
+                                                    <button type="button" class="dropdown-item text-danger"
+                                                        data-bs-toggle="modal"
+                                                        th:data-bs-target="'#deleteModal' + ${category.id}"
+                                                        th:data-id="${category.id}" th:data-name="${category.name}">
+                                                        <i class="bi bi-trash me-2"></i>Xóa
+                                                    </button>
+                                                </li>
+                                            </ul>
                                         </div>
 
 
@@ -196,7 +191,8 @@
                                         <div class="text-muted">
                                             <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                                             <p class="mb-2">Chưa có danh mục nào</p>
-                                            <a th:href="@{/admin/categories/create}" class="btn btn-primary btn-sm rounded-3"
+                                            <a th:href="@{/admin/categories/create}"
+                                                class="btn btn-primary btn-sm rounded-3"
                                                 style="background-color: var(--primary-color); border: none;">
                                                 <i class="bi bi-plus-circle me-1"></i>Thêm danh mục đầu tiên
                                             </a>

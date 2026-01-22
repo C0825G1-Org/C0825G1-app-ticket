@@ -16,14 +16,64 @@
                         </a>
                         <h4 class="fw-bold mb-0">Chi tiết sự kiện</h4>
                     </div>
-                    <div class="d-flex gap-2">
-                        <button th:if="${event.status.name() == 'DRAFT'}" class="btn btn-success rounded-3"
-                            onclick="publishEvent()">
-                            <i class="bi bi-send me-1"></i> Gửi duyệt
-                        </button>
-                        <a th:href="@{/user/events/edit/{id}(id=${event.id})}" class="btn btn-primary rounded-3">
-                            <i class="bi bi-pencil me-1"></i> Chỉnh sửa
-                        </a>
+                    <!-- Actions moved below into an Action Bar (to mirror admin detail) -->
+                </div>
+
+                <!-- Action Bar (user) - similar to admin's action bar but using user endpoints -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="badge rounded-pill px-3 py-2 fs-6"
+                                th:classappend="${event.status.name() == 'PENDING' ? 'bg-warning-subtle text-warning' : (event.status.name() == 'APPROVED' ? 'bg-success-subtle text-success' : (event.status.name() == 'FINISHED' ? 'bg-primary-subtle text-primary' : (event.status.name() == 'DRAFT' ? 'bg-secondary-subtle text-secondary' : 'bg-danger-subtle text-danger')))}"
+                                th:text="${event.status.name() == 'PENDING' ? 'Chờ duyệt' : (event.status.name() == 'APPROVED' ? 'Đã duyệt' : (event.status.name() == 'FINISHED' ? 'Đã kết thúc' : (event.status.name() == 'DRAFT' ? 'Bản nháp' : (event.status.name() == 'CANCELLED' ? 'Đã hủy' : 'Từ chối'))))}">Status</span>
+                            <div class="text-muted small">Nhà tổ chức: <strong
+                                    th:text="${event.organizerName != null ? event.organizerName : event.createdByName}">Organizer</strong>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <!-- DRAFT: Edit / Publish / Delete -->
+                            <div th:if="${event.status.name() == 'DRAFT'}" class="d-flex gap-2">
+                                <a th:href="@{/user/events/edit/{id}(id=${event.id})}"
+                                    class="btn btn-light border rounded-3 fw-bold px-3">
+                                    <i class="bi bi-pencil me-2"></i> Chỉnh sửa
+                                </a>
+                                <button type="button" class="btn btn-success fw-bold px-3 rounded-3" onclick="publishEvent()">
+                                    <i class="bi bi-send me-2"></i> Gửi duyệt
+                                </button>
+                                <button type="button" class="btn btn-outline-danger rounded-3 fw-bold px-3" th:attr="data-id=${event.id}, data-title=${event.title}" onclick="deleteEvent(this.getAttribute('data-id'), this.getAttribute('data-title'))">
+                                    <i class="bi bi-trash me-2"></i> Xóa
+                                </button>
+                            </div>
+
+                            <!-- PENDING: Edit / Delete -->
+                            <div th:if="${event.status.name() == 'PENDING'}" class="d-flex gap-2">
+                                <!-- Thêm nút Chỉnh sửa cho PENDING giống admin -->
+                                <a th:href="@{/user/events/edit/{id}(id=${event.id})}" class="btn btn-light border rounded-3 fw-bold px-3">
+                                    <i class="bi bi-pencil me-2"></i> Chỉnh sửa
+                                </a>
+                                <button type="button" class="btn btn-outline-danger rounded-3 fw-bold px-3" th:attr="data-id=${event.id}, data-title=${event.title}" onclick="deleteEvent(this.getAttribute('data-id'), this.getAttribute('data-title'))">
+                                    <i class="bi bi-trash me-2"></i> Xóa
+                                </button>
+                            </div>
+
+                            <!-- APPROVED: Edit / Cancel only (duplicate is available on list) -->
+                            <div th:if="${event.status.name() == 'APPROVED'}" class="d-flex gap-2">
+                                <a th:href="@{/user/events/edit/{id}(id=${event.id})}" class="btn btn-light border rounded-3 fw-bold px-3">
+                                    <i class="bi bi-pencil me-2"></i> Chỉnh sửa
+                                </a>
+                                <button type="button" class="btn btn-warning fw-bold px-3 rounded-3 text-white" th:onclick="'cancelEvent(' + ${event.id} + ')'">
+                                    <i class="bi bi-slash-circle me-2"></i> Hủy
+                                </button>
+                            </div>
+
+                            <!-- REJECTED/CANCELLED/FINISHED: Delete only (duplicate is available on list) -->
+                            <div th:if="${event.status.name() == 'REJECTED' or event.status.name() == 'CANCELLED' or event.status.name() == 'FINISHED' or event.status.name() == 'DELETED'}" class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-danger rounded-3 fw-bold px-3" th:attr="data-id=${event.id}, data-title=${event.title}" onclick="deleteEvent(this.getAttribute('data-id'), this.getAttribute('data-title'))">
+                                    <i class="bi bi-trash me-2"></i> Xóa
+                                </button>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
 
@@ -269,6 +319,132 @@
                             }
                         });
                     };
+
+                    // Duplicate Event
+                    window.duplicateEvent = function (eventId) {
+                        Swal.fire({
+                            title: 'Nhân bản sự kiện?',
+                            text: "Một sự kiện mới sẽ được tạo ra từ sự kiện này.",
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: 'Nhân bản',
+                            cancelButtonText: 'Hủy',
+                            confirmButtonColor: '#198754'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+                                fetch('/user/events/' + eventId + '/duplicate', {
+                                    method: 'POST',
+                                    headers: {
+                                        [csrfHeader]: csrfToken
+                                    }
+                                })
+                                    .then(response => {
+                                        if (response.ok) {
+                                            return response.json();
+                                        } else {
+                                            return response.json().then(data => {
+                                                throw new Error(data.message || 'Nhân bản thất bại');
+                                            });
+                                        }
+                                    })
+                                    .then(data => {
+                                        if (data.status === 'success') {
+                                            Toast.fire({ icon: 'success', title: 'Nhân bản thành công' });
+                                            setTimeout(() => location.reload(), 1000);
+                                        } else {
+                                            Toast.fire({ icon: 'error', title: data.message });
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        Toast.fire({ icon: 'error', title: error.message });
+                                    });
+                            }
+                        });
+                    };
+
+                    // Delete Event (updated to match UserEventController)
+                    window.deleteEvent = function (eventId, eventTitle) {
+                        Swal.fire({
+                            title: `Xóa sự kiện "${eventTitle}"?`,
+                            text: "Hành động này không thể hoàn tác!",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Đồng ý xóa',
+                            cancelButtonText: 'Hủy',
+                            confirmButtonColor: '#d33'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                fetch('/user/events/delete/' + eventId, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        [csrfHeader]: csrfToken
+                                    }
+                                })
+                                    .then(response => {
+                                        if (response.ok) {
+                                            // Controller returns plain text; treat success by redirecting
+                                            Swal.fire({ icon: 'success', title: 'Đã xóa sự kiện thành công!' });
+                                            setTimeout(() => window.location.href = '/user/events', 1000);
+                                        } else {
+                                            return response.text().then(text => { throw new Error(text || 'Xóa thất bại'); });
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        Swal.fire({ icon: 'error', title: error.message || 'Lỗi khi xóa sự kiện' });
+                                    });
+                            }
+                        });
+                    }
+
+                    // Cancel Event (send reason as query param)
+                    window.cancelEvent = function (eventId) {
+                        Swal.fire({
+                            title: 'Hủy sự kiện?',
+                            input: 'textarea',
+                            inputLabel: 'Lý do hủy',
+                            inputPlaceholder: 'Nhập lý do tại đây...',
+                            showCancelButton: true,
+                            confirmButtonText: 'Xác nhận hủy',
+                            cancelButtonText: 'Quay lại',
+                            confirmButtonColor: '#dc3545',
+                            inputValidator: (value) => {
+                                if (!value) return 'Vui lòng nhập lý do!'
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const reason = result.value;
+                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                fetch('/user/events/' + eventId + '/cancel?reason=' + encodeURIComponent(reason), {
+                                    method: 'POST',
+                                    headers: {
+                                        [csrfHeader]: csrfToken
+                                    }
+                                })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.status === 'success') {
+                                            Swal.fire({ icon: 'success', title: data.message });
+                                            setTimeout(() => location.reload(), 1000);
+                                        } else {
+                                            Swal.fire({ icon: 'error', title: data.message || 'Hủy thất bại' });
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        Swal.fire({ icon: 'error', title: 'Lỗi khi hủy sự kiện' });
+                                    });
+                            }
+                        });
+                    }
+
                 });
             </script>
         </div>

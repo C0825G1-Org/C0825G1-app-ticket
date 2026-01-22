@@ -84,10 +84,16 @@
                                             <div class="text-danger small error-message" id="error-categoryId"></div>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label fw-medium">Mô tả sự kiện <span
-                                                    class="text-danger">*</span></label>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <label class="form-label fw-medium mb-0">Mô tả sự kiện <span class="text-danger">*</span></label>
+                                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="openPreviewModal()"><i class="bi bi-eye me-1"></i> Xem trước</button>
+                                            </div>
                                             <textarea class="form-control" rows="5" th:field="*{description}"
                                                 id="description" placeholder="Mô tả chi tiết..."></textarea>
+                                            <div class="form-text text-muted mt-2">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#guideModal">Xem hướng dẫn soạn thảo nội dung <i class="bi bi-eye ms-1"></i></a>
+                                            </div>
                                             <div class="text-danger small error-message" id="error-description"></div>
                                         </div>
 
@@ -286,6 +292,7 @@
                                         <input type="hidden" th:field="*{bannerUrl}" id="bannerUrl">
                                         <input type="hidden" th:field="*{logoUrl}" id="logoUrl">
                                         <input type="hidden" th:field="*{ticketMapUrl}" id="ticketMapUrl">
+                                        <input type="hidden" th:field="*{status}" id="eventStatus">
                                         <div id="galleryUrlsContainer"></div>
 
                                         <div class="mb-5">
@@ -378,6 +385,12 @@
                                         onclick="prevStep()">
                                         <i class="bi bi-arrow-left me-2"></i> Quay lại
                                     </button>
+                                    <button type="submit"
+                                        class="btn btn-outline-secondary btn-lg rounded-3 px-5 fw-bold"
+                                        onclick="saveAsDraft()" formnovalidate
+                                        th:if="${eventUpdateDTO.status.name() == 'DRAFT'}">
+                                        <i class="bi bi-file-earmark me-2"></i> Lưu nháp
+                                    </button>
                                     <button type="submit" class="btn btn-gradient btn-lg rounded-3 px-5 fw-bold"
                                         style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); border: none; color: white;">
                                         <i class="bi bi-check-lg me-2"></i> Lưu thay đổi
@@ -405,6 +418,11 @@
                             }
 
                             // Global helper functions
+                            window.saveAsDraft = function () {
+                                document.getElementById('eventStatus').value = 'DRAFT';
+                                // formnovalidate on button handles the rest
+                            };
+
                             window.removeRow = function (btn, type) {
                                 if (type === 'occurrence') {
                                     const item = btn.closest('.event-occurrence-item');
@@ -887,6 +905,12 @@
             </div>
         </div>
     </div>
+
+    <!-- Use admin guide and preview fragments for consistent UX -->
+    <div th:replace="~{admin/event/fragments/guide-modal :: guideModal}"></div>
+    <div th:replace="~{admin/event/fragments/preview-modal :: previewModal}"></div>
 </body>
 
 </html>
+
+

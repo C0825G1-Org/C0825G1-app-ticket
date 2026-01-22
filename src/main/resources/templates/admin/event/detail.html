@@ -29,7 +29,7 @@
                             <span class="badge rounded-pill px-3 py-2 fs-6"
                                 th:classappend="${event.status.name() == 'PENDING' ? 'bg-warning-subtle text-warning' : (event.status.name() == 'APPROVED' ? 'bg-success-subtle text-success' : (event.status.name() == 'FINISHED' ? 'bg-primary-subtle text-primary' : (event.status.name() == 'DRAFT' ? 'bg-secondary-subtle text-secondary' : 'bg-danger-subtle text-danger')))}"
                                 th:text="${event.status.name() == 'PENDING' ? 'Chờ duyệt' : (event.status.name() == 'APPROVED' ? 'Đã duyệt' : (event.status.name() == 'FINISHED' ? 'Đã kết thúc' : (event.status.name() == 'DRAFT' ? 'Bản nháp' : (event.status.name() == 'CANCELLED' ? 'Đã hủy' : 'Từ chối'))))}">Status</span>
-                            <div class="text-muted small">Người tạo: <strong
+                            <div class="text-muted small">Nhà tổ chức: <strong
                                     th:text="${event.createdByName != null ? event.createdByName : 'Admin'}">Admin</strong>
                             </div>
                         </div>

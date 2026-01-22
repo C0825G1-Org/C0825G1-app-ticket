@@ -290,6 +290,7 @@
                                     <input type="hidden" th:field="*{bannerUrl}" id="bannerUrl">
                                     <input type="hidden" th:field="*{logoUrl}" id="logoUrl">
                                     <input type="hidden" th:field="*{ticketMapUrl}" id="ticketMapUrl">
+                                    <input type="hidden" th:field="*{status}" id="eventStatus">
                                     <div id="galleryUrlsContainer"></div>
 
                                     <div class="mb-5">
@@ -380,6 +381,11 @@
                                     onclick="prevStep()">
                                     <i class="bi bi-arrow-left me-2"></i> Quay lại
                                 </button>
+                                <button type="submit" class="btn btn-secondary btn-lg rounded-3 px-5 fw-bold"
+                                    onclick="saveAsDraft()" formnovalidate
+                                    th:if="${eventUpdateDTO.status.name() == 'DRAFT'}">
+                                    <i class="bi bi-file-earmark me-2"></i> Lưu nháp
+                                </button>
                                 <button type="submit" class="btn btn-gradient btn-lg rounded-3 px-5 fw-bold"
                                     style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); border: none; color: white;">
                                     <i class="bi bi-check-lg me-2"></i> Lưu thay đổi
@@ -412,6 +418,11 @@
                             });
 
                             // Global Preview Functions
+                            window.saveAsDraft = function () {
+                                document.getElementById('eventStatus').value = 'DRAFT';
+                                // formnovalidate on button handles the rest
+                            };
+
                             window.removeRow = function (btn, type) {
                                 if (type === 'occurrence') {
                                     const item = btn.closest('.event-occurrence-item');

@@ -74,7 +74,9 @@ public class EventService implements IEventService {
         @Transactional(readOnly = true)
         public org.springframework.data.domain.Page<EventDTO> findAll(
                         org.springframework.data.domain.Pageable pageable) {
-                return eventRepository.findByStatusNot(EventStatus.DELETED, pageable).map(this::convertToDTO);
+                // Enforce custom sort by stripping sort from pageable
+                Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+                return eventRepository.findAllWithCustomSort(sortedPageable).map(this::convertToDTO);
         }
 
         @Override
@@ -92,13 +94,15 @@ public class EventService implements IEventService {
                                 ? dto.getEndDate().atTime(java.time.LocalTime.MAX)
                                 : null;
 
+                // Strip sort to use custom query sort
+                Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
                 return eventRepository.searchEvents(
                                 dto.getTitle(),
                                 dto.getCategoryId(),
                                 dto.getStatus(),
                                 start,
                                 end,
-                                pageable).map(this::convertToDTO);
+                                sortedPageable).map(this::convertToDTO);
         }
 
         @Override
@@ -634,8 +638,13 @@ public class EventService implements IEventService {
         }
 
         @Override
-        public Page<Event> findEventsByOrganizer(User organizer, Pageable pageable) {
-                return eventRepository.findByOrganizerAndStatusNot(organizer, EventStatus.DELETED, pageable);
+        public org.springframework.data.domain.Page<Event> findEventsByOrganizer(
+                        com.codegym.appticket.entity.User organizer,
+                        Pageable pageable) {
+                // Enforce custom sort by stripping sort from pageable
+                Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+                return eventRepository.findByOrganizerWithCustomSort(organizer.getId(), EventStatus.DELETED,
+                                sortedPageable);
         }
 
         @Override
