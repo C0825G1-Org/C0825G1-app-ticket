@@ -347,33 +347,46 @@
                                                     th:text="${event.categoryName}">Category</span>
                                             </div>
 
-                                            <!-- Danh sách các suất diễn -->
+                                            <!-- Occurrence count with toggle -->
                                             <div th:if="${event.occurrences != null and !event.occurrences.isEmpty()}"
-                                                class="occurrence-list mt-2 pt-2 border-top">
-                                                <p class="small fw-bold mb-1 text-muted">
-                                                    <i class="bi bi-calendar-event"></i> Các suất diễn:
+                                                class="occurrence-section mt-2 pt-2 border-top">
+                                                <!-- Clickable summary -->
+                                                <p class="small mb-0" style="cursor: pointer;"
+                                                    th:data-bs-toggle="'collapse'"
+                                                    th:data-bs-target="'#occurrences-' + ${event.id}">
+                                                    <i class="bi bi-calendar-event text-primary"></i>
+                                                    <span class="fw-semibold"
+                                                        th:text="${event.occurrences.size()} + ' suất diễn'">3 suất
+                                                        diễn</span>
+                                                    <i class="bi bi-chevron-down text-muted ms-1"
+                                                        style="font-size: 0.7rem;"></i>
+                                                    <small class="text-muted ms-1">(click xem chi tiết)</small>
                                                 </p>
-                                                <div class="occurrence-items"
-                                                    style="max-height: 120px; overflow-y: auto;">
-                                                    <div th:each="occ, iterStat : ${event.occurrences}"
-                                                        class="occurrence-item small mb-1 pb-1"
-                                                        th:classappend="${!iterStat.last} ? 'border-bottom' : ''">
-                                                        <div class="d-flex align-items-start gap-1">
-                                                            <i class="bi bi-clock text-primary mt-1"
-                                                                style="font-size: 0.75rem;"></i>
-                                                            <div class="flex-grow-1">
-                                                                <div class="fw-semibold"
-                                                                    th:text="${#temporals.format(occ.eventDate, 'dd/MM/yyyy HH:mm')}">
-                                                                    25/01/2026 19:00
-                                                                </div>
-                                                                <div class="text-muted" style="font-size: 0.7rem;"
-                                                                    th:text="${occ.addressDetail}">
-                                                                    Địa chỉ chi tiết
+
+                                                <!-- Collapsible occurrence list
+                                                <div class="collapse" th:id="'occurrences-' + ${event.id}">
+                                                    <div class="occurrence-items mt-2"
+                                                        style="max-height: 120px; overflow-y: auto;">
+                                                        <div th:each="occ, iterStat : ${event.occurrences}"
+                                                            class="occurrence-item small mb-1 pb-1"
+                                                            th:classappend="${!iterStat.last} ? 'border-bottom' : ''">
+                                                            <div class="d-flex align-items-start gap-1">
+                                                                <i class="bi bi-clock text-primary mt-1"
+                                                                    style="font-size: 0.75rem;"></i>
+                                                                <div class="flex-grow-1">
+                                                                    <div class="fw-semibold"
+                                                                        th:text="${#temporals.format(occ.eventDate, 'dd/MM/yyyy HH:mm')}">
+                                                                        25/01/2026 19:00
+                                                                    </div>
+                                                                    <div class="text-muted" style="font-size: 0.7rem;"
+                                                                        th:text="${occ.addressDetail}">
+                                                                        Địa chỉ chi tiết
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
+                                                </div> -->
                                             </div>
                                         </div>
                                     </div>
