@@ -56,8 +56,8 @@
                                         <td class="px-4 py-3">
                                             <div class="d-flex align-items-center gap-2">
                                                 <span class="badge rounded-pill px-3"
-                                                    th:classappend="${event.status.name() == 'PENDING' ? 'bg-warning-subtle text-warning' : (event.status.name() == 'APPROVED' ? 'bg-success-subtle text-success' : (event.status.name() == 'HAPPENING' ? 'bg-primary-subtle text-primary' : (event.status.name() == 'FINISHED' ? 'bg-info-subtle text-info' : (event.status.name() == 'DELETED' ? 'bg-dark-subtle text-dark text-decoration-line-through' : 'bg-danger-subtle text-danger'))))}"
-                                                    th:text="${event.status.name() == 'PENDING' ? 'Chờ duyệt' : (event.status.name() == 'APPROVED' ? 'Đã duyệt' : (event.status.name() == 'HAPPENING' ? 'Đang diễn ra' : (event.status.name() == 'FINISHED' ? 'Đã kết thúc' : (event.status.name() == 'DELETED' ? 'Đã xóa' : (event.status.name() == 'CANCELLED' ? 'Đã hủy' : 'Từ chối')))))}">Status</span>
+                                                    th:classappend="${event.status.name() == 'DRAFT' ? 'bg-secondary-subtle text-secondary' : (event.status.name() == 'PENDING' ? 'bg-warning-subtle text-warning' : (event.status.name() == 'APPROVED' ? 'bg-success-subtle text-success' : (event.status.name() == 'HAPPENING' ? 'bg-primary-subtle text-primary' : (event.status.name() == 'FINISHED' ? 'bg-info-subtle text-info' : (event.status.name() == 'DELETED' ? 'bg-dark-subtle text-dark text-decoration-line-through' : 'bg-danger-subtle text-danger')))))}"
+                                                    th:text="${event.status.name() == 'DRAFT' ? 'Nháp' : (event.status.name() == 'PENDING' ? 'Chờ duyệt' : (event.status.name() == 'APPROVED' ? 'Đã duyệt' : (event.status.name() == 'HAPPENING' ? 'Đang diễn ra' : (event.status.name() == 'FINISHED' ? 'Đã kết thúc' : (event.status.name() == 'DELETED' ? 'Đã xóa' : (event.status.name() == 'CANCELLED' ? 'Đã hủy' : 'Từ chối'))))))}">Status</span>
 
 
                                             </div>

@@ -1,7 +1,7 @@
 package com.codegym.appticket.controller;
 
 import com.codegym.appticket.entity.EventStatus;
-import com.codegym.appticket.repository.IBookingDetailRepository;
+
 import com.codegym.appticket.repository.IEventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -17,29 +17,41 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class AdminDashboardController {
 
-    private final IBookingDetailRepository bookingDetailRepository;
     private final IEventRepository eventRepository;
+    private final com.codegym.appticket.repository.IBookingRepository bookingRepository;
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
-        // 1. Stats
-        BigDecimal totalRevenue = bookingDetailRepository.sumTotalRevenue();
-        Long totalTicketsSold = bookingDetailRepository.countTotalTicketsSold();
+        // 1. Revenue Today (Cash Flow)
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        java.time.LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+        java.time.LocalDateTime endOfDay = now.toLocalDate().atTime(java.time.LocalTime.MAX);
 
+        BigDecimal revenueToday = bookingRepository.sumTotalRevenue(startOfDay, endOfDay);
+        if (revenueToday == null)
+            revenueToday = BigDecimal.ZERO;
+
+        // 2. Live Status (Happening Events)
+        long happeningEventsCount = eventRepository.countByStatus(EventStatus.HAPPENING);
+
+        // 3. Pending Events Count (Action Required)
         long pendingEventsCount = eventRepository.countByStatus(EventStatus.PENDING);
 
-        model.addAttribute("totalRevenue", totalRevenue);
-        model.addAttribute("totalTicketsSold", totalTicketsSold);
-        model.addAttribute("pendingEventsCount", pendingEventsCount);
-        // Note: New events could be defined as created this month, but for now using
-        // pending count as a proxy for 'attention needed' or just approved count for
-        // 'active'.
-        // Let's use Approved count as "New Events" metric label in UI or just "Total
-        // Active Events".
-        // The UI demo says "New Events", let's map it to Pending for now as that's
-        // actionable.
+        // 4. Upcoming Events Sales Performance (Top 3)
+        var upcomingSales = eventRepository.findTopUpcomingEventsWithSales(3);
 
-        // 2. Pending Events Table (Top 5)
+        // 5. Recent Bookings (Last 5 Successful)
+        var recentBookings = bookingRepository
+                .findRecentBookings(com.codegym.appticket.entity.BookingStatus.SUCCESS);
+
+        // Add to model
+        model.addAttribute("revenueToday", revenueToday);
+        model.addAttribute("happeningEventsCount", happeningEventsCount);
+        model.addAttribute("pendingEventsCount", pendingEventsCount);
+        model.addAttribute("upcomingSales", upcomingSales);
+        model.addAttribute("recentBookings", recentBookings);
+
+        // 6. Pending Events Table (Top 5)
         model.addAttribute("pendingEvents", eventRepository.findByStatus(EventStatus.PENDING, PageRequest.of(0, 5)));
 
         return "admin/dashboard";

@@ -46,11 +46,12 @@ public interface IEventService {
         List<NearByEventDTO> findNearbyEvents(Double userLatitude, Double userLongitude, String excludeLocation,
                         int limit);
 
-    List<NearByEventWithOccurrencesDTO> findNearbyEventsGrouped(Double userLatitude, Double userLongitude, String excludeLocation, int limit);
+        List<NearByEventWithOccurrencesDTO> findNearbyEventsGrouped(Double userLatitude, Double userLongitude,
+                        String excludeLocation, int limit);
 
-    // User/Organizer methods
-    org.springframework.data.domain.Page<Event> findEventsByOrganizer(com.codegym.appticket.entity.User organizer,
-            Pageable pageable);
+        // User/Organizer methods
+        org.springframework.data.domain.Page<Event> findEventsByOrganizer(com.codegym.appticket.entity.User organizer,
+                        Pageable pageable);
 
         // Approval Flow
         void approve(Long id);
@@ -59,6 +60,8 @@ public interface IEventService {
 
         // Cancel an event
         void cancel(Long eventId, String reason);
+
+        void submitForApproval(Long id); // User submits DRAFT -> PENDING
 
         // Restore an event (from Cancelled/Deleted/Rejected -> Pending)
         void restore(Long eventId);
@@ -71,6 +74,12 @@ public interface IEventService {
     void incrementViewCount(Long eventId);
 
     com.codegym.appticket.dto.event.EventStatsDTO getEventStats(Long eventId, Long occurrenceId);
-    
+
     byte[] exportBookedTicketsToExcel(Long eventId, Long occurrenceId) throws java.io.IOException;
+
+        EventDTO duplicate(Long originalId);
+
+        void bulkDelete(List<Long> ids);
+
+        void bulkApprove(List<Long> ids);
 }

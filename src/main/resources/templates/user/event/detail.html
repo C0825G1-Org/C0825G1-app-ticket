@@ -17,6 +17,10 @@
                         <h4 class="fw-bold mb-0">Chi tiết sự kiện</h4>
                     </div>
                     <div class="d-flex gap-2">
+                        <button th:if="${event.status.name() == 'DRAFT'}" class="btn btn-success rounded-3"
+                            onclick="publishEvent()">
+                            <i class="bi bi-send me-1"></i> Gửi duyệt
+                        </button>
                         <a th:href="@{/user/events/edit/{id}(id=${event.id})}" class="btn btn-primary rounded-3">
                             <i class="bi bi-pencil me-1"></i> Chỉnh sửa
                         </a>
@@ -717,6 +721,79 @@
                     }
                 </script>
             </div>
+
+            <!-- Script must be INSIDE the fragment to be included in layout -->
+            <script th:inline="javascript">
+                document.addEventListener('DOMContentLoaded', function () {
+                    // SweetAlert2 Toast Mixin (global)
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                        didOpen: (toast) => {
+                            toast.onmouseenter = Swal.stopTimer;
+                            toast.onmouseleave = Swal.resumeTimer;
+                        }
+                    });
+
+                    // Global function for button onclick
+                    window.publishEvent = function () {
+                        Swal.fire({
+                            title: 'Gửi duyệt sự kiện?',
+                            text: "Sự kiện sẽ chuyển sang trạng thái CHỜ DUYỆT và được Admin xem xét.",
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: 'Gửi ngay',
+                            cancelButtonText: 'Hủy',
+                            confirmButtonColor: '#198754'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const eventId = [[${ event.id }]];
+                                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                                const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+                                fetch('/user/events/' + eventId + '/publish', {
+                                    method: 'POST',
+                                    headers: {
+                                        [csrfHeader]: csrfToken
+                                    }
+                                })
+                                    .then(response => {
+                                        if (response.ok) {
+                                            return response.json();
+                                        } else {
+                                            // Validation error or other error
+                                            return response.json().then(data => {
+                                                throw new Error(data.message || 'Validation failed');
+                                            });
+                                        }
+                                    })
+                                    .then(data => {
+                                        if (data.status === 'success') {
+                                            Toast.fire({ icon: 'success', title: data.message });
+                                            setTimeout(() => location.reload(), 1000);
+                                        } else {
+                                            Toast.fire({ icon: 'error', title: data.message });
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        // Show toast message and redirect to edit page
+                                        Toast.fire({
+                                            icon: 'warning',
+                                            title: 'Cần hoàn thiện sự kiện trước khi gửi duyệt'
+                                        });
+                                        setTimeout(() => {
+                                            window.location.href = '/user/events/edit/' + eventId;
+                                        }, 1500);
+                                    });
+                            }
+                        });
+                    };
+                });
+            </script>
         </div>
     </div>
 </body>

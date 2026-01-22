@@ -413,6 +413,26 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
     List<NearByEventDTO> findEventsByProvinces(
             @Param("nearbyProvinces") List<String> nearbyProvinces,
             @Param("limit") int limit);
+
+    @Query(value = """
+            SELECT
+                e.id AS id,
+                e.title AS title,
+                MIN(eo.start_time) AS startTime,
+                COALESCE(SUM(CASE WHEN b.status = 'SUCCESS' THEN bd.quantity ELSE 0 END), 0) AS soldTickets,
+                (COALESCE(SUM(CASE WHEN b.status = 'SUCCESS' THEN bd.quantity ELSE 0 END), 0) + SUM(tt.quantity)) AS totalTickets
+            FROM events e
+            JOIN event_occurrences eo ON eo.event_id = e.id
+            JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
+            LEFT JOIN booking_details bd ON bd.ticket_type_id = tt.id
+            LEFT JOIN bookings b ON b.id = bd.booking_id
+            WHERE e.status = 'APPROVED'
+            GROUP BY e.id, e.title
+            HAVING MIN(eo.start_time) > NOW()
+            ORDER BY MIN(eo.start_time) ASC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<com.codegym.appticket.dto.admin.EventSalesDTO> findTopUpcomingEventsWithSales(@Param("limit") int limit);
     // --- Organizer Stats Queries ---
 
     @Query(value = """
