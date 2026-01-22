@@ -266,10 +266,34 @@
                                 </div>
 
                                 <h5 class="fw-bold mb-2">Mô tả sự kiện</h5>
-                                <div class="text-secondary mb-4" style="line-height: 1.6;"
-                                    th:utext="${event.description}">
+                                <div class="text-secondary mb-4" id="event-description-content"
+                                    style="line-height: 1.6;" th:utext="${event.description}">
                                     Description...
                                 </div>
+                                <style>
+                                    /* Description Content Styling - Admin */
+                                    #event-description-content img {
+                                        max-width: 100% !important;
+                                        height: auto !important;
+                                        display: block;
+                                        margin: 10px auto;
+                                        border-radius: 0.5rem;
+                                    }
+
+                                    #event-description-content table {
+                                        width: 100% !important;
+                                        max-width: 100% !important;
+                                        margin-bottom: 1rem;
+                                        background-color: transparent;
+                                        border-collapse: collapse;
+                                    }
+
+                                    #event-description-content table td,
+                                    #event-description-content table th {
+                                        padding: 0.5rem;
+                                        border: 1px solid #dee2e6;
+                                    }
+                                </style>
                             </div>
                         </div>
 

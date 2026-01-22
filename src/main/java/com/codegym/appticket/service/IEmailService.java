@@ -12,4 +12,6 @@ public interface IEmailService {
     void sendEventRejectionNotification(com.codegym.appticket.entity.Event event, String reason);
 
     void sendEventCancellationNotification(com.codegym.appticket.entity.Event event, String reason);
+
+    void sendEventRestorationNotification(com.codegym.appticket.entity.Event event);
 }

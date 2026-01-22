@@ -306,4 +306,47 @@ public class EmailServiceImpl implements IEmailService {
                         log.error("Failed to send cancellation email for event #{}", event.getId(), e);
                 }
         }
+
+        @Async
+        @Override
+        public void sendEventRestorationNotification(com.codegym.appticket.entity.Event event) {
+                try {
+                        log.info("Sending restoration email for event #{}", event.getId());
+
+                        if (event.getOrganizer() == null || event.getOrganizer().getEmail() == null) {
+                                log.warn("Organizer email not found for event #{}", event.getId());
+                                return;
+                        }
+
+                        MimeMessage message = mailSender.createMimeMessage();
+                        MimeMessageHelper helper = new MimeMessageHelper(message,
+                                        MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
+                                        StandardCharsets.UTF_8.name());
+
+                        Context context = new Context();
+                        context.setVariable("organizerName",
+                                        event.getOrganizer().getFullName() != null ? event.getOrganizer().getFullName()
+                                                        : "Organizer");
+                        context.setVariable("eventTitle", event.getTitle());
+
+                        java.time.format.DateTimeFormatter dateFormatter = java.time.format.DateTimeFormatter
+                                        .ofPattern("HH:mm dd/MM/yyyy");
+                        context.setVariable("restorationDate", java.time.LocalDateTime.now().format(dateFormatter));
+
+                        // Assuming default localhost port, in production this should be from properties
+                        context.setVariable("eventLink", "http://localhost:8080/events/detail/" + event.getId());
+
+                        String html = templateEngine.process("mail/event-restoration", context);
+
+                        helper.setTo(event.getOrganizer().getEmail());
+                        helper.setSubject("Sự Kiện Của Bạn Đã Được Khôi Phục: " + event.getTitle());
+                        helper.setText(html, true);
+
+                        mailSender.send(message);
+                        log.info("Restoration email sent successfully for event #{}", event.getId());
+
+                } catch (MessagingException e) {
+                        log.error("Failed to send restoration email for event #{}", event.getId(), e);
+                }
+        }
 }

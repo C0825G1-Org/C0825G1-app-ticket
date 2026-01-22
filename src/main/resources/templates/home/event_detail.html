@@ -158,9 +158,33 @@
                     </div>
                     <div class="mb-5">
                         <h3 class="fw-bold mb-4">Giới thiệu sự kiện</h3>
-                        <div class="text-muted lh-lg" th:utext="${event.description}">
+                        <div class="text-muted lh-lg" id="event-description-content" th:utext="${event.description}">
                             Chào mừng đến với EDM Symphony Night 2026 - Sự kiện âm nhạc hoành tráng nhất năm...
                         </div>
+                        <style>
+                            /* Description Content Styling - Home */
+                            #event-description-content img {
+                                max-width: 100% !important;
+                                height: auto !important;
+                                display: block;
+                                margin: 10px auto;
+                                border-radius: 0.5rem;
+                            }
+
+                            #event-description-content table {
+                                width: 100% !important;
+                                max-width: 100% !important;
+                                margin-bottom: 1rem;
+                                background-color: transparent;
+                                border-collapse: collapse;
+                            }
+
+                            #event-description-content table td,
+                            #event-description-content table th {
+                                padding: 0.5rem;
+                                border: 1px solid #dee2e6;
+                            }
+                        </style>
                     </div>
                 </div>
 

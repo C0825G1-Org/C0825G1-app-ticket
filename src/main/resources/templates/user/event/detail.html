@@ -48,8 +48,8 @@
                                             Event Title</h2>
                                         <div class="d-flex align-items-center gap-2 text-white-50">
                                             <span
-                                                th:classappend="${event.status.name() == 'PENDING' ? 'badge bg-warning text-dark' : (event.status.name() == 'APPROVED' ? 'badge bg-success' : 'badge bg-danger')}"
-                                                th:text="${event.status.name() == 'PENDING' ? 'Chờ duyệt' : (event.status.name() == 'APPROVED' ? 'Đã duyệt' : 'Từ chối')}">Status</span>
+                                                th:classappend="${event.status.name() == 'PENDING' ? 'badge bg-warning text-dark' : (event.status.name() == 'APPROVED' ? 'badge bg-success' : (event.status.name() == 'HAPPENING' ? 'badge bg-primary' : (event.status.name() == 'FINISHED' ? 'badge bg-info' : (event.status.name() == 'DELETED' ? 'badge bg-dark text-decoration-line-through' : (event.status.name() == 'CANCELLED' ? 'badge bg-danger' : (event.status.name() == 'DRAFT' ? 'badge bg-secondary' : 'badge bg-danger'))))))}"
+                                                th:text="${event.status.name() == 'PENDING' ? 'Chờ duyệt' : (event.status.name() == 'APPROVED' ? 'Đã duyệt' : (event.status.name() == 'HAPPENING' ? 'Đang diễn ra' : (event.status.name() == 'FINISHED' ? 'Đã kết thúc' : (event.status.name() == 'DELETED' ? 'Đã xóa' : (event.status.name() == 'CANCELLED' ? 'Đã hủy' : (event.status.name() == 'DRAFT' ? 'Nháp' : 'Từ chối'))))))}">Status</span>
                                         </div>
                                     </div>
                                 </div>
@@ -72,11 +72,36 @@
                         <div class="card border-0 shadow-sm rounded-4 mb-4">
                             <div class="card-body p-4">
                                 <h5 class="fw-bold mb-3">Mô tả sự kiện</h5>
-                                <div class="text-muted" th:utext="${event.description}">
+                                <div class="text-muted" id="event-description-content" th:utext="${event.description}">
                                     No description.
                                 </div>
                             </div>
                         </div>
+
+                        <style>
+                            /* Description Content Styling */
+                            #event-description-content img {
+                                max-width: 100% !important;
+                                height: auto !important;
+                                display: block;
+                                margin: 10px auto;
+                                border-radius: 0.5rem;
+                            }
+
+                            #event-description-content table {
+                                width: 100% !important;
+                                max-width: 100% !important;
+                                margin-bottom: 1rem;
+                                background-color: transparent;
+                                border-collapse: collapse;
+                            }
+
+                            #event-description-content table td,
+                            #event-description-content table th {
+                                padding: 0.5rem;
+                                border: 1px solid #dee2e6;
+                            }
+                        </style>
 
                         <!-- Gallery -->
                         <div class="card border-0 shadow-sm rounded-4 mb-4"
@@ -113,7 +138,8 @@
                                     <div class="text-center rounded-3 bg-light p-2"
                                         style="min-width: 60px; height: fit-content;">
                                         <div class="small fw-bold text-uppercase text-danger"
-                                            th:text="${#temporals.monthName(occ.startTime)}">JAN</div>
+                                            th:text="${#temporals.monthName(occ.startTime)}">JAN
+                                        </div>
                                         <div class="h4 fw-bold mb-0" th:text="${#temporals.day(occ.startTime)}">01</div>
                                     </div>
                                     <div>
@@ -154,7 +180,6 @@
                                 </div>
                             </div>
                         </div>
-
 
 
                         <!-- Ticket Map -->

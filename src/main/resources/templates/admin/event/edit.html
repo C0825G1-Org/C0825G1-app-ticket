@@ -89,10 +89,24 @@
                                         <div class="text-danger small error-message" id="error-categoryId"></div>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label fw-medium">Mô tả sự kiện <span
-                                                class="text-danger">*</span></label>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <label class="form-label fw-medium mb-0">Mô tả sự kiện <span
+                                                    class="text-danger">*</span></label>
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                                onclick="openPreviewModal()">
+                                                <i class="bi bi-eye me-1"></i> Xem trước
+                                            </button>
+                                        </div>
                                         <textarea class="form-control" rows="5" th:field="*{description}"
                                             id="description" placeholder="Mô tả chi tiết..."></textarea>
+                                        <div class="form-text text-muted">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            <a href="#" class="text-decoration-none" data-bs-toggle="modal"
+                                                data-bs-target="#guideModal">
+                                                Xem hướng dẫn soạn thảo nội dung <i class="bi bi-eye ms-1"></i>
+                                            </a>
+                                        </div>
                                         <div class="text-danger small error-message" id="error-description"></div>
                                     </div>
 
@@ -373,6 +387,11 @@
                             </div>
                         </div>
                     </form>
+
+                    <!-- Guide Modal Fragment -->
+                    <div th:replace="~{admin/event/fragments/guide-modal :: guideModal}"></div>
+                    <!-- Preview Modal Fragment -->
+                    <div th:replace="~{admin/event/fragments/preview-modal :: previewModal}"></div>
 
                     <!-- Shared Cloudinary Logic -->
                     <script src="/js/cloudinary-upload.js"></script>
