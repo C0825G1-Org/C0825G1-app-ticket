@@ -15,8 +15,16 @@
                         <div class="card-header bg-transparent border-0 py-3">
                             <h5 class="fw-bold mb-0">Sơ đồ vé</h5>
                         </div>
-                        <div class="card-body text-center">
+                        <div class="card-body text-center position-relative group-hover" role="button"
+                            data-bs-toggle="modal" data-bs-target="#seatMapModal">
                             <img th:src="${ticketMap.mediaUrl}" class="img-fluid rounded-3" alt="Sơ đồ vé">
+                            <div
+                                class="position-absolute top-50 start-50 translate-middle opacity-0 hover-opacity-100 transition-all">
+                                <span class="badge bg-dark bg-opacity-75 p-2 rounded-circle">
+                                    <i class="bi bi-zoom-in fs-4 text-white"></i>
+                                </span>
+                            </div>
+                            <p class="text-muted small mt-2 mb-0">Nhấn vào ảnh để phóng to</p>
                         </div>
                     </div>
                 </div>
@@ -74,7 +82,7 @@
                                             </div>
                                             <div style="width: 100px;">
                                                 <input type="number" th:name="'ticket_' + ${tt.id}"
-                                                    class="form-control ticket-qty bg-dark text-white border-secondary border-opacity-50"
+                                                    class="form-control ticket-qty bg-dark text-white border-secondary border-opacity-50" th:data-price="${tt.price}"
                                                     th:value="${preSelectedQuantities != null and preSelectedQuantities.containsKey(tt.id) ? preSelectedQuantities.get(tt.id) : ''}"
                                                     placeholder="0" min="0" th:max="${ticketAvailability[tt.id]}">
                                             </div>
@@ -85,6 +93,12 @@
                                 <div id="ticketCountError" class="alert alert-warning py-2 mb-3 d-none">
                                     <i class="bi bi-exclamation-circle me-2"></i>
                                     Vui lòng chọn ít nhất một vé để tiếp tục.
+                                </div>
+
+                                <div
+                                    class="d-flex justify-content-between align-items-center mb-4 p-3 bg-light rounded-3 border">
+                                    <h5 class="fw-bold mb-0">Tổng cộng:</h5>
+                                    <h4 class="fw-bold text-primary mb-0" id="totalAmountDisplay">0 VND</h4>
                                 </div>
 
                                 <div class="d-grid gap-2 mt-4">
@@ -114,10 +128,48 @@
                                         errorDiv.classList.add('d-none');
                                     }
                                 });
+
+                                // Calculate Total Amount
+                                const ticketInputs = document.querySelectorAll('.ticket-qty');
+                                const totalDisplay = document.getElementById('totalAmountDisplay');
+
+                                function updateTotal() {
+                                    let totalAmount = 0;
+                                    ticketInputs.forEach(input => {
+                                        const qty = parseInt(input.value) || 0;
+                                        const price = parseFloat(input.dataset.price) || 0;
+                                        totalAmount += qty * price;
+                                    });
+                                    totalDisplay.textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalAmount).replace('₫', 'VND');
+                                }
+
+                                ticketInputs.forEach(input => {
+                                    input.addEventListener('input', updateTotal);
+                                    input.addEventListener('change', updateTotal);
+                                });
+
+                                // Initial Calculation
+                                updateTotal();
                                 /*]]>*/
                             </script>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Seat Map Modal -->
+    <div class="modal fade" id="seatMapModal" tabindex="-1" aria-hidden="true"
+        th:if="${event.eventMedias.^[mediaPurpose.name() == 'TICKET_MAP'] != null}">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content bg-transparent border-0 shadow-none">
+                <div class="modal-header border-0 p-0 mb-2">
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0 text-center"
+                    th:with="ticketMap=${event.eventMedias.^[mediaPurpose.name() == 'TICKET_MAP']}">
+                    <img th:src="${ticketMap.mediaUrl}" class="img-fluid rounded-3 shadow-lg" alt="Sơ đồ vé chi tiết">
                 </div>
             </div>
         </div>
