@@ -40,6 +40,9 @@ public class Event extends Parent {
     @Column(name = "status")
     private EventStatus status = EventStatus.PENDING;
 
+    @Column(name = "view_count")
+    private Long viewCount = 0L;
+
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventMedia> eventMedias = new ArrayList<>();
 
@@ -59,7 +62,15 @@ public class Event extends Parent {
         if (eventOccurrences != null && !eventOccurrences.isEmpty()) {
             EventOccurrence occurrence = eventOccurrences.get(0);
             if (occurrence.getLocation() != null) {
-                return occurrence.getLocation().getAddressDetail();
+                Location loc = occurrence.getLocation();
+                StringBuilder fullAddress = new StringBuilder(loc.getAddressDetail());
+                if (loc.getWard() != null) {
+                    fullAddress.append(", ").append(loc.getWard().getName());
+                    if (loc.getWard().getProvince() != null) {
+                        fullAddress.append(", ").append(loc.getWard().getProvince().getName());
+                    }
+                }
+                return fullAddress.toString();
             }
         }
         return "Địa điểm chưa xác định";

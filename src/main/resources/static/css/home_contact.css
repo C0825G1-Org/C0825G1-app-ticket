@@ -1,0 +1,21 @@
+.contact-page {
+    background-color: #0f172a;
+}
+
+/* Keep the navbar/footer dark theme consistent with Home/Event pages */
+.contact-page section.bg-light,
+.contact-page section.bg-white {
+    background-color: transparent !important;
+}
+
+/* Improve readability on dark background without affecting admin/global styles */
+.contact-page .breadcrumb,
+.contact-page .breadcrumb a,
+.contact-page .breadcrumb-item.active {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.contact-page .text-muted {
+    color: #94a3b8 !important;
+}
+

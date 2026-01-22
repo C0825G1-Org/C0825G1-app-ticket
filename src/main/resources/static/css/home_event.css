@@ -1,0 +1,38 @@
+.event-filter-sidebar .btn-event-search {
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.5);
+    transition: all 0.25s ease;
+}
+
+.event-filter-sidebar .btn-event-search i {
+    color: inherit;
+}
+
+.event-filter-sidebar .btn-event-search:hover,
+.event-filter-sidebar .btn-event-search:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.7);
+    filter: brightness(1.05);
+    color: #ffffff;
+}
+
+.event-filter-sidebar .btn-event-reset {
+    background-color: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    transition: all 0.25s ease;
+}
+
+.event-filter-sidebar .btn-event-reset i {
+    color: inherit;
+}
+
+.event-filter-sidebar .btn-event-reset:hover,
+.event-filter-sidebar .btn-event-reset:focus {
+    background-color: rgba(124, 58, 237, 0.12);
+    color: #ffffff;
+    border-color: var(--primary-color);
+}
+

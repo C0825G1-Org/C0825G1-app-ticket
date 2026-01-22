@@ -6,8 +6,23 @@
 <body>
     <div th:replace="~{common/layout :: user-layout(~{:: .booking-form})}">
         <div class="booking-form container py-5" style="margin-top: 80px;">
-            <div class="row justify-content-center">
-                <div class="col-md-8">
+            <div class="row justify-content-center"
+                th:with="ticketMap=${event.eventMedias.^[mediaPurpose.name() == 'TICKET_MAP']}">
+
+                <!-- Left Column: Seat Map (Optional) -->
+                <div class="col-lg-5 mb-4 mb-lg-0" th:if="${ticketMap != null}">
+                    <div class="card shadow-sm border-0 h-100 sticky-top" style="top: 100px; z-index: 1;">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h5 class="fw-bold mb-0">Sơ đồ vé</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <img th:src="${ticketMap.mediaUrl}" class="img-fluid rounded-3" alt="Sơ đồ vé">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Booking Form -->
+                <div th:class="${ticketMap != null ? 'col-lg-7' : 'col-md-8'}">
                     <div class="card shadow-sm border-0">
                         <div class="card-body p-4">
                             <h2 class="mb-4" th:text="${event.title}">Tên sự kiện</h2>

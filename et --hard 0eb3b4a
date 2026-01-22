@@ -1,0 +1,53 @@
+[33m9f50f78[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mnguyen97-CRUD-event[m[33m)[m HEAD@{0}: reset: moving to HEAD~1
+[33m0eb3b4a[m HEAD@{1}: checkout: moving from tri to nguyen97-CRUD-event
+[33m25a4796[m[33m ([m[1;31morigin/tri[m[33m, [m[1;32mtri[m[33m)[m HEAD@{2}: pull origin tri: Fast-forward
+[33m3da15c6[m HEAD@{3}: checkout: moving from nguyen97-CRUD-event to tri
+[33m0eb3b4a[m HEAD@{4}: commit: hoàn thiện hướng dẫn và preview mô tả
+[33m9f50f78[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mnguyen97-CRUD-event[m[33m)[m HEAD@{5}: commit: fix lỗi vỡ layout khi nhập mô tả, thêm link hướng dẫn
+[33m02f2329[m[33m ([m[1;31morigin/nguyen97-CRUD-event[m[33m)[m HEAD@{6}: commit: thêm bản nháp, nhân bản sự kiện
+[33m8a57f2f[m HEAD@{7}: commit: fix lỗi hiển thị xã phường tại edit event user
+[33m960a197[m HEAD@{8}: commit: gửi mail khi thay đổi trạng thái sự kiện, fix các lỗi khi CRUD sự kiện
+[33mda1c8bc[m HEAD@{9}: commit: đã fix các lỗi khi merge code
+[33m0b80fc2[m HEAD@{10}: commit (merge): đã merge code minh
+[33m753fdfd[m HEAD@{11}: checkout: moving from minh to nguyen97-CRUD-event
+[33m84242c5[m[33m ([m[1;32mminh[m[33m)[m HEAD@{12}: pull origin minh: Fast-forward
+[33m75f3dc8[m HEAD@{13}: checkout: moving from nguyen97-CRUD-event to minh
+[33m753fdfd[m HEAD@{14}: merge origin/sinh: Merge made by the 'ort' strategy.
+[33m4bb69c4[m HEAD@{15}: checkout: moving from sinh to nguyen97-CRUD-event
+[33m3485dbc[m[33m ([m[1;32msinh[m[33m)[m HEAD@{16}: pull origin sinh: Fast-forward
+[33mdbdd7c1[m HEAD@{17}: checkout: moving from nguyen97-CRUD-event to sinh
+[33m4bb69c4[m HEAD@{18}: commit: sửa loại vé thuộc lình trình chứ không phải thuộc sự kiện và fix các lỗi liên quan
+[33m7317453[m HEAD@{19}: commit: thêm các trạng thái của sự kiện
+[33m9ec52e4[m HEAD@{20}: commit (merge): đã merge code ok
+[33m8dbd4da[m HEAD@{21}: checkout: moving from tri to nguyen97-CRUD-event
+[33m3da15c6[m HEAD@{22}: pull origin tri: Fast-forward
+[33m726114b[m HEAD@{23}: checkout: moving from nguyen97-CRUD-event to tri
+[33m8dbd4da[m HEAD@{24}: commit: fix lỗi Explicit is better than implicit
+[33mef7aa5c[m HEAD@{25}: commit: fix lại Tiếng Việt
+[33m90509d7[m HEAD@{26}: commit: đã fix lỗi CRUD event tại user
+[33mc8e2dcc[m HEAD@{27}: commit: fix loi
+[33m6427f4b[m HEAD@{28}: checkout: moving from minh to nguyen97-CRUD-event
+[33m75f3dc8[m HEAD@{29}: checkout: moving from nguyen97-CRUD-event to minh
+[33m6427f4b[m HEAD@{30}: commit: lưu code
+[33m75f3dc8[m HEAD@{31}: pull origin minh: Fast-forward
+[33mdd74309[m HEAD@{32}: commit: xóa location trong event, fix lỗi CRUD
+[33m0c3efa4[m HEAD@{33}: commit: trang chủ admin, crud sự kiện phía người dùng cơ bản
+[33mb58bb42[m HEAD@{34}: commit (merge): merge code không xung đột
+[33mbe3be9a[m HEAD@{35}: checkout: moving from tri to nguyen97-CRUD-event
+[33m726114b[m HEAD@{36}: pull origin tri: Fast-forward
+[33m2ec3e26[m HEAD@{37}: checkout: moving from nguyen97-CRUD-event to tri
+[33mbe3be9a[m HEAD@{38}: commit: sửa sự kiện có nhiều suất diễn (thời gian, địa điểm)
+[33mb9343ac[m HEAD@{39}: commit: thêm preview ảnh, mổ tả như word, nút thêm mới
+[33m45eb929[m HEAD@{40}: commit (merge): đã pull code mới
+[33ma4f0391[m HEAD@{41}: checkout: moving from tri to nguyen97-CRUD-event
+[33m2ec3e26[m HEAD@{42}: pull origin tri: Fast-forward
+[33m9363d9c[m HEAD@{43}: checkout: moving from nguyen97-CRUD-event to tri
+[33ma4f0391[m HEAD@{44}: commit: đã pull code mới
+[33m2ec5892[m HEAD@{45}: pull --rebase origin nguyen97-CRUD-event (finish): returning to refs/heads/nguyen97-CRUD-event
+[33m2ec5892[m HEAD@{46}: pull --rebase origin nguyen97-CRUD-event (pick): hoàn thiện và fix các lỗi khi CRUD sự kiện tại admin
+[33md46802e[m HEAD@{47}: pull --rebase origin nguyen97-CRUD-event (start): checkout d46802ebed17f1d02565b2706014da356a371014
+[33mea1c4ed[m HEAD@{48}: commit: hoàn thiện và fix các lỗi khi CRUD sự kiện tại admin
+[33m2b0119b[m HEAD@{49}: commit: CRUD event
+[33mfe62980[m[33m ([m[1;31morigin/nguyen[m[33m, [m[1;32mmain[m[33m)[m HEAD@{50}: checkout: moving from main to nguyen97-CRUD-event
+[33mfe62980[m[33m ([m[1;31morigin/nguyen[m[33m, [m[1;32mmain[m[33m)[m HEAD@{51}: pull origin main: Fast-forward
+[33m9935d2b[m HEAD@{52}: clone: from https://github.com/C0825G1-Org/C0825G1-app-ticket.git

@@ -9,6 +9,7 @@ public interface EventDetailDTO {
     String getLocation();
     String getCategoryName();
     String getMediaUrl();
+    String getStatus();
     LocalDateTime getStartTime();
     LocalDateTime getEndTime();
 }

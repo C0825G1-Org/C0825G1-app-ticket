@@ -24,6 +24,7 @@ public class EmailServiceImpl implements IEmailService {
         private final TemplateEngine templateEngine;
         private final com.codegym.appticket.repository.BookingDetailRepository bookingDetailRepository;
         private final com.codegym.appticket.repository.TicketRepository ticketRepository;
+        private final com.codegym.appticket.repository.BookingRepository bookingRepository;
 
         @Async
         @Override
@@ -31,14 +32,18 @@ public class EmailServiceImpl implements IEmailService {
                 try {
                         log.info("Bắt đầu gửi email cho đơn hàng #{}", booking.getId());
 
+                        // Refresh booking with User eagerly loaded
+                        booking = bookingRepository.findByIdWithUser(booking.getId())
+                                        .orElse(booking);
+
                         MimeMessage message = mailSender.createMimeMessage();
                         MimeMessageHelper helper = new MimeMessageHelper(message,
                                         MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
                                         StandardCharsets.UTF_8.name());
 
-                        // Lấy danh sách chi tiết đặt vé
+                        // Lấy danh sách chi tiết đặt vé với đầy đủ associations
                         java.util.List<com.codegym.appticket.entity.BookingDetail> details = bookingDetailRepository
-                                        .findByBookingId(booking.getId());
+                                        .findByBookingIdWithAssociations(booking.getId());
                         // Lấy danh sách vé để lấy mã QR
                         java.util.List<com.codegym.appticket.entity.Ticket> tickets = ticketRepository
                                         .findByBookingId(booking.getId());
@@ -72,9 +77,13 @@ public class EmailServiceImpl implements IEmailService {
                                         MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
                                         StandardCharsets.UTF_8.name());
 
-                        // Load data
+                        // Refresh booking with User eagerly loaded
+                        booking = bookingRepository.findByIdWithUser(booking.getId())
+                                        .orElse(booking);
+
+                        // Load data with all associations eagerly loaded
                         java.util.List<com.codegym.appticket.entity.BookingDetail> details = bookingDetailRepository
-                                        .findByBookingId(booking.getId());
+                                        .findByBookingIdWithAssociations(booking.getId());
 
                         // Calculate Total Price
                         long total = 0;

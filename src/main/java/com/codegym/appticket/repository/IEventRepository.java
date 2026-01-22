@@ -65,186 +65,187 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
         org.springframework.data.domain.Page<Event> findByStatus(com.codegym.appticket.entity.EventStatus status,
                         Pageable pageable);
 
-        @Query(value = """
-                            SELECT
-                                e.id AS id,
-                                e.title AS title,
-                                e.description AS description,
-                                MIN(p.name) AS location,
-                                (SELECT em.media_url
-                                 FROM event_media em
-                                 WHERE em.event_id = e.id
-                                 ORDER BY em.created_at ASC
-                                 LIMIT 1) AS image,
-                                MIN(eo.start_time) AS eventDate,
-                                c.name AS categoryName,
-                                SUM(bd.quantity) AS totalTickets
-                            FROM events e
-                            LEFT JOIN event_categories c ON c.id = e.category_id
-                            JOIN event_occurrences eo ON eo.event_id = e.id
-                            LEFT JOIN locations l ON l.id = eo.location_id
-                            LEFT JOIN wards w ON w.code = l.ward_code
-                            LEFT JOIN provinces p ON p.code = w.province_code
-                            JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
-                            JOIN booking_details bd ON bd.ticket_type_id = tt.id
-                            JOIN bookings b ON b.id = bd.booking_id
-                            WHERE b.status = 'SUCCESS'
-                              AND e.status = 'APPROVED'
-                            GROUP BY e.id, e.title, e.description, c.name
-                            ORDER BY totalTickets DESC
-                            LIMIT 3
-                        """, nativeQuery = true)
-        List<TrendingEventDTO> findTopTrendingEvents();
+    @Query(value = """
+                SELECT
+                    e.id AS id,
+                    e.title AS title,
+                    e.description AS description,
+                    MIN(p.name) AS location,
+                    (SELECT em.media_url
+                     FROM event_media em
+                     WHERE em.event_id = e.id
+                     ORDER BY em.created_at ASC
+                     LIMIT 1) AS image,
+                    MIN(eo.start_time) AS eventDate,
+                    c.name AS categoryName,
+                    SUM(bd.quantity) AS totalTickets
+                FROM events e
+                LEFT JOIN event_categories c ON c.id = e.category_id
+                JOIN event_occurrences eo ON eo.event_id = e.id
+                LEFT JOIN locations l ON l.id = eo.location_id
+                LEFT JOIN wards w ON w.code = l.ward_code
+                LEFT JOIN provinces p ON p.code = w.province_code
+                JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
+                JOIN booking_details bd ON bd.ticket_type_id = tt.id
+                JOIN bookings b ON b.id = bd.booking_id
+                WHERE b.status = 'SUCCESS'
+                  AND (e.status = 'APPROVED' OR e.status = 'HAPPENING')
+                GROUP BY e.id, e.title, e.description, c.name
+                ORDER BY totalTickets DESC
+                LIMIT 3
+            """, nativeQuery = true)
+    List<TrendingEventDTO> findTopTrendingEvents();
 
-        @Query(value = """
-                            SELECT
-                                e.id AS id,
-                                e.title AS title,
-                                e.description AS description,
-                                MIN(p.name) AS location,
-                                COUNT(DISTINCT p.code) AS locationCount,
-                                (SELECT em.media_url
-                                 FROM event_media em
-                                 WHERE em.event_id = e.id
-                                 ORDER BY em.created_at ASC
-                                 LIMIT 1) AS image,
-                                c.name AS categoryName,
-                                MIN(eo.start_time) AS startTime,
-                                MIN(tt.price) AS minPrice
-                            FROM events e
-                            LEFT JOIN event_categories c ON c.id = e.category_id
-                            JOIN event_occurrences eo ON eo.event_id = e.id
-                            LEFT JOIN locations l ON l.id = eo.location_id
-                            LEFT JOIN wards w ON w.code = l.ward_code
-                            LEFT JOIN provinces p ON p.code = w.province_code
-                            LEFT JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
-                            WHERE eo.start_time > NOW()
-                              AND e.status = 'APPROVED'
-                            GROUP BY e.id, e.title, e.description, c.name
-                            ORDER BY startTime ASC
-                            LIMIT 4
-                        """, nativeQuery = true)
-        // @Query("""
-        // SELECT e.id AS id,
-        // e.title AS title,
-        // e.location AS location,
-        // MIN(et.startTime) AS startTime
-        // FROM Event e
-        // JOIN e.eventTimes et
-        // WHERE et.startTime > CURRENT_TIMESTAMP
-        // AND e.status = 'APPROVED'
-        // GROUP BY e.id, e.title, e.location
-        // ORDER BY startTime ASC
-        // """)
-        List<UpComingEventDTO> findUpComingEvents();
+    @Query(value = """
+                SELECT
+                    e.id AS id,
+                    e.title AS title,
+                    e.description AS description,
+                    MIN(p.name) AS location,
+                    COUNT(DISTINCT p.code) AS locationCount,
+                    (SELECT em.media_url
+                     FROM event_media em
+                     WHERE em.event_id = e.id
+                     ORDER BY em.created_at ASC
+                     LIMIT 1) AS image,
+                    c.name AS categoryName,
+                    MIN(eo.start_time) AS startTime,
+                    MIN(tt.price) AS minPrice
+                FROM events e
+                LEFT JOIN event_categories c ON c.id = e.category_id
+                JOIN event_occurrences eo ON eo.event_id = e.id
+                LEFT JOIN locations l ON l.id = eo.location_id
+                LEFT JOIN wards w ON w.code = l.ward_code
+                LEFT JOIN provinces p ON p.code = w.province_code
+                LEFT JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
+                WHERE eo.start_time > NOW()
+                  AND (e.status = 'APPROVED' OR e.status = 'HAPPENING')
+                GROUP BY e.id, e.title, e.description, c.name
+                ORDER BY startTime ASC
+                LIMIT 4
+            """, nativeQuery = true)
+    // @Query("""
+    // SELECT e.id AS id,
+    // e.title AS title,
+    // e.location AS location,
+    // MIN(et.startTime) AS startTime
+    // FROM Event e
+    // JOIN e.eventTimes et
+    // WHERE et.startTime > CURRENT_TIMESTAMP
+    // AND e.status = 'APPROVED'
+    // GROUP BY e.id, e.title, e.location
+    // ORDER BY startTime ASC
+    // """)
+    List<UpComingEventDTO> findUpComingEvents();
 
-        @Query(value = """
-                            SELECT
-                                e.id AS id,
-                                e.title AS title,
-                                e.description AS description,
-                                MIN(p.name) AS location,
-                                COUNT(DISTINCT p.code) AS locationCount,
-                                (SELECT em.media_url
-                                 FROM event_media em
-                                 WHERE em.event_id = e.id
-                                 ORDER BY em.created_at ASC
-                                 LIMIT 1) AS mediaUrl,
-                                c.name AS categoryName,
-                                MIN(eo.start_time) AS startTime,
-                                MIN(tt.price) AS price
-                            FROM events e
-                            LEFT JOIN event_categories c ON c.id = e.category_id
-                            LEFT JOIN event_occurrences eo ON eo.event_id = e.id
-                            LEFT JOIN locations l ON l.id = eo.location_id
-                            LEFT JOIN wards w ON w.code = l.ward_code
-                            LEFT JOIN provinces p ON p.code = w.province_code
-                            LEFT JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
-                            WHERE e.status = 'APPROVED'
-                            GROUP BY e.id, e.title, e.description, c.name
-                            ORDER BY MIN(eo.start_time) ASC
-                        """, countQuery = """
-                            SELECT COUNT(DISTINCT e.id)
-                            FROM events e
-                            WHERE e.status = 'APPROVED'
-                        """, nativeQuery = true)
-        Page<HomeEventDTO> findAllEvent(Pageable pageable);
+    @Query(value = """
+                SELECT
+                    e.id AS id,
+                    e.title AS title,
+                    e.description AS description,
+                    MIN(p.name) AS location,
+                    COUNT(DISTINCT p.code) AS locationCount,
+                    (SELECT em.media_url
+                     FROM event_media em
+                     WHERE em.event_id = e.id
+                     ORDER BY em.created_at ASC
+                     LIMIT 1) AS mediaUrl,
+                    c.name AS categoryName,
+                    MIN(eo.start_time) AS startTime,
+                    MIN(tt.price) AS price
+                FROM events e
+                LEFT JOIN event_categories c ON c.id = e.category_id
+                LEFT JOIN event_occurrences eo ON eo.event_id = e.id
+                LEFT JOIN locations l ON l.id = eo.location_id
+                LEFT JOIN wards w ON w.code = l.ward_code
+                LEFT JOIN provinces p ON p.code = w.province_code
+                LEFT JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
+                WHERE (e.status = 'APPROVED' OR e.status = 'HAPPENING')
+                GROUP BY e.id, e.title, e.description, c.name
+                ORDER BY MIN(eo.start_time) ASC
+            """, countQuery = """
+                SELECT COUNT(DISTINCT e.id)
+                FROM events e
+                WHERE (e.status = 'APPROVED' OR e.status = 'HAPPENING')
+            """, nativeQuery = true)
+    Page<HomeEventDTO> findAllEvent(Pageable pageable);
 
-        // Search events with filters, returns HomeEventDTO for display
-        // Note: locationVariants should never be null - pass empty list if no location
-        // filter
-        @Query(value = """
-                            SELECT
-                                e.id AS id,
-                                e.title AS title,
-                                e.description AS description,
-                                MIN(p.name) AS location,
-                                COUNT(DISTINCT p.code) AS locationCount,
-                                (SELECT em.media_url
-                                 FROM event_media em
-                                 WHERE em.event_id = e.id
-                                 ORDER BY em.created_at ASC
-                                 LIMIT 1) AS mediaUrl,
-                                c.name AS categoryName,
-                                MIN(eo.start_time) AS startTime,
-                                MIN(tt.price) AS price
-                            FROM events e
-                            LEFT JOIN event_categories c ON c.id = e.category_id
-                            LEFT JOIN event_occurrences eo ON eo.event_id = e.id
-                            LEFT JOIN locations l ON l.id = eo.location_id
-                            LEFT JOIN wards w ON w.code = l.ward_code
-                            LEFT JOIN provinces p ON p.code = w.province_code
-                            LEFT JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
-                            WHERE e.status = 'APPROVED'
-                              AND (:searchText IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :searchText, '%')))
-                              AND (:categoryId IS NULL OR e.category_id = :categoryId)
-                              AND (:hasLocationFilter = 0 OR p.name IN :locationVariants)
-                            GROUP BY e.id, e.title, e.description, c.name
-                            ORDER BY MIN(eo.start_time) ASC
-                        """, countQuery = """
-                            SELECT COUNT(DISTINCT e.id)
-                            FROM events e
-                            LEFT JOIN event_occurrences eo ON eo.event_id = e.id
-                            LEFT JOIN locations l ON l.id = eo.location_id
-                            LEFT JOIN wards w ON w.code = l.ward_code
-                            LEFT JOIN provinces p ON p.code = w.province_code
-                            WHERE e.status = 'APPROVED'
-                              AND (:searchText IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :searchText, '%')))
-                              AND (:categoryId IS NULL OR e.category_id = :categoryId)
-                              AND (:hasLocationFilter = 0 OR p.name IN :locationVariants)
-                        """, nativeQuery = true)
-        Page<HomeEventDTO> searchHomeEvents(
-                        @Param("searchText") String searchText,
-                        @Param("categoryId") Long categoryId,
-                        @Param("locationVariants") List<String> locationVariants,
-                        @Param("hasLocationFilter") int hasLocationFilter,
-                        Pageable pageable);
+    // Search events with filters, returns HomeEventDTO for display
+    // Note: locationVariants should never be null - pass empty list if no location
+    // filter
+    @Query(value = """
+                SELECT
+                    e.id AS id,
+                    e.title AS title,
+                    e.description AS description,
+                    MIN(p.name) AS location,
+                    COUNT(DISTINCT p.code) AS locationCount,
+                    (SELECT em.media_url
+                     FROM event_media em
+                     WHERE em.event_id = e.id
+                     ORDER BY em.created_at ASC
+                     LIMIT 1) AS mediaUrl,
+                    c.name AS categoryName,
+                    MIN(eo.start_time) AS startTime,
+                    MIN(tt.price) AS price
+                FROM events e
+                LEFT JOIN event_categories c ON c.id = e.category_id
+                LEFT JOIN event_occurrences eo ON eo.event_id = e.id
+                LEFT JOIN locations l ON l.id = eo.location_id
+                LEFT JOIN wards w ON w.code = l.ward_code
+                LEFT JOIN provinces p ON p.code = w.province_code
+                LEFT JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
+                WHERE (e.status = 'APPROVED' OR e.status = 'HAPPENING')
+                  AND (:searchText IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :searchText, '%')))
+                  AND (:categoryId IS NULL OR e.category_id = :categoryId)
+                  AND (:hasLocationFilter = 0 OR p.name IN :locationVariants)
+                GROUP BY e.id, e.title, e.description, c.name
+                ORDER BY MIN(eo.start_time) ASC
+            """, countQuery = """
+                SELECT COUNT(DISTINCT e.id)
+                FROM events e
+                LEFT JOIN event_occurrences eo ON eo.event_id = e.id
+                LEFT JOIN locations l ON l.id = eo.location_id
+                LEFT JOIN wards w ON w.code = l.ward_code
+                LEFT JOIN provinces p ON p.code = w.province_code
+                WHERE (e.status = 'APPROVED' OR e.status = 'HAPPENING')
+                  AND (:searchText IS NULL OR LOWER(e.title) LIKE LOWER(CONCAT('%', :searchText, '%')))
+                  AND (:categoryId IS NULL OR e.category_id = :categoryId)
+                  AND (:hasLocationFilter = 0 OR p.name IN :locationVariants)
+            """, nativeQuery = true)
+    Page<HomeEventDTO> searchHomeEvents(
+            @Param("searchText") String searchText,
+            @Param("categoryId") Long categoryId,
+            @Param("locationVariants") List<String> locationVariants,
+            @Param("hasLocationFilter") int hasLocationFilter,
+            Pageable pageable);
 
-        // Get event detail by ID
-        @Query(value = """
-                            SELECT
-                                e.id AS id,
-                                e.title AS title,
-                                e.description AS description,
-                                MIN(p.name) AS location,
-                                c.name AS categoryName,
-                                (SELECT em.media_url
-                                 FROM event_media em
-                                 WHERE em.event_id = e.id
-                                 ORDER BY em.created_at ASC
-                                 LIMIT 1) AS mediaUrl,
-                                MIN(eo.start_time) AS startTime,
-                                MAX(eo.end_time) AS endTime
-                            FROM events e
-                            LEFT JOIN event_categories c ON c.id = e.category_id
-                            LEFT JOIN event_occurrences eo ON eo.event_id = e.id
-                            LEFT JOIN locations l ON l.id = eo.location_id
-                            LEFT JOIN wards w ON w.code = l.ward_code
-                            LEFT JOIN provinces p ON p.code = w.province_code
-                            WHERE e.id = :eventId AND e.status = 'APPROVED'
-                            GROUP BY e.id, e.title, e.description, c.name
-                        """, nativeQuery = true)
-        EventDetailDTO findEventDetailById(@Param("eventId") Long eventId);
+    // Get event detail by ID
+    @Query(value = """
+                SELECT
+                    e.id AS id,
+                    e.title AS title,
+                    e.description AS description,
+                    MIN(p.name) AS location,
+                    c.name AS categoryName,
+                    (SELECT em.media_url
+                     FROM event_media em
+                     WHERE em.event_id = e.id
+                     ORDER BY em.created_at ASC
+                     LIMIT 1) AS mediaUrl,
+                    e.status AS status,
+                    MIN(eo.start_time) AS startTime,
+                    MAX(eo.end_time) AS endTime
+                FROM events e
+                LEFT JOIN event_categories c ON c.id = e.category_id
+                LEFT JOIN event_occurrences eo ON eo.event_id = e.id
+                LEFT JOIN locations l ON l.id = eo.location_id
+                LEFT JOIN wards w ON w.code = l.ward_code
+                LEFT JOIN provinces p ON p.code = w.province_code
+                WHERE e.id = :eventId AND (e.status = 'APPROVED' OR e.status = 'HAPPENING')
+                GROUP BY e.id, e.title, e.description, c.name, e.status
+            """, nativeQuery = true)
+    EventDetailDTO findEventDetailById(@Param("eventId") Long eventId);
 
         // Get ticket types for an event
         @Query(value = """
@@ -323,9 +324,9 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                         @Param("end") LocalDateTime end,
                         @Param("limit") int limit);
 
-        // 2. Events Count by Category (Pie Chart)
-        @Query("SELECT e.category.name, COUNT(e) FROM Event e WHERE e.status = 'APPROVED' GROUP BY e.category.name")
-        List<Object[]> countEventsByCategory();
+    // 2. Events Count by Category (Pie Chart) - In Period
+    @Query("SELECT e.category.name, COUNT(e) FROM Event e WHERE e.status = 'APPROVED' AND e.createdDate BETWEEN :start AND :end GROUP BY e.category.name")
+    List<Object[]> countEventsByCategory(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
         @Query("SELECT COUNT(e) FROM Event e WHERE e.createdDate BETWEEN :start AND :end AND e.status = 'APPROVED'")
         long countNewEvents(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
@@ -351,48 +352,48 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                         """)
         List<Event> findFinishedEvents(@Param("now") LocalDateTime now);
 
-        @Query(value = """
-                        SELECT
-                            e.id AS id,
-                            e.title AS title,
-                            CONCAT(p.name, ', ', w.name) AS location,
-                            (SELECT em.media_url
-                             FROM event_media em
-                             WHERE em.event_id = e.id
-                             ORDER BY em.created_at ASC
-                             LIMIT 1) AS image,
-                            l.latitude AS latitude,
-                            l.longitude AS longitude,
-                            (6371 * acos(
-                                cos(radians(:userLat)) * cos(radians(l.latitude)) *
-                                cos(radians(l.longitude) - radians(:userLon)) +
-                                sin(radians(:userLat)) * sin(radians(l.latitude))
-                            )) AS distance,
-                            c.name AS categoryName,
-                            eo.start_time AS eventDate,
-                            l.address_detail AS addressDetail,
-                            eo.id AS occurrenceId
-                        FROM events e
-                        LEFT JOIN event_categories c ON c.id = e.category_id
-                        JOIN event_occurrences eo ON eo.event_id = e.id
-                        JOIN locations l ON l.id = eo.location_id
-                        LEFT JOIN wards w ON w.code = l.ward_code
-                        LEFT JOIN provinces p ON p.code = w.province_code
-                        WHERE e.status = 'APPROVED'
-                          AND l.latitude IS NOT NULL
-                          AND l.longitude IS NOT NULL
-                          AND eo.start_time > NOW()
-                          AND (:hasExcludeFilter = 0 OR p.name NOT IN :excludeLocationVariants)
-                        HAVING distance < 160
-                        ORDER BY distance ASC
-                        LIMIT :limit
-                        """, nativeQuery = true)
-        List<NearByEventDTO> findNearbyEvents(
-                        @Param("userLat") Double userLatitude,
-                        @Param("userLon") Double userLongitude,
-                        @Param("excludeLocationVariants") List<String> excludeLocationVariants,
-                        @Param("hasExcludeFilter") int hasExcludeFilter,
-                        @Param("limit") int limit);
+    @Query(value = """
+            SELECT
+                e.id AS id,
+                e.title AS title,
+                CONCAT(p.name, ', ', w.name) AS location,
+                (SELECT em.media_url
+                 FROM event_media em
+                 WHERE em.event_id = e.id
+                 ORDER BY em.created_at ASC
+                 LIMIT 1) AS image,
+                l.latitude AS latitude,
+                l.longitude AS longitude,
+                (6371 * acos(
+                    cos(radians(:userLat)) * cos(radians(l.latitude)) *
+                    cos(radians(l.longitude) - radians(:userLon)) +
+                    sin(radians(:userLat)) * sin(radians(l.latitude))
+                )) AS distance,
+                c.name AS categoryName,
+                eo.start_time AS eventDate,
+                l.address_detail AS addressDetail,
+                eo.id AS occurrenceId
+            FROM events e
+            LEFT JOIN event_categories c ON c.id = e.category_id
+            JOIN event_occurrences eo ON eo.event_id = e.id
+            JOIN locations l ON l.id = eo.location_id
+            LEFT JOIN wards w ON w.code = l.ward_code
+            LEFT JOIN provinces p ON p.code = w.province_code
+            WHERE e.status = 'APPROVED' OR e.status = 'HAPPENING'
+              AND l.latitude IS NOT NULL
+              AND l.longitude IS NOT NULL
+              AND eo.start_time > NOW()
+              AND (:hasExcludeFilter = 0 OR p.name NOT IN :excludeLocationVariants)
+            HAVING distance < 160
+            ORDER BY distance ASC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<NearByEventDTO> findNearbyEvents(
+            @Param("userLat") Double userLatitude,
+            @Param("userLon") Double userLongitude,
+            @Param("excludeLocationVariants") List<String> excludeLocationVariants,
+            @Param("hasExcludeFilter") int hasExcludeFilter,
+            @Param("limit") int limit);
 
         @Query(value = """
                         SELECT
@@ -420,43 +421,89 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
                         @Param("nearbyProvinces") List<String> nearbyProvinces,
                         @Param("limit") int limit);
 
-        @Query(value = """
-                        SELECT
-                            e.id AS id,
-                            e.title AS title,
-                            MIN(eo.start_time) AS startTime,
-                            COALESCE(SUM(CASE WHEN b.status = 'SUCCESS' THEN bd.quantity ELSE 0 END), 0) AS soldTickets,
-                            (COALESCE(SUM(CASE WHEN b.status = 'SUCCESS' THEN bd.quantity ELSE 0 END), 0) + SUM(tt.quantity)) AS totalTickets
-                        FROM events e
-                        JOIN event_occurrences eo ON eo.event_id = e.id
-                        JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
-                        LEFT JOIN booking_details bd ON bd.ticket_type_id = tt.id
-                        LEFT JOIN bookings b ON b.id = bd.booking_id
-                        WHERE e.status = 'APPROVED'
-                        GROUP BY e.id, e.title
-                        HAVING MIN(eo.start_time) > NOW()
-                        ORDER BY MIN(eo.start_time) ASC
-                        LIMIT :limit
-                        """, nativeQuery = true)
-        List<com.codegym.appticket.dto.admin.EventSalesDTO> findTopUpcomingEventsWithSales(@Param("limit") int limit);
+    @Query(value = """
+            SELECT
+                e.id AS id,
+                e.title AS title,
+                MIN(eo.start_time) AS startTime,
+                COALESCE(SUM(CASE WHEN b.status = 'SUCCESS' THEN bd.quantity ELSE 0 END), 0) AS soldTickets,
+                (COALESCE(SUM(CASE WHEN b.status = 'SUCCESS' THEN bd.quantity ELSE 0 END), 0) + SUM(tt.quantity)) AS totalTickets
+            FROM events e
+            JOIN event_occurrences eo ON eo.event_id = e.id
+            JOIN ticket_types tt ON tt.event_occurrence_id = eo.id
+            LEFT JOIN booking_details bd ON bd.ticket_type_id = tt.id
+            LEFT JOIN bookings b ON b.id = bd.booking_id
+            WHERE e.status = 'APPROVED'
+            GROUP BY e.id, e.title
+            HAVING MIN(eo.start_time) > NOW()
+            ORDER BY MIN(eo.start_time) ASC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<com.codegym.appticket.dto.admin.EventSalesDTO> findTopUpcomingEventsWithSales(@Param("limit") int limit);
+    // --- Organizer Stats Queries ---
 
-        @Query("SELECT e FROM Event e WHERE e.status <> 'DELETED' ORDER BY " +
-                        "CASE WHEN e.status = 'PENDING' THEN 1 " +
-                        "WHEN e.status = 'DRAFT' THEN 2 " +
-                        "WHEN e.status = 'APPROVED' THEN 3 " +
-                        "ELSE 4 END ASC, " +
-                        "e.createdDate DESC")
-        org.springframework.data.domain.Page<Event> findAllWithCustomSort(
-                        org.springframework.data.domain.Pageable pageable);
+    @Query(value = """
+            SELECT
+                SUM(bd.quantity) AS totalTicketsSold,
+                SUM(bd.quantity * tt.price) AS totalRevenue
+            FROM bookings b
+            JOIN booking_details bd ON bd.booking_id = b.id
+            JOIN ticket_types tt ON bd.ticket_type_id = tt.id
+            JOIN event_occurrences eo ON tt.event_occurrence_id = eo.id
+            WHERE b.status = 'SUCCESS'
+              AND eo.event_id = :eventId
+              AND (:occurrenceId IS NULL OR eo.id = :occurrenceId)
+            """, nativeQuery = true)
+    java.util.List<Object[]> sumRevenueAndTickets(@Param("eventId") Long eventId, @Param("occurrenceId") Long occurrenceId);
 
-        @Query("SELECT e FROM Event e WHERE e.organizer.id = :userId AND e.status <> :excludeStatus ORDER BY " +
-                        "CASE WHEN e.status = 'PENDING' THEN 1 " +
-                        "WHEN e.status = 'DRAFT' THEN 2 " +
-                        "WHEN e.status = 'APPROVED' THEN 3 " +
-                        "ELSE 4 END ASC, " +
-                        "e.createdDate DESC")
-        org.springframework.data.domain.Page<Event> findByOrganizerWithCustomSort(
-                        @Param("userId") Long userId,
-                        @Param("excludeStatus") com.codegym.appticket.entity.EventStatus excludeStatus,
-                        org.springframework.data.domain.Pageable pageable);
+
+    @Query("""
+            SELECT new com.codegym.appticket.dto.event.BookedTicketDTO(
+                t.ticketCode,
+                u.fullName,
+                u.email,
+                u.phoneNumber,
+                tt.name,
+                bd.quantity,
+                CAST(bd.quantity * tt.price AS bigdecimal),
+                b.bookingTime,
+                CAST(b.status AS string),
+                CONCAT(eo.startTime, ' - ', l.addressDetail)
+            )
+            FROM Booking b
+            JOIN b.bookingDetails bd
+            JOIN bd.tickets t
+            JOIN bd.ticketType tt
+            JOIN tt.eventOccurrence eo
+            JOIN eo.location l
+            JOIN b.user u
+            WHERE b.status = 'SUCCESS'
+              AND eo.event.id = :eventId
+              AND (:occurrenceId IS NULL OR eo.id = :occurrenceId)
+            ORDER BY b.bookingTime DESC
+            """)
+    List<com.codegym.appticket.dto.event.BookedTicketDTO> findBookedTicketsByEventAndOccurrence(@Param("eventId") Long eventId, @Param("occurrenceId") Long occurrenceId);
+
+    @Query("SELECT COUNT(t) FROM Ticket t JOIN t.bookingDetail.ticketType.eventOccurrence eo WHERE eo.event.id = :eventId AND t.used = true")
+    Long countCheckedInTickets(@Param("eventId") Long eventId);
+    @Query("SELECT e FROM Event e WHERE e.status <> 'DELETED' ORDER BY " +
+            "CASE WHEN e.status = 'PENDING' THEN 1 " +
+            "WHEN e.status = 'DRAFT' THEN 2 " +
+            "WHEN e.status = 'APPROVED' THEN 3 " +
+            "ELSE 4 END ASC, " +
+            "e.createdDate DESC")
+    org.springframework.data.domain.Page<Event> findAllWithCustomSort(
+            org.springframework.data.domain.Pageable pageable);
+
+    @Query("SELECT e FROM Event e WHERE e.organizer.id = :userId AND e.status <> :excludeStatus ORDER BY " +
+            "CASE WHEN e.status = 'PENDING' THEN 1 " +
+            "WHEN e.status = 'DRAFT' THEN 2 " +
+            "WHEN e.status = 'APPROVED' THEN 3 " +
+            "ELSE 4 END ASC, " +
+            "e.createdDate DESC")
+    org.springframework.data.domain.Page<Event> findByOrganizerWithCustomSort(
+            @Param("userId") Long userId,
+            @Param("excludeStatus") com.codegym.appticket.entity.EventStatus excludeStatus,
+            org.springframework.data.domain.Pageable pageable);
 }
+

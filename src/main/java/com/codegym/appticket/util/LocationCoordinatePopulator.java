@@ -22,7 +22,7 @@ public class LocationCoordinatePopulator {
     
     private final ILocationRepository locationRepository;
     private final IGeoLocationService geoLocationService;
-    
+
     /**
      * Manual trigger method - can be called from services if needed
      * @return number of locations updated

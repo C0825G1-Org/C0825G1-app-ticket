@@ -24,4 +24,7 @@ public class Ticket {
 
     @Column(name = "used")
     private Boolean used = false;
+
+    @Column(name = "check_in_time")
+    private java.time.LocalDateTime checkInTime;
 }

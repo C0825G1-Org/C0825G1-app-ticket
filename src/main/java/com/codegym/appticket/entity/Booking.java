@@ -28,4 +28,7 @@ public class Booking extends Parent {
 
     @Column(name = "transaction_code")
     private String transactionCode;
+
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+    private java.util.List<BookingDetail> bookingDetails;
 }

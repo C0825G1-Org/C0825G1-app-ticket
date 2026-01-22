@@ -78,45 +78,77 @@
                 </div>
 
                 <div class="row">
-                    <!-- Left Column: Media & Info -->
-                    <div class="col-lg-8">
-                        <!-- Banner & Logo -->
-                        <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden position-relative"
-                            style="min-height: 250px;">
-                            <img th:src="${bannerUrl ?: 'https://via.placeholder.com/800x400'}"
-                                class="w-100 h-100 object-fit-cover position-absolute top-0 start-0" alt="Banner">
-                            <div class="position-absolute bottom-0 start-0 w-100 p-4 bg-gradient-dark text-white"
-                                style="background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);">
-                                <div class="d-flex align-items-end gap-3">
-                                    <img th:src="${logoUrl ?: 'https://via.placeholder.com/100'}"
-                                        class="rounded-3 border border-2 border-white bg-white" width="80" height="80"
-                                        style="object-fit: cover;">
-                                    <div>
-                                        <span class="badge bg-primary mb-2"
-                                            th:text="${event.categoryName}">Category</span>
-                                        <h2 class="fw-bold mb-1 text-white text-shadow-sm" th:text="${event.title}">
-                                            Event Title</h2>
-                                        <div class="d-flex align-items-center gap-2 text-white-50">
-                                            <span
-                                                th:classappend="${event.status.name() == 'PENDING' ? 'badge bg-warning text-dark' : (event.status.name() == 'APPROVED' ? 'badge bg-success' : (event.status.name() == 'HAPPENING' ? 'badge bg-primary' : (event.status.name() == 'FINISHED' ? 'badge bg-info' : (event.status.name() == 'DELETED' ? 'badge bg-dark text-decoration-line-through' : (event.status.name() == 'CANCELLED' ? 'badge bg-danger' : (event.status.name() == 'DRAFT' ? 'badge bg-secondary' : 'badge bg-danger'))))))}"
-                                                th:text="${event.status.name() == 'PENDING' ? 'Chờ duyệt' : (event.status.name() == 'APPROVED' ? 'Đã duyệt' : (event.status.name() == 'HAPPENING' ? 'Đang diễn ra' : (event.status.name() == 'FINISHED' ? 'Đã kết thúc' : (event.status.name() == 'DELETED' ? 'Đã xóa' : (event.status.name() == 'CANCELLED' ? 'Đã hủy' : (event.status.name() == 'DRAFT' ? 'Nháp' : 'Từ chối'))))))}">Status</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <!-- MAIN LAYOUT: Tabs -->
+                    <div class="col-12">
+                        <ul class="nav nav-tabs mb-4">
+                            <li class="nav-item">
+                                <a class="nav-link active fw-bold" data-bs-toggle="tab" href="#tab-info">
+                                    <i class="bi bi-info-circle me-1"></i> Thông tin chi tiết
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-tickets">
+                                    <i class="bi bi-ticket-perforated me-1"></i> Quản lý vé
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link fw-bold" data-bs-toggle="tab" href="#tab-checkin">
+                                    <i class="bi bi-qr-code-scan me-1"></i> Soát vé
+                                </a>
+                            </li>
+                        </ul>
 
-                        <!-- Reason Alert for REJECTED/CANCELLED -->
-                        <div class="alert alert-danger d-flex align-items-top shadow-sm rounded-4 mb-4" role="alert"
-                            th:if="${(event.status.name() == 'REJECTED' || event.status.name() == 'CANCELLED') && event.reason != null}">
-                            <i class="bi bi-exclamation-triangle-fill flex-shrink-0 me-3 fs-4"></i>
-                            <div>
-                                <h5 class="alert-heading fw-bold mb-1"
-                                    th:text="${event.status.name() == 'REJECTED' ? 'Sự kiện bị từ chối' : 'Sự kiện đã hủy'}">
-                                    Thông báo</h5>
-                                <div th:text="${event.reason}">Lý do...</div>
-                            </div>
-                        </div>
+                        <div class="tab-content">
+                            <!-- TAB 1: Info (Existing Layout) -->
+                            <div class="tab-pane fade show active" id="tab-info">
+                                <div class="row">
+                                    <!-- Left Column: Media & Info -->
+                                    <div class="col-lg-8">
+                                        <!-- Banner & Logo -->
+                                        <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden position-relative"
+                                            style="min-height: 250px;">
+                                            <img th:src="${bannerUrl ?: 'https://via.placeholder.com/800x400'}"
+                                                class="w-100 h-100 object-fit-cover position-absolute top-0 start-0"
+                                                alt="Banner">
+                                            <div class="position-absolute bottom-0 start-0 w-100 p-4 bg-gradient-dark text-white"
+                                                style="background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);">
+                                                <div class="d-flex align-items-end gap-3">
+                                                    <img th:src="${logoUrl ?: 'https://via.placeholder.com/100'}"
+                                                        class="rounded-3 border border-2 border-white bg-white"
+                                                        width="80" height="80" style="object-fit: cover;">
+                                                    <div>
+                                                        <span class="badge bg-primary mb-2"
+                                                            th:text="${event.categoryName}">Category</span>
+                                                        <h2 class="fw-bold mb-1 text-white text-shadow-sm"
+                                                            th:text="${event.title}">
+                                                            Event Title</h2>
+                                                        <div class="d-flex align-items-center gap-2 text-white-50">
+                                                            <span
+                                                                th:classappend="${event.status.name() == 'PENDING' ? 'badge bg-warning text-dark' : (event.status.name() == 'APPROVED' ? 'badge bg-success' : (event.status.name() == 'HAPPENING' ? 'badge bg-primary' : (event.status.name() == 'FINISHED' ? 'badge bg-info' : (event.status.name() == 'DELETED' ? 'badge bg-dark text-decoration-line-through' : (event.status.name() == 'CANCELLED' ? 'badge bg-danger' : (event.status.name() == 'DRAFT' ? 'badge bg-secondary' : 'badge bg-danger'))))))}"
+                                                                th:text="${event.status.name() == 'PENDING' ? 'Chờ duyệt' : (event.status.name() == 'APPROVED' ? 'Đã duyệt' : (event.status.name() == 'HAPPENING' ? 'Đang diễn ra' : (event.status.name() == 'FINISHED' ? 'Đã kết thúc' : (event.status.name() == 'DELETED' ? 'Đã xóa' : (event.status.name() == 'CANCELLED' ? 'Đã hủy' : (event.status.name() == 'DRAFT' ? 'Nháp' : 'Từ chối'))))))}">
+                                                                Status
+                                                            </span>
+                                                            <span class="small"><i class="bi bi-eye me-1"></i><span
+                                                                    th:text="${event.viewCount ?: 0}">0</span> lượt
+                                                                xem</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Reason Alert for REJECTED/CANCELLED -->
+                                        <div class="alert alert-danger d-flex align-items-top shadow-sm rounded-4 mb-4"
+                                            role="alert"
+                                            th:if="${(event.status.name() == 'REJECTED' || event.status.name() == 'CANCELLED') && event.reason != null}">
+                                            <i class="bi bi-exclamation-triangle-fill flex-shrink-0 me-3 fs-4"></i>
+                                            <div>
+                                                <h5 class="alert-heading fw-bold mb-1"
+                                                    th:text="${event.status.name() == 'REJECTED' ? 'Sự kiện bị từ chối' : 'Sự kiện đã hủy'}">
+                                                    Thông báo</h5>
+                                                <div th:text="${event.reason}">Lý do...</div>
+                                            </div>
+                                        </div>
 
                         <!-- Description -->
                         <div class="card border-0 shadow-sm rounded-4 mb-4">
@@ -175,78 +207,562 @@
                         </div>
                     </div>
 
-                    <!-- Right Column: Occurrences & Tickets -->
-                    <div class="col-lg-4">
-                        <!-- Occurrences -->
-                        <div class="card border-0 shadow-sm rounded-4 mb-4">
-                            <div class="card-header bg-white border-0 py-3">
-                                <h5 class="fw-bold mb-0">Lịch trình & Địa điểm</h5>
-                            </div>
-                            <div class="card-body pt-0">
-                                <div th:each="occ : ${event.eventOccurrences}"
-                                    class="d-flex gap-3 mb-3 border-bottom pb-3 last:border-0 last:mb-0 last:pb-0">
-                                    <div class="text-center rounded-3 bg-light p-2"
-                                        style="min-width: 60px; height: fit-content;">
-                                        <div class="small fw-bold text-uppercase text-danger"
-                                            th:text="${#temporals.monthName(occ.startTime)}">JAN
-                                        </div>
-                                        <div class="h4 fw-bold mb-0" th:text="${#temporals.day(occ.startTime)}">01</div>
-                                    </div>
-                                    <div>
-                                        <div class="fw-bold mb-1">
-                                            <span th:text="${#temporals.format(occ.startTime, 'HH:mm')}">20:00</span> -
-                                            <span th:text="${#temporals.format(occ.endTime, 'HH:mm')}">22:00</span>
-                                        </div>
-                                        <div class="small text-muted mb-1">
-                                            <i class="bi bi-geo-alt me-1"></i>
-                                            <span th:text="${occ.addressDetail}">Address</span>,
-                                            <span th:text="${occ.wardName}">Ward</span>,
-                                            <span th:text="${occ.provinceName}">Province</span>
-                                        </div>
-                                        <a th:if="${occ.mapLink}" th:href="${occ.mapLink}" target="_blank"
-                                            class="small text-primary text-decoration-none d-block mb-2">
-                                            Xem bản đồ <i class="bi bi-box-arrow-up-right ms-1"
-                                                style="font-size: 10px;"></i>
-                                        </a>
+                                    <!-- Right Column: Occurrences & Tickets -->
+                                    <div class="col-lg-4">
+                                        <!-- Occurrences -->
+                                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                                            <div class="card-header bg-white border-0 py-3">
+                                                <h5 class="fw-bold mb-0">Lịch trình & Địa điểm</h5>
+                                            </div>
+                                            <div class="card-body pt-0">
+                                                <div th:each="occ : ${event.eventOccurrences}"
+                                                    class="d-flex gap-3 mb-3 border-bottom pb-3 last:border-0 last:mb-0 last:pb-0">
+                                                    <div class="text-center rounded-3 bg-light p-2"
+                                                        style="min-width: 60px; height: fit-content;">
+                                                        <div class="small fw-bold text-uppercase text-danger"
+                                                            th:text="${#temporals.monthName(occ.startTime)}">JAN</div>
+                                                        <div class="h4 fw-bold mb-0"
+                                                            th:text="${#temporals.day(occ.startTime)}">01</div>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold mb-1">
+                                                            <span
+                                                                th:text="${#temporals.format(occ.startTime, 'HH:mm')}">20:00</span>
+                                                            -
+                                                            <span
+                                                                th:text="${#temporals.format(occ.endTime, 'HH:mm')}">22:00</span>
+                                                        </div>
+                                                        <div class="small text-muted mb-1">
+                                                            <i class="bi bi-geo-alt me-1"></i>
+                                                            <span th:text="${occ.addressDetail}">Address</span>,
+                                                            <span th:text="${occ.wardName}">Ward</span>,
+                                                            <span th:text="${occ.provinceName}">Province</span>
+                                                        </div>
+                                                        <a th:if="${occ.mapLink}" th:href="${occ.mapLink}"
+                                                            target="_blank"
+                                                            class="small text-primary text-decoration-none d-block mb-2">
+                                                            Xem bản đồ <i class="bi bi-box-arrow-up-right ms-1"
+                                                                style="font-size: 10px;"></i>
+                                                        </a>
 
-                                        <!-- Nested Ticket Types -->
-                                        <div th:if="${not #lists.isEmpty(occ.ticketTypes)}"
-                                            class="mt-2 border-top pt-2">
-                                            <div class="small fw-bold text-muted mb-1">Các loại vé:</div>
-                                            <div th:each="ticket : ${occ.ticketTypes}"
-                                                class="d-flex justify-content-between align-items-center mb-1 small">
-                                                <div>
-                                                    <span class="fw-semibold" th:text="${ticket.name}">VIP</span>
-                                                    <span class="text-muted">(SL: <span
-                                                            th:text="${ticket.quantity}">100</span>)</span>
+                                                        <!-- Nested Ticket Types -->
+                                                        <div th:if="${not #lists.isEmpty(occ.ticketTypes)}"
+                                                            class="mt-2 border-top pt-2">
+                                                            <div class="small fw-bold text-muted mb-1">Các loại vé:
+                                                            </div>
+                                                            <div th:each="ticket : ${occ.ticketTypes}"
+                                                                class="d-flex justify-content-between align-items-center mb-1 small">
+                                                                <div>
+                                                                    <span class="fw-semibold"
+                                                                        th:text="${ticket.name}">VIP</span>
+                                                                    <span class="text-muted">(SL: <span
+                                                                            th:text="${ticket.quantity}">100</span>)</span>
+                                                                </div>
+                                                                <span class="badge bg-light text-dark border">
+                                                                    <span
+                                                                        th:text="${#numbers.formatInteger(ticket.price, 0, 'COMMA')}">500,000</span>đ
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <span class="badge bg-light text-dark border">
-                                                    <span
-                                                        th:text="${#numbers.formatInteger(ticket.price, 0, 'COMMA')}">500,000</span>đ
-                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Ticket Map -->
+                                        <div class="card border-0 shadow-sm rounded-4 mb-4"
+                                            th:if="${event.eventMedias.^[mediaPurpose.name() == 'TICKET_MAP'] != null}">
+                                            <div class="card-header bg-white border-0 py-3">
+                                                <h5 class="fw-bold mb-0">Sơ đồ vé</h5>
+                                            </div>
+                                            <div class="card-body pt-0">
+                                                <div
+                                                    th:with="mapMedia=${event.eventMedias.^[mediaPurpose.name() == 'TICKET_MAP']}">
+                                                    <img th:if="${mapMedia != null}" th:src="${mapMedia.mediaUrl}"
+                                                        class="img-fluid rounded-3" alt="Ticket Map">
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
+                            <!-- TAB 3: Check-in (Soát vé) -->
+                            <div class="tab-pane fade" id="tab-checkin">
+                                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                                    <div class="card-header bg-white border-0 py-3">
+                                        <h5 class="fw-bold mb-0">Soát vé QR</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Check-in Stats -->
+                                        <div class="row g-3 mb-4 justify-content-center">
+                                            <div class="col-md-6 col-lg-4">
+                                                <div
+                                                    class="p-3 bg-light rounded-3 border h-100 d-flex align-items-center justify-content-center gap-3">
+                                                    <div class="icon-shape bg-success text-white rounded-circle shadow-sm"
+                                                        style="width: 48px; height: 48px; display:flex; align-items:center; justify-content:center;">
+                                                        <i class="bi bi-check-lg fs-4"></i>
+                                                    </div>
+                                                    <div class="text-center text-md-start">
+                                                        <div class="small text-muted fw-bold text-uppercase">Đã check-in
+                                                        </div>
+                                                        <h3 class="fw-bold mb-0" id="stat-checkin-checked">0</h3>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                        <!-- Ticket Map -->
-                        <div class="card border-0 shadow-sm rounded-4 mb-4"
-                            th:if="${event.eventMedias.^[mediaPurpose.name() == 'TICKET_MAP'] != null}">
-                            <div class="card-header bg-white border-0 py-3">
-                                <h5 class="fw-bold mb-0">Sơ đồ vé</h5>
+                                        <!-- Scanner & Result Area -->
+                                        <div class="row g-4">
+                                            <div class="col-lg-6">
+                                                <h6 class="fw-bold mb-3">Quét mã QR</h6>
+                                                <div class="position-relative rounded-4 overflow-hidden bg-dark d-flex align-items-center justify-content-center"
+                                                    style="min-height: 350px;">
+                                                    <div id="reader" style="width: 100%;"></div>
+                                                    <div id="camera-placeholder" class="text-white text-center">
+                                                        <i class="bi bi-camera-video fs-1 mb-2"></i>
+                                                        <p>Camera chưa được bật</p>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-3 d-flex gap-2">
+                                                    <button id="startScanBtn" class="btn btn-primary flex-grow-1"><i
+                                                            class="bi bi-camera-video-fill me-1"></i> Bật
+                                                        Camera</button>
+                                                    <button id="stopScanBtn"
+                                                        class="btn btn-outline-secondary flex-grow-1"
+                                                        style="display:none;"><i class="bi bi-stop-fill me-1"></i> Tắt
+                                                        Camera</button>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <h6 class="fw-bold mb-3">Kết quả quét</h6>
+                                                <div id="scanResult"
+                                                    class="h-100 p-4 bg-light rounded-4 border d-flex flex-column align-items-center justify-content-center text-center">
+                                                    <i class="bi bi-qr-code-scan text-muted"
+                                                        style="font-size: 3rem;"></i>
+                                                    <p class="text-muted mt-2">Chưa có kết quả quét</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Check-in History -->
+                                        <div class="mt-5">
+                                            <h6 class="fw-bold mb-3">Lịch sử check-in gần đây</h6>
+                                            <div class="table-responsive">
+                                                <table class="table table-hover align-middle" id="checkinHistoryTable">
+                                                    <thead class="table-light small text-uppercase">
+                                                        <tr>
+                                                            <th>Mã vé</th>
+                                                            <th>Khách hàng</th>
+                                                            <th>Loại vé</th>
+                                                            <th>Thời gian check-in</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="small">
+                                                        <tr>
+                                                            <td colspan="4" class="text-center text-muted py-3">Chưa có
+                                                                dữ liệu</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="card-body pt-0">
-                                <div th:with="mapMedia=${event.eventMedias.^[mediaPurpose.name() == 'TICKET_MAP']}">
-                                    <img th:if="${mapMedia != null}" th:src="${mapMedia.mediaUrl}"
-                                        class="img-fluid rounded-3" alt="Ticket Map">
+
+                            <!-- TAB 2: Ticket Management & Stats (Moved back inside tab-content) -->
+                            <div class="tab-pane fade" id="tab-tickets">
+                                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                                    <div
+                                        class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                        <h5 class="fw-bold mb-0">Thống kê & Vé đã đặt</h5>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <!-- Filter -->
+                                            <div class="d-flex align-items-center">
+                                                <label class="me-2 small fw-semibold text-muted">Lọc theo suất
+                                                    diễn:</label>
+                                                <select id="occurrenceFilter" class="form-select form-select-sm"
+                                                    style="width: auto;">
+                                                    <option value="">Tất cả suất diễn</option>
+                                                    <option th:each="occ : ${event.eventOccurrences}"
+                                                        th:value="${occ.id}"
+                                                        th:text="${#temporals.format(occ.startTime, 'dd/MM/yyyy HH:mm') + ' - ' + occ.addressDetail}">
+                                                        Occurrence 1
+                                                    </option>
+                                                </select>
+                                            </div>
+                                            <!-- Export Button -->
+                                            <button id="exportExcelBtn" class="btn btn-sm btn-success text-white">
+                                                <i class="bi bi-file-earmark-excel me-1"></i> Xuất danh sách vé đã đặt
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Stats Cards -->
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-md-4">
+                                                <div class="p-3 bg-light rounded-3 border h-100">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <div class="small text-muted fw-bold text-uppercase">Vé đã bán
+                                                        </div>
+                                                        <div class="icon-shape bg-primary text-white rounded-circle shadow-sm"
+                                                            style="width: 32px; height: 32px; display:flex; align-items:center; justify-content:center;">
+                                                            <i class="bi bi-ticket-fill small"></i>
+                                                        </div>
+                                                    </div>
+                                                    <h3 class="fw-bold mb-0" id="stat-totalTickets">0</h3>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="p-3 bg-light rounded-3 border h-100">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <div class="small text-muted fw-bold text-uppercase">Tổng doanh
+                                                            thu</div>
+                                                        <div class="icon-shape bg-success text-white rounded-circle shadow-sm"
+                                                            style="width: 32px; height: 32px; display:flex; align-items:center; justify-content:center;">
+                                                            <i class="bi bi-currency-dollar small"></i>
+                                                        </div>
+                                                    </div>
+                                                    <h3 class="fw-bold mb-0 text-success" id="stat-totalRevenue">0đ</h3>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="p-3 bg-light rounded-3 border h-100">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <div class="small text-muted fw-bold text-uppercase">Lượt xem
+                                                            trang</div>
+                                                        <div class="icon-shape bg-info text-white rounded-circle shadow-sm"
+                                                            style="width: 32px; height: 32px; display:flex; align-items:center; justify-content:center;">
+                                                            <i class="bi bi-eye-fill small"></i>
+                                                        </div>
+                                                    </div>
+                                                    <h3 class="fw-bold mb-0" id="stat-viewCount"
+                                                        th:text="${event.viewCount ?: 0}">0</h3>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Ticket Table -->
+                                        <div class="table-responsive">
+                                            <table class="table table-hover align-middle" id="ticketTable">
+                                                <thead class="table-light small text-uppercase">
+                                                    <tr>
+                                                        <th>Mã vé</th>
+                                                        <th>Khách hàng</th>
+                                                        <th>Loại vé</th>
+                                                        <th>Thành tiền</th>
+                                                        <th>Ngày đặt</th>
+                                                        <th>Suất diễn</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="small">
+                                                    <!-- Data populated by JS -->
+                                                    <tr>
+                                                        <td colspan="6" class="text-center py-4 text-muted"><i
+                                                                class="spinner-border spinner-border-sm me-2"></i>Loading
+                                                            data...</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- JavaScript for Stats -->
+                <script th:inline="javascript">
+                    const eventId = /*[[${event.id}]]*/ 0;
+
+                    document.addEventListener('DOMContentLoaded', function () {
+                        // Persist Tab logic
+                        // Persist Tab logic (URL Hash)
+                        const hash = window.location.hash;
+                        if (hash) {
+                            const tabTrigger = document.querySelector(`.nav-link[href="${hash}"]`);
+                            if (tabTrigger) {
+                                const tab = new bootstrap.Tab(tabTrigger);
+                                tab.show();
+                            }
+                        }
+
+                        // Save tab on change
+                        document.querySelectorAll('a[data-bs-toggle="tab"]').forEach(tab => {
+                            tab.addEventListener('shown.bs.tab', function (e) {
+                                history.replaceState(null, null, e.target.getAttribute('href'));
+                            });
+                        });
+
+                        // Filter Listener
+                        const occurrenceFilter = document.getElementById('occurrenceFilter');
+                        if (occurrenceFilter) {
+                            occurrenceFilter.addEventListener('change', function () {
+                                loadStats(this.value);
+                            });
+                        }
+
+                        // Export Excel Listener
+                        const exportBtn = document.getElementById('exportExcelBtn');
+                        if (exportBtn) {
+                            exportBtn.addEventListener('click', function () {
+                                const occurrenceId = occurrenceFilter ? occurrenceFilter.value : '';
+                                let url = `/api/organizer/events/${eventId}/export-tickets`;
+                                if (occurrenceId) url += `?occurrenceId=${occurrenceId}`;
+                                window.location.href = url;
+                            });
+                        }
+
+                        // Initial Load
+                        loadStats();
+                    });
+
+                    function loadStats(occurrenceId = '') {
+                        const tbody = document.querySelector('#ticketTable tbody');
+                        // Show loading only if manual refresh or initial load looks long, optional
+                        // tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted"><i class="spinner-border spinner-border-sm me-2"></i>Loading...</td></tr>';
+
+                        let url = `/api/organizer/events/${eventId}/stats`;
+                        if (occurrenceId) {
+                            url += `?occurrenceId=${occurrenceId}`;
+                        }
+
+                        fetch(url)
+                            .then(response => {
+                                if (!response.ok) throw new Error('API Error: ' + response.status);
+                                return response.json();
+                            })
+                            .then(data => {
+                                console.log('Stats Data:', data);
+                                // Update Cards with null checks
+                                document.getElementById('stat-totalTickets').textContent = (data.totalTicketsSold || 0).toLocaleString();
+                                document.getElementById('stat-totalRevenue').textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(data.totalRevenue || 0);
+                                document.getElementById('stat-viewCount').textContent = (data.viewCount || 0).toLocaleString();
+
+                                // Update Table
+                                tbody.innerHTML = '';
+                                if (!data.bookedTickets || data.bookedTickets.length === 0) {
+                                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Chưa có vé nào được bán trong giai đoạn này.</td></tr>';
+                                    return;
+                                }
+
+                                data.bookedTickets.forEach(ticket => {
+                                    const tr = document.createElement('tr');
+                                    tr.innerHTML = `
+                                        <td><span class="badge bg-secondary font-monospace" style="font-size: 0.85em;">${ticket.ticketCode || 'N/A'}</span></td>
+                                        <td>
+                                            <div class="fw-bold">${ticket.customerName || 'N/A'}</div>
+                                            <div class="text-muted small">${ticket.customerEmail || ''} <br> ${ticket.customerPhone || ''}</div>
+                                        </td>
+                                        <td>${ticket.ticketTypeName || '-'}</td>
+                                        <td class="fw-semibold text-success">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(ticket.totalPrice || 0)}</td>
+                                        <td>${ticket.bookingTime ? new Date(ticket.bookingTime).toLocaleDateString('vi-VN') : '-'} <br> <span class="text-muted small">${ticket.bookingTime ? new Date(ticket.bookingTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : ''}</span></td>
+                                        <td>${ticket.occurrenceTime || '-'}</td>
+                                    `;
+                                    tbody.appendChild(tr);
+                                });
+                            })
+                            .catch(error => {
+                                console.error('Error fetching stats:', error);
+                                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Không thể tải dữ liệu thống kê. <br><small>Chi tiết: ' + error.message + '</small></td></tr>';
+                            });
+                    }
+                </script>
+                <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+                <script th:inline="javascript">
+                    // QR Code Scanner Logic
+                    let html5QrcodeScanner = null;
+                    let isScanning = false;
+                    let invalidCount = 0;
+
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const checkInTab = document.querySelector('a[href="#tab-checkin"]');
+                        if (checkInTab) {
+                            checkInTab.addEventListener('shown.bs.tab', function (e) {
+                                loadCheckInStats();
+                                loadCheckInHistory();
+                            });
+                        }
+
+                        // If tab persisted as Checkin (URL Hash check handled above handles activation)
+                        if (window.location.hash === '#tab-checkin') {
+                            loadCheckInStats();
+                            loadCheckInHistory();
+                        }
+
+                        document.getElementById('startScanBtn').addEventListener('click', startScanner);
+                        document.getElementById('stopScanBtn').addEventListener('click', stopScanner);
+                    });
+
+                    function loadCheckInStats() {
+                        fetch(`/api/organizer/events/${eventId}/check-in-stats`)
+                            .then(res => res.json())
+                            .then(data => {
+                                document.getElementById('stat-checkin-checked').textContent = (data.checkedIn || 0).toLocaleString();
+                            })
+                            .catch(err => console.error(err));
+                    }
+
+                    function loadCheckInHistory() {
+                        fetch(`/api/organizer/events/${eventId}/check-in-history`)
+                            .then(res => res.json())
+                            .then(data => {
+                                const tbody = document.querySelector('#checkinHistoryTable tbody');
+                                if (!tbody) return;
+                                tbody.innerHTML = '';
+                                if (!data || data.length === 0) {
+                                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">Chưa có dữ liệu</td></tr>';
+                                    return;
+                                }
+                                data.forEach(item => {
+                                    const tr = document.createElement('tr');
+                                    tr.innerHTML = `
+                                 <td><span class="badge bg-secondary font-monospace">${item.ticketCode}</span></td>
+                                 <td>${item.customerName}</td>
+                                 <td>${item.ticketType}</td>
+                                 <td>${new Date(item.checkInTime).toLocaleString('vi-VN')}</td>
+                              `;
+                                    tbody.appendChild(tr);
+                                });
+                            })
+                            .catch(err => console.error(err));
+                    }
+
+                    function startScanner() {
+                        // SSL Check
+                        if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                            alert('Lỗi: Camera chỉ hoạt động trên HTTPS hoặc localhost. Vui lòng kiểm tra lại cấu hình server.');
+                            return;
+                        }
+
+                        if (html5QrcodeScanner) return;
+
+                        document.getElementById('camera-placeholder').style.display = 'none';
+                        document.getElementById('startScanBtn').style.display = 'none';
+                        document.getElementById('stopScanBtn').style.display = 'block';
+
+                        html5QrcodeScanner = new Html5Qrcode("reader");
+                        html5QrcodeScanner.start(
+                            { facingMode: "environment" },
+                            {
+                                fps: 10,
+                                qrbox: { width: 250, height: 250 }
+                            },
+                            (decodedText, decodedResult) => {
+                                // Handle Success
+                                handleScanSuccess(decodedText);
+                            },
+                            (errorMessage) => {
+                                // parse error, ignore loop
+                            }
+                        ).catch(err => {
+                            console.error('Camera Error:', err);
+                            alert('Không thể khởi động Camera. Vui lòng cấp quyền truy cập camera.');
+                            stopScanner();
+                        });
+                    }
+
+                    function stopScanner() {
+                        if (html5QrcodeScanner) {
+                            html5QrcodeScanner.stop().then(() => {
+                                try { html5QrcodeScanner.clear(); } catch (e) { }
+                                html5QrcodeScanner = null;
+                                document.getElementById('camera-placeholder').style.display = 'block';
+                                document.getElementById('startScanBtn').style.display = 'block';
+                                document.getElementById('stopScanBtn').style.display = 'none';
+                            }).catch(err => console.error(err));
+                        }
+                    }
+
+                    let processingCode = null;
+
+                    function handleScanSuccess(ticketCode) {
+                        if (processingCode === ticketCode) return; // Debounce same code
+                        processingCode = ticketCode;
+
+                        // Show processing UI
+                        const resultDiv = document.getElementById('scanResult');
+                        resultDiv.innerHTML = `<div class="spinner-border text-primary" role="status"></div><p class="mt-2">Đang kiểm tra...</p>`;
+
+                        // Get CSRF Token
+                        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                        const headers = {
+                            'Content-Type': 'application/json'
+                        };
+                        if (csrfToken && csrfHeader) {
+                            headers[csrfHeader] = csrfToken;
+                        }
+
+                        fetch(`/api/organizer/events/${eventId}/check-in`, {
+                            method: 'POST',
+                            headers: headers,
+                            body: JSON.stringify({ ticketCode: ticketCode })
+                        })
+                            .then(res => {
+                                if (res.status === 405) {
+                                    throw new Error('Lỗi 405: Phương thức không được hỗ trợ. Vui lòng kiểm tra lại URL API.');
+                                }
+                                if (res.status === 403) {
+                                    throw new Error('Lỗi 403: Từ chối truy cập (CSRF/Auth). Vui lòng tải lại trang.');
+                                }
+                                return res.json();
+                            })
+                            .then(resp => {
+                                if (resp.status === 'SUCCESS') {
+                                    playSuccessSound();
+                                    resultDiv.innerHTML = `
+                                    <div class="text-success mb-2"><i class="bi bi-check-circle-fill" style="font-size: 3rem;"></i></div>
+                                    <h5 class="fw-bold text-success">Check-in Thành công!</h5>
+                                    <div class="text-start mt-3 w-100 bg-white p-3 rounded border">
+                                        <div class="small text-muted">Mã vé: <span class="fw-bold text-dark">${resp.ticketCode}</span></div>
+                                        <div class="small text-muted">Khách hàng: <span class="fw-bold text-dark">${resp.customerName}</span></div>
+                                        <div class="small text-muted">Loại vé: <span class="fw-bold text-dark">${resp.ticketType}</span></div>
+                                    </div>
+                                `;
+                                    loadCheckInStats();
+                                    loadCheckInHistory();
+                                } else {
+                                    playErrorSound();
+                                    invalidCount++;
+                                    invalidCount++;
+                                    // document.getElementById('stat-checkin-invalid').textContent = invalidCount; (Removed)
+                                    let color = 'text-danger';
+                                    let icon = 'bi-x-circle-fill';
+                                    if (resp.status === 'ALREADY_CHECKED_IN') {
+                                        color = 'text-warning';
+                                        icon = 'bi-exclamation-circle-fill';
+                                    }
+
+                                    resultDiv.innerHTML = `
+                                    <div class="${color} mb-2"><i class="bi ${icon}" style="font-size: 3rem;"></i></div>
+                                    <h5 class="fw-bold ${color}">${resp.message}</h5>
+                                    <p class="small text-muted">${resp.ticketCode}</p>
+                                    ${resp.status === 'ALREADY_CHECKED_IN' ? `
+                                        <div class="small text-muted mt-2">Đã check-in lúc: ${new Date(resp.checkInTime).toLocaleTimeString('vi-VN')}</div>
+                                    ` : ''}
+                                `;
+                                }
+
+                                // Reset processing flag after 3 seconds
+                                setTimeout(() => { processingCode = null; }, 3000);
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                resultDiv.innerHTML = `<p class="text-danger">Lỗi kết nối API!</p>`;
+                                processingCode = null;
+                            });
+                    }
+
+                    function playSuccessSound() {
+                        // Placeholder
+                    }
+                    function playErrorSound() {
+                        // Placeholder
+                    }
+                </script>
             </div>
 
             <!-- Script must be INSIDE the fragment to be included in layout -->

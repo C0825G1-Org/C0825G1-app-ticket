@@ -71,6 +71,11 @@ public interface IEventService {
         long countByStatuses(List<EventStatus> statuses);
 
         long countAll();
+    void incrementViewCount(Long eventId);
+
+    com.codegym.appticket.dto.event.EventStatsDTO getEventStats(Long eventId, Long occurrenceId);
+
+    byte[] exportBookedTicketsToExcel(Long eventId, Long occurrenceId) throws java.io.IOException;
 
         EventDTO duplicate(Long originalId);
 
