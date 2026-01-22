@@ -94,33 +94,16 @@ public class HomeController {
         return "home/event";
     }
 
-//    @GetMapping("/event/search")
-//    public String searchEvent(
-//            @RequestParam(required = false) String search,
-//            @RequestParam(required = false) Long category,
-//            @RequestParam(required = false) String location,
-//            @RequestParam(required = false) String sort,
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "6") int size,
-//            Model model) {
-//
-//        // Normalize empty strings to null
-//        if (search != null && search.trim().isEmpty()) {
-//            search = null;
-//        }
-//        if (location != null && location.trim().isEmpty()) {
-//            location = null;
-//        }
-//
-//        // Use unified search method that returns HomeEventDTO
-//        Page<HomeEventDTO> events = eventService.searchHomeEvents(search, category, location, page, size, sort);
-//
-//        // Load all categories for filter sidebar
-//        model.addAttribute("categories", eventCategoryService.findAll());
-//        model.addAttribute("events", events);
-//
-//        return "home/event";
-//    }
+    @GetMapping("/privacy")
+    public String showPolicyPage() {
+        return "home/privacy_policy";
+    }
+
+    @GetMapping("/terms")
+    public String showTermsPage() {
+        return "home/term";
+    }
+
     @GetMapping("/event/search")
     public String searchEvent(
             @RequestParam(required = false) String search,

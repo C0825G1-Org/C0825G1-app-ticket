@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Điều Khoản Sử Dụng - EventPro</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <th:block th:replace="~{common/styles :: styles}"></th:block>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.8;
+        }
+
+        .terms-content {
+            padding: 100px 0 60px 0;
+            background: #f8f9fa;
+        }
+
+        .terms-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .terms-header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 40px 20px;
+            background: #833AB4;
+            background: linear-gradient(90deg, rgba(131, 58, 180, 1) 0%, rgba(253, 29, 29, 1) 50%, rgba(252, 176, 69, 1) 100%);
+            border-radius: 12px;
+            color: white;
+        }
+
+        .terms-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .terms-header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            text-align: center;
+        }
+
+        .section-title {
+            color: #e05d0b;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .section-title:first-child {
+            margin-top: 0;
+        }
+
+        .subsection-title {
+            color: #495057;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        .terms-content ul {
+            padding-left: 25px;
+        }
+
+        .terms-content ul li {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .terms-content p {
+            color: #6c757d;
+            text-align: justify;
+        }
+
+        .highlight-box {
+            background: #f0f9ff;
+            border-left: 4px solid #0ea5e9;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .info-box {
+            background: #f0f9ff;
+            border-left: 4px solid #0ea5e9;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .warning-box {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .contact-info {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .contact-info strong {
+            color: #856404;
+        }
+
+        .effective-date {
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #0ea5e9;
+            margin-top: 40px;
+            padding: 20px;
+            background: #f0f9ff;
+            border-radius: 8px;
+        }
+
+        .terms-content ol {
+            padding-left: 25px;
+        }
+
+        .terms-content ol li {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <div th:replace="~{common/header :: public-navbar-dark}"></div>
+
+    <!-- Terms of Service Content -->
+    <div class="terms-content">
+        <div class="container">
+            <div class="terms-header">
+                <h1><i class="bi bi-file-text me-4"></i>Điều Khoản Sử Dụng</h1>
+            </div>
+
+            <div class="terms-card">
+                <!-- Introduction -->
+                <section>
+                    <h2 class="section-title">Giới thiệu</h2>
+                    <p>
+                        Chào mừng bạn đến với <strong>EventPro</strong> - nền tảng đặt vé sự kiện trực tuyến hàng đầu
+                        Việt Nam.
+                        Bằng việc truy cập và sử dụng trang web EventPro, bạn đồng ý tuân thủ và bị ràng buộc bởi các
+                        Điều
+                        Khoản Sử Dụng sau đây. Vui lòng đọc kỹ các điều khoản này trước khi sử dụng dịch vụ của chúng
+                        tôi.
+                    </p>
+                    <div class="highlight-box">
+                        <p class="mb-0">
+                            <strong><i class="bi bi-exclamation-triangle me-2"></i>Quan trọng:</strong>
+                            Nếu bạn không đồng ý với bất kỳ phần nào của các điều khoản này, vui lòng không sử dụng dịch
+                            vụ
+                            của EventPro. Việc tiếp tục sử dụng dịch vụ đồng nghĩa với việc bạn chấp nhận các điều khoản
+                            này.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- 1. Định nghĩa -->
+                <section>
+                    <h2 class="section-title">1. Định nghĩa</h2>
+                    <ul>
+                        <li><strong>"EventPro", "Chúng tôi", "Của chúng tôi"</strong> - Đề cập đến Công ty TNHH
+                            EventPro,
+                            chủ sở hữu và vận hành nền tảng EventPro.</li>
+                        <li><strong>"Người dùng", "Bạn", "Khách hàng"</strong> - Đề cập đến cá nhân hoặc tổ chức truy
+                            cập
+                            và sử dụng dịch vụ của EventPro.</li>
+                        <li><strong>"Dịch vụ"</strong> - Bao gồm tất cả các tính năng, chức năng và dịch vụ được cung
+                            cấp
+                            trên nền tảng EventPro.</li>
+                        <li><strong>"Sự kiện"</strong> - Các buổi biểu diễn, hội nghị, triển lãm, festival hoặc bất kỳ
+                            hoạt
+                            động nào được bán vé thông qua EventPro.</li>
+                        <li><strong>"Vé"</strong> - Giấy xác nhận quyền tham dự sự kiện, có thể ở dạng điện tử hoặc vật
+                            lý.</li>
+                        <li><strong>"Nhà tổ chức sự kiện"</strong> - Cá nhân, công ty hoặc tổ chức tạo và quản lý sự
+                            kiện
+                            trên nền tảng EventPro.</li>
+                    </ul>
+                </section>
+
+                <!-- 2. Đăng ký và Tài khoản -->
+                <section>
+                    <h2 class="section-title">2. Đăng ký và Quản lý Tài khoản</h2>
+
+                    <div class="subsection-title">2.1. Yêu cầu đăng ký</div>
+                    <p>
+                        Để sử dụng đầy đủ các tính năng của EventPro, bạn cần tạo một tài khoản. Khi đăng ký, bạn cam
+                        kết:
+                    </p>
+                    <ul>
+                        <li>Cung cấp thông tin chính xác, đầy đủ và cập nhật</li>
+                        <li>Bạn phải đủ 18 tuổi hoặc có sự đồng ý của cha mẹ/người giám hộ hợp pháp</li>
+                        <li>Duy trì và cập nhật thông tin tài khoản để đảm bảo tính chính xác</li>
+                        <li>Chịu trách nhiệm về mọi hoạt động diễn ra dưới tài khoản của bạn</li>
+                        <li>Không chia sẻ mật khẩu hoặc cho phép người khác truy cập vào tài khoản của bạn</li>
+                    </ul>
+
+                    <div class="subsection-title">2.2. Bảo mật tài khoản</div>
+                    <p>
+                        Bạn có trách nhiệm bảo mật thông tin đăng nhập của mình. EventPro không chịu trách nhiệm về bất
+                        kỳ
+                        tổn thất nào phát sinh từ việc sử dụng trái phép tài khoản của bạn. Nếu phát hiện hoặc nghi ngờ
+                        có
+                        hành vi xâm phạm tài khoản, vui lòng thông báo ngay cho chúng tôi.
+                    </p>
+
+                    <div class="subsection-title">2.3. Chấm dứt tài khoản</div>
+                    <p>
+                        EventPro có quyền đình chỉ hoặc chấm dứt tài khoản của bạn nếu:
+                    </p>
+                    <ul>
+                        <li>Vi phạm bất kỳ điều khoản nào trong thỏa thuận này</li>
+                        <li>Cung cấp thông tin sai lệch hoặc giả mạo</li>
+                        <li>Tham gia vào các hoạt động gian lận hoặc bất hợp pháp</li>
+                        <li>Gây hại đến danh tiếng hoặc quyền lợi của EventPro hoặc người dùng khác</li>
+                    </ul>
+                </section>
+
+                <!-- 3. Đặt vé và Thanh toán -->
+                <section>
+                    <h2 class="section-title">3. Đặt vé và Thanh toán</h2>
+
+                    <div class="subsection-title">3.1. Quy trình đặt vé</div>
+                    <p>
+                        Khi đặt vé trên EventPro, bạn thực hiện một hợp đồng mua bán có ràng buộc pháp lý với nhà tổ
+                        chức
+                        sự kiện. Quy trình đặt vé bao gồm:
+                    </p>
+                    <ol>
+                        <li>Chọn sự kiện và loại vé mong muốn</li>
+                        <li>Điền đầy đủ thông tin người tham dự (nếu được yêu cầu)</li>
+                        <li>Xác nhận thông tin đơn hàng và tổng số tiền</li>
+                        <li>Thực hiện thanh toán qua các phương thức được hỗ trợ</li>
+                        <li>Nhận xác nhận đặt vé qua email</li>
+                    </ol>
+
+                    <div class="subsection-title">3.2. Giá vé và Phí dịch vụ</div>
+                    <p>
+                        Tất cả giá vé hiển thị trên EventPro đã bao gồm VAT (nếu có). Ngoài giá vé, có thể áp dụng thêm:
+                    </p>
+                    <ul>
+                        <li><strong>Phí dịch vụ:</strong> Chi phí xử lý giao dịch và cung cấp nền tảng</li>
+                        <li><strong>Phí thanh toán:</strong> Phụ thuộc vào phương thức thanh toán bạn chọn</li>
+                        <li><strong>Phí giao vé:</strong> Nếu bạn yêu cầu vé vật lý được giao tận nơi</li>
+                    </ul>
+                    <div class="info-box">
+                        <p class="mb-0">
+                            <strong><i class="bi bi-info-circle me-2"></i>Lưu ý:</strong>
+                            Tổng số tiền cuối cùng (bao gồm tất cả các phí) sẽ được hiển thị rõ ràng trước khi bạn xác
+                            nhận thanh toán.
+                        </p>
+                    </div>
+
+                    <div class="subsection-title">3.3. Phương thức thanh toán</div>
+                    <p>EventPro chấp nhận các phương thức thanh toán sau:</p>
+                    <ul>
+                        <li>Thẻ tín dụng/Thẻ ghi nợ (Visa, Mastercard, JCB)</li>
+                        <li>Chuyển khoản ngân hàng nội địa</li>
+                        <li>Ví điện tử (Momo, ZaloPay, VNPay)</li>
+                        <li>Thanh toán tại điểm (nếu được hỗ trợ)</li>
+                    </ul>
+
+                    <div class="subsection-title">3.4. Xác nhận đơn hàng</div>
+                    <p>
+                        Sau khi thanh toán thành công, bạn sẽ nhận được:
+                    </p>
+                    <ul>
+                        <li>Email xác nhận đặt vé kèm mã đơn hàng</li>
+                        <li>Vé điện tử (e-ticket) với mã QR hoặc barcode</li>
+                        <li>Thông tin chi tiết về sự kiện (thời gian, địa điểm, hướng dẫn tham dự)</li>
+                    </ul>
+                    <div class="warning-box">
+                        <p class="mb-0">
+                            <strong><i class="bi bi-exclamation-triangle-fill me-2"></i>Cảnh báo:</strong>
+                            Vui lòng kiểm tra kỹ thông tin trong email xác nhận. Nếu có sai sót, liên hệ với chúng tôi
+                            trong vòng 24 giờ.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- 4. Chính sách Hoàn tiền và Hủy vé -->
+                <section>
+                    <h2 class="section-title">4. Chính sách Hoàn tiền và Hủy vé</h2>
+
+                    <div class="subsection-title">4.1. Quyền hủy vé của khách hàng</div>
+                    <p>
+                        Chính sách hủy vé phụ thuộc vào từng sự kiện và được quy định bởi nhà tổ chức. Thông thường:
+                    </p>
+                    <ul>
+                        <li><strong>Hủy trước 7 ngày:</strong> Hoàn 80% giá trị vé (trừ phí dịch vụ)</li>
+                        <li><strong>Hủy từ 3-7 ngày:</strong> Hoàn 50% giá trị vé (trừ phí dịch vụ)</li>
+                        <li><strong>Hủy trong vòng 3 ngày:</strong> Không hoàn tiền</li>
+                    </ul>
+                    <div class="highlight-box">
+                        <p class="mb-0">
+                            <strong>Lưu ý quan trọng:</strong> Phí dịch vụ và phí thanh toán không được hoàn lại trong
+                            mọi trường hợp.
+                        </p>
+                    </div>
+
+                    <div class="subsection-title">4.2. Sự kiện bị hủy hoặc hoãn</div>
+                    <p>
+                        Trong trường hợp sự kiện bị hủy bỏ hoặc hoãn lại bởi nhà tổ chức:
+                    </p>
+                    <ul>
+                        <li><strong>Hủy hoàn toàn:</strong> Hoàn 100% giá trị vé (bao gồm phí dịch vụ)</li>
+                        <li><strong>Hoãn lại:</strong> Vé vẫn có giá trị cho ngày mới HOẶC khách hàng có thể yêu cầu
+                            hoàn tiền 100%</li>
+                        <li><strong>Thay đổi địa điểm:</strong> Khách hàng có quyền yêu cầu hoàn tiền nếu không thể tham
+                            dự</li>
+                    </ul>
+
+                    <div class="subsection-title">4.3. Quy trình hoàn tiền</div>
+                    <p>
+                        Thời gian xử lý hoàn tiền:
+                    </p>
+                    <ul>
+                        <li>Yêu cầu hoàn tiền được xử lý trong vòng 5-7 ngày làm việc</li>
+                        <li>Tiền sẽ được hoàn về tài khoản/phương thức thanh toán ban đầu</li>
+                        <li>Thời gian tiền về tài khoản phụ thuộc vào ngân hàng (5-15 ngày làm việc)</li>
+                    </ul>
+
+                    <div class="subsection-title">4.4. Trường hợp đặc biệt không hoàn tiền</div>
+                    <ul>
+                        <li>Vé đã được sử dụng để check-in tại sự kiện</li>
+                        <li>Vi phạm quy định của sự kiện dẫn đến bị từ chối tham dự</li>
+                        <li>Không tham dự sự kiện mà không thông báo hủy trước</li>
+                        <li>Vé khuyến mại hoặc vé miễn phí (trừ khi sự kiện bị hủy)</li>
+                    </ul>
+                </section>
+
+                <!-- 5. Sử dụng Vé -->
+                <section>
+                    <h2 class="section-title">5. Sử dụng Vé</h2>
+
+                    <div class="subsection-title">5.1. Quyền sở hữu vé</div>
+                    <p>
+                        Vé là tài sản của nhà tổ chức sự kiện và chỉ cấp cho bạn quyền tham dự sự kiện. Bạn không được:
+                    </p>
+                    <ul>
+                        <li>Bán lại vé với giá cao hơn giá gốc (trừ khi được phép)</li>
+                        <li>Sử dụng vé cho mục đích thương mại không được ủy quyền</li>
+                        <li>Sao chép, chỉnh sửa hoặc làm giả vé</li>
+                        <li>Chuyển nhượng vé nếu nhà tổ chức không cho phép</li>
+                    </ul>
+
+                    <div class="subsection-title">5.2. Điều kiện tham dự</div>
+                    <p>
+                        Khi tham dự sự kiện, bạn phải:
+                    </p>
+                    <ul>
+                        <li>Xuất trình vé hợp lệ (điện tử hoặc in ra) và CMND/CCCD (nếu được yêu cầu)</li>
+                        <li>Tuân thủ mọi quy định của nhà tổ chức và địa điểm tổ chức</li>
+                        <li>Không mang theo vật phẩm cấm (vũ khí, chất cấm, đồ uống có cồn nếu không được phép)</li>
+                        <li>Tôn trọng quyền riêng tư và an toàn của người tham dự khác</li>
+                    </ul>
+
+                    <div class="subsection-title">5.3. Quyền từ chối tham dự</div>
+                    <p>
+                        Nhà tổ chức sự kiện có quyền từ chối hoặc trục xuất bạn khỏi sự kiện nếu:
+                    </p>
+                    <ul>
+                        <li>Vé không hợp lệ hoặc giả mạo</li>
+                        <li>Hành vi say rượu, gây rối hoặc bạo lực</li>
+                        <li>Vi phạm luật pháp hoặc quy định an toàn</li>
+                        <li>Có hành vi quấy rối, phân biệt đối xử</li>
+                    </ul>
+                    <div class="warning-box">
+                        <p class="mb-0">
+                            Trong các trường hợp trên, bạn sẽ <strong>KHÔNG được hoàn tiền</strong> và có thể phải chịu
+                            trách nhiệm pháp lý.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- 6. Quyền và Nghĩa vụ của Người dùng -->
+                <section>
+                    <h2 class="section-title">6. Quyền và Nghĩa vụ của Người dùng</h2>
+
+                    <div class="subsection-title">6.1. Hành vi cấm</div>
+                    <p>Khi sử dụng EventPro, bạn KHÔNG ĐƯỢC:</p>
+                    <ul>
+                        <li>Sử dụng dịch vụ cho mục đích bất hợp pháp hoặc trái đạo đức</li>
+                        <li>Hack, phá hoại hoặc can thiệp vào hệ thống bảo mật của EventPro</li>
+                        <li>Sử dụng robot, script hoặc công cụ tự động để đặt vé (ticket bot)</li>
+                        <li>Thu thập thông tin người dùng khác mà không có sự đồng ý</li>
+                        <li>Đăng tải nội dung vi phạm pháp luật, xúc phạm hoặc spam</li>
+                        <li>Giả mạo danh tính hoặc mối quan hệ với bất kỳ cá nhân/tổ chức nào</li>
+                        <li>Tạo nhiều tài khoản để lợi dụng khuyến mãi</li>
+                    </ul>
+
+                    <div class="subsection-title">6.2. Nội dung do người dùng tạo</div>
+                    <p>
+                        Nếu bạn đăng đánh giá, bình luận hoặc nội dung khác trên EventPro:
+                    </p>
+                    <ul>
+                        <li>Bạn giữ quyền sở hữu nội dung của mình</li>
+                        <li>Bạn cấp cho EventPro quyền sử dụng, hiển thị và phân phối nội dung đó</li>
+                        <li>Nội dung phải chính xác, không vi phạm pháp luật hoặc quyền của người khác</li>
+                        <li>EventPro có quyền xóa nội dung không phù hợp mà không cần thông báo</li>
+                    </ul>
+                </section>
+
+                <!-- 7. Sở hữu Trí tuệ -->
+                <section>
+                    <h2 class="section-title">7. Quyền Sở hữu Trí tuệ</h2>
+                    <p>
+                        Tất cả nội dung trên EventPro bao gồm văn bản, hình ảnh, logo, biểu tượng, video, giao diện, mã
+                        nguồn
+                        và các tài liệu khác đều thuộc quyền sở hữu của EventPro hoặc các bên cấp phép. Các nội dung này
+                        được
+                        bảo vệ bởi luật sở hữu trí tuệ Việt Nam và quốc tế.
+                    </p>
+                    <p>
+                        Bạn không được sao chép, sửa đổi, phân phối, bán hoặc khai thác thương mại bất kỳ nội dung nào
+                        của
+                        EventPro mà không có sự cho phép bằng văn bản từ chúng tôi.
+                    </p>
+                </section>
+
+                <!-- 8. Giới hạn Trách nhiệm -->
+                <section>
+                    <h2 class="section-title">8. Giới hạn Trách nhiệm</h2>
+
+                    <div class="subsection-title">8.1. Vai trò của EventPro</div>
+                    <p>
+                        EventPro hoạt động như một nền tảng trung gian kết nối người mua vé với nhà tổ chức sự kiện.
+                        Chúng tôi <strong>KHÔNG</strong>:
+                    </p>
+                    <ul>
+                        <li>Tổ chức hoặc quản lý các sự kiện được bán vé trên nền tảng</li>
+                        <li>Chịu trách nhiệm về chất lượng, nội dung hoặc tính hợp pháp của sự kiện</li>
+                        <li>Đảm bảo sự kiện diễn ra đúng như mô tả hoặc quảng cáo</li>
+                        <li>Chịu trách nhiệm về hành vi của nhà tổ chức hoặc người tham dự khác</li>
+                    </ul>
+
+                    <div class="subsection-title">8.2. Từ chối bảo đảm</div>
+                    <p>
+                        Dịch vụ EventPro được cung cấp trên cơ sở "NGUYÊN TRẠNG" (AS IS) và "SẴN CÓ" (AS AVAILABLE).
+                        Chúng tôi không đảm bảo:
+                    </p>
+                    <ul>
+                        <li>Dịch vụ sẽ không bị gián đoạn, lỗi hoặc virus</li>
+                        <li>Thông tin trên EventPro luôn chính xác, đầy đủ hoặc cập nhật</li>
+                        <li>Kết quả sử dụng dịch vụ sẽ đáp ứng yêu cầu của bạn</li>
+                    </ul>
+
+                    <div class="subsection-title">8.3. Giới hạn bồi thường</div>
+                    <div class="highlight-box">
+                        <p class="mb-0">
+                            Trong mọi trường hợp, EventPro chỉ chịu trách nhiệm bồi thường tối đa bằng <strong>tổng số
+                                tiền
+                                bạn đã thanh toán cho giao dịch liên quan</strong>. Chúng tôi không chịu trách nhiệm về
+                            các thiệt
+                            hại gián tiếp, ngẫu nhiên, đặc biệt hoặc do hậu quả.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- 9. Bồi thường -->
+                <section>
+                    <h2 class="section-title">9. Bồi thường</h2>
+                    <p>
+                        Bạn đồng ý bồi thường, bảo vệ và giữ cho EventPro, các giám đốc, nhân viên và đối tác của chúng
+                        tôi
+                        không bị tổn hại bởi bất kỳ khiếu nại, tổn thất, trách nhiệm pháp lý, chi phí (bao gồm phí luật
+                        sư)
+                        phát sinh từ:
+                    </p>
+                    <ul>
+                        <li>Vi phạm Điều khoản sử dụng này của bạn</li>
+                        <li>Vi phạm pháp luật hoặc quyền của bên thứ ba</li>
+                        <li>Sử dụng sai mục đích hoặc trái phép dịch vụ EventPro</li>
+                        <li>Nội dung bạn đăng tải hoặc chia sẻ trên EventPro</li>
+                    </ul>
+                </section>
+
+                <!-- 10. Bảo vệ Dữ liệu -->
+                <section>
+                    <h2 class="section-title">10. Bảo vệ Dữ liệu và Quyền riêng tư</h2>
+                    <p>
+                        EventPro cam kết bảo vệ quyền riêng tư và dữ liệu cá nhân của bạn. Vui lòng đọc
+                        <a href="/privacy" class="text-decoration-none fw-bold">Chính sách Bảo mật</a> của chúng tôi để
+                        hiểu cách chúng tôi thu thập, sử dụng và bảo vệ thông tin của bạn.
+                    </p>
+                </section>
+
+                <!-- 11. Luật áp dụng -->
+                <section>
+                    <h2 class="section-title">11. Luật áp dụng và Giải quyết Tranh chấp</h2>
+
+                    <div class="subsection-title">11.1. Luật điều chỉnh</div>
+                    <p>
+                        Các Điều khoản sử dụng này được điều chỉnh và giải thích theo pháp luật nước Cộng hòa Xã hội Chủ
+                        nghĩa
+                        Việt Nam.
+                    </p>
+
+                    <div class="subsection-title">11.2. Giải quyết tranh chấp</div>
+                    <p>
+                        Mọi tranh chấp phát sinh từ hoặc liên quan đến các Điều khoản này sẽ được giải quyết theo trình
+                        tự sau:
+                    </p>
+                    <ol>
+                        <li><strong>Thương lượng:</strong> Các bên sẽ cố gắng giải quyết tranh chấp thông qua thương
+                            lượng thiện chí</li>
+                        <li><strong>Hòa giải:</strong> Nếu không thương lượng được, tranh chấp sẽ được đưa ra hòa giải
+                        </li>
+                        <li><strong>Tòa án:</strong> Nếu hòa giải không thành, tranh chấp sẽ được giải quyết tại Tòa án
+                            có thẩm
+                            quyền tại Thành phố Hồ Chí Minh</li>
+                    </ol>
+                </section>
+
+                <!-- 12. Điều khoản chung -->
+                <section>
+                    <h2 class="section-title">12. Các Điều khoản Chung</h2>
+
+                    <div class="subsection-title">12.1. Toàn bộ thỏa thuận</div>
+                    <p>
+                        Các Điều khoản sử dụng này cùng với Chính sách bảo mật tạo thành toàn bộ thỏa thuận giữa bạn và
+                        EventPro
+                        liên quan đến việc sử dụng dịch vụ.
+                    </p>
+
+                    <div class="subsection-title">12.2. Sửa đổi điều khoản</div>
+                    <p>
+                        EventPro có quyền sửa đổi các Điều khoản sử dụng này bất cứ lúc nào. Các thay đổi quan trọng sẽ
+                        được
+                        thông báo trước ít nhất 7 ngày. Việc bạn tiếp tục sử dụng dịch vụ sau khi có thay đổi đồng nghĩa
+                        với
+                        việc bạn chấp nhận các điều khoản mới.
+                    </p>
+
+                    <div class="subsection-title">12.3. Tính độc lập của các điều khoản</div>
+                    <p>
+                        Nếu bất kỳ điều khoản nào trong thỏa thuận này bị tòa án tuyên bố là không hợp lệ hoặc không thể
+                        thi hành,
+                        các điều khoản còn lại vẫn có hiệu lực đầy đủ.
+                    </p>
+
+                    <div class="subsection-title">12.4. Chuyển nhượng</div>
+                    <p>
+                        Bạn không được chuyển nhượng quyền và nghĩa vụ của mình theo các Điều khoản này cho bên thứ ba
+                        mà không
+                        có sự đồng ý bằng văn bản của EventPro. EventPro có thể chuyển nhượng quyền và nghĩa vụ của mình
+                        cho bên
+                        thứ ba.
+                    </p>
+                </section>
+
+                <!-- 13. Thông tin liên hệ -->
+                <section>
+                    <h2 class="section-title">13. Thông tin Liên hệ</h2>
+                    <p>
+                        Nếu bạn có bất kỳ câu hỏi nào về các Điều khoản sử dụng này, vui lòng liên hệ với chúng tôi:
+                    </p>
+                    <div class="contact-info">
+                        <p class="mb-2"><strong>Công ty TNHH EventPro</strong></p>
+                        <p class="mb-2">
+                            <i class="bi bi-geo-alt-fill me-2"></i>
+                            <strong>Trụ sở chính:</strong> Tầng 3, Tháp A, Tòa nhà Viettel, 285 Cách Mạng Tháng Tám,
+                            Phường 12, Quận 10, Thành phố Hồ Chí Minh
+                        </p>
+                        <p class="mb-2">
+                            <i class="bi bi-telephone-fill me-2"></i>
+                            <strong>Hotline:</strong> 1900.6408
+                        </p>
+                        <p class="mb-2">
+                            <i class="bi bi-envelope-fill me-2"></i>
+                            <strong>Email:</strong> support@eventpro.vn
+                        </p>
+                        <p class="mb-0">
+                            <i class="bi bi-clock-fill me-2"></i>
+                            <strong>Giờ làm việc:</strong> Thứ 2 - Thứ 6: 8:00 - 17:30 | Thứ 7: 8:00 - 12:00
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Hiệu lực -->
+                <section>
+                    <h2 class="section-title">14. Hiệu lực</h2>
+                    <div class="effective-date">
+                        <i class="bi bi-calendar-check me-2"></i>
+                        Điều Khoản Sử Dụng này có hiệu lực từ ngày 21/01/2026
+                    </div>
+                    <div class="info-box mt-3">
+                        <p class="mb-0 text-center">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <strong>Cảm ơn bạn đã tin tưởng và sử dụng dịch vụ EventPro!</strong>
+                        </p>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer th:replace="~{common/footer :: footer-dark}"></footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

@@ -97,7 +97,7 @@
 
         <!-- Pagination -->
         <nav th:if="${events != null and events.totalPages > 1}" aria-label="Page navigation" class="mt-4">
-            <ul class="pagination pagination-custom justify-content-center">
+            <ul class="pagination justify-content-center">
                 <!-- Previous -->
                 <li class="page-item" th:classappend="${events.first} ? 'disabled'">
                     <a class="page-link" th:href="@{/events(page=${events.number - 1}, size=${events.size})}"

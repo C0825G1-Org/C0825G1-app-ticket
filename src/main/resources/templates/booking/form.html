@@ -70,13 +70,13 @@
                                                     th:text="${#numbers.formatDecimal(tt.price, 0, 'COMMA', 0, 'POINT')} + ' VND'"></small>
                                                 <br>
                                                 <small class="text-white-50"
-                                                    th:text="'Còn lại: ' + ${tt.quantity}"></small>
+                                                    th:text="'Còn lại: ' + ${ticketAvailability[tt.id]}"></small>
                                             </div>
                                             <div style="width: 100px;">
                                                 <input type="number" th:name="'ticket_' + ${tt.id}"
                                                     class="form-control ticket-qty bg-dark text-white border-secondary border-opacity-50"
                                                     th:value="${preSelectedQuantities != null and preSelectedQuantities.containsKey(tt.id) ? preSelectedQuantities.get(tt.id) : ''}"
-                                                    placeholder="0" min="0" th:max="${tt.quantity}">
+                                                    placeholder="0" min="0" th:max="${ticketAvailability[tt.id]}">
                                             </div>
                                         </div>
                                     </div>
