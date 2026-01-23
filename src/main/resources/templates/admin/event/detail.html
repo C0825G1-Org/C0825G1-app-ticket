@@ -79,11 +79,11 @@
                             <div th:if="${event.status.name() == 'FINISHED' or event.status.name() == 'CANCELLED' or event.status.name() == 'REJECTED' or event.status.name() == 'DELETED'}"
                                 class="d-flex gap-2">
                                 <!-- Restore (For Cancelled/Rejected/Deleted) -->
-                                <button type="button" class="btn btn-outline-primary rounded-3 fw-bold px-3"
-                                    th:if="${event.status.name() == 'CANCELLED' or event.status.name() == 'REJECTED' or event.status.name() == 'DELETED'}"
-                                    th:onclick="'restoreEvent(' + ${event.id} + ')'">
-                                    <i class="bi bi-arrow-counterclockwise me-2"></i> Khôi phục
-                                </button>
+<!--                                <button type="button" class="btn btn-outline-primary rounded-3 fw-bold px-3"-->
+<!--                                    th:if="${event.status.name() == 'CANCELLED' or event.status.name() == 'REJECTED' or event.status.name() == 'DELETED'}"-->
+<!--                                    th:onclick="'restoreEvent(' + ${event.id} + ')'">-->
+<!--                                    <i class="bi bi-arrow-counterclockwise me-2"></i> Khôi phục-->
+<!--                                </button>-->
                                 <!-- View Reason for Rejected/Cancelled if needed? -->
                                 <button type="button" class="btn btn-outline-danger rounded-3 fw-bold px-3"
                                     th:data-id="${event.id}" th:data-title="${event.title}"
