@@ -69,15 +69,23 @@ public class BookingServiceImpl implements IBookingService {
             TicketType ticketType = ticketTypeRepository.findById(ticketTypeId)
                     .orElseThrow(() -> new RuntimeException("Ticket type not found"));
 
-            if (ticketType.getQuantity() < quantity) {
-                throw new RuntimeException("Not enough tickets for: " + ticketType.getName());
+            // if (ticketType.getQuantity() < quantity) {
+            //     throw new RuntimeException("Not enough tickets for: " + ticketType.getName());
+            // }
+
+            // // Giảm số lượng vé trong kho
+            // ticketType.setQuantity(ticketType.getQuantity() - quantity);
+            // ticketTypeRepository.save(ticketType);
+            // Calculate available quantity (quantity - sold)
+            int sold = getSoldQuantity(ticketType.getId());
+            int available = ticketType.getQuantity() - sold;
+            
+            if (available < quantity) {
+                throw new RuntimeException("Not enough tickets available for: " + ticketType.getName() 
+                    + ". Available: " + available + ", Requested: " + quantity);
             }
 
-            // Giảm số lượng vé trong kho
-            ticketType.setQuantity(ticketType.getQuantity() - quantity);
-            ticketTypeRepository.save(ticketType);
-
-            // Tạo chi tiết booking
+            // Tạo chi tiết booking (quantity field remains unchanged)
             BookingDetail detail = new BookingDetail();
             detail.setBooking(booking);
             detail.setTicketType(ticketType);
@@ -122,13 +130,15 @@ public class BookingServiceImpl implements IBookingService {
         booking.setStatus(BookingStatus.CANCELLED);
         bookingRepository.save(booking);
 
-        // Hoàn lại số lượng vé
-        List<BookingDetail> details = bookingDetailRepository.findByBookingId(bookingId);
-        for (BookingDetail detail : details) {
-            TicketType tt = detail.getTicketType();
-            tt.setQuantity(tt.getQuantity() + detail.getQuantity());
-            ticketTypeRepository.save(tt);
-        }
+        //         // Hoàn lại số lượng vé
+        // List<BookingDetail> details = bookingDetailRepository.findByBookingId(bookingId);
+        // for (BookingDetail detail : details) {
+        //     TicketType tt = detail.getTicketType();
+        //     tt.setQuantity(tt.getQuantity() + detail.getQuantity());
+        //     ticketTypeRepository.save(tt);
+        // }
+        // No need to restore quantity - it's calculated dynamically from booking_details
+        // Available quantity will automatically increase when status = CANCELLED is excluded from calculations
     }
 
     @Override
@@ -187,5 +197,15 @@ public class BookingServiceImpl implements IBookingService {
     @Override
     public List<BookingDetail> getBookingDetailsByBookingId(Long bookingId) {
         return bookingDetailRepository.findByBookingId(bookingId);
+    }
+
+    @Override
+    public int getSoldQuantity(Long ticketTypeId) {
+        List<BookingDetail> details = bookingDetailRepository.findByTicketType_Id(ticketTypeId);
+        return details.stream()
+                .filter(detail -> detail.getBooking().getStatus() == BookingStatus.SUCCESS || 
+                                 detail.getBooking().getStatus() == BookingStatus.PENDING)
+                .mapToInt(BookingDetail::getQuantity)
+                .sum();
     }
 }

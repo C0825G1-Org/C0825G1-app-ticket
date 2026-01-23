@@ -4,24 +4,29 @@
 <head th:replace="~{common/layout :: head('Sự kiện của tôi')}">
 </head>
 
-<body>
+<body style="background-color: #0f172a;" data-bs-theme="dark">
     <div th:replace="~{common/layout :: user-layout(~{::content})}">
         <div th:fragment="content">
             <div class="container-xl mt-5 pt-5 mb-5">
                 <!-- Header for Page -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h4 class="fw-bold mb-0">Sự kiện của tôi</h4>
-                        <p class="text-muted small mb-0">Quản lý các sự kiện mà bạn tổ chức</p>
+                        <h4 class="fw-bold mb-0 text-white">Sự kiện của tôi</h4>
+                        <p class="text-white-50 small mb-0">Quản lý các sự kiện mà bạn tổ chức</p>
                     </div>
+                    <a th:href="@{/user/events/create}" class="btn btn-gradient rounded-pill px-4 shadow-sm"
+                        style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); color: white; border: none;">
+                        <i class="bi bi-plus-lg me-2"></i>Thêm sự kiện
+                    </a>
                 </div>
 
                 <!-- Events Table -->
-                <div class="card border-0 shadow-sm rounded-4">
+                <div class="card card-glass-dark border-0 shadow-sm rounded-4">
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead class="bg-light">
+                            <table class="table text-white align-middle mb-0"
+                                style="border-color: rgba(255,255,255,0.1);">
+                                <thead style="background-color: rgba(255,255,255,0.05);">
                                     <tr class="text-muted small text-uppercase">
                                         <th class="px-4 py-3 fw-bold">Sự kiện</th>
                                         <th class="px-4 py-3 fw-bold">Danh mục</th>
@@ -41,50 +46,45 @@
                                                         style="object-fit: cover; min-width: 60px;">
                                                 </div>
                                                 <div>
-                                                    <div class="fw-bold" th:text="${event.title}">Title</div>
+                                                    <div class="fw-bold text-white" th:text="${event.title}">Title</div>
 
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="px-4 py-3"><span class="badge bg-primary-subtle text-primary"
+                                        <td class="px-4 py-3"><span
+                                                class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25"
                                                 th:text="${event.category.name}">Cat</span></td>
-                                        <td class="px-4 py-3 text-muted">
+                                        <td class="px-4 py-3 text-white-50">
                                             <span
                                                 th:if="${event.eventOccurrences != null && !event.eventOccurrences.isEmpty()}"
                                                 th:text="${#temporals.format(event.eventOccurrences[0].startTime, 'dd/MM/yyyy')}">Date</span>
                                         </td>
                                         <td class="px-4 py-3">
                                             <div class="d-flex align-items-center gap-2">
-                                                <span class="badge rounded-pill px-3"
-                                                    th:classappend="${event.status.name() == 'DRAFT' ? 'bg-secondary-subtle text-secondary' : (event.status.name() == 'PENDING' ? 'bg-warning-subtle text-warning' : (event.status.name() == 'APPROVED' ? 'bg-success-subtle text-success' : (event.status.name() == 'HAPPENING' ? 'bg-primary-subtle text-primary' : (event.status.name() == 'FINISHED' ? 'bg-info-subtle text-info' : (event.status.name() == 'DELETED' ? 'bg-dark-subtle text-dark text-decoration-line-through' : 'bg-danger-subtle text-danger')))))}"
+                                                <span
+                                                    class="badge rounded-pill px-3 bg-opacity-25 border border-opacity-25"
+                                                    th:classappend="${event.status.name() == 'DRAFT' ? 'bg-secondary text-secondary border-secondary' : (event.status.name() == 'PENDING' ? 'bg-warning text-warning border-warning' : (event.status.name() == 'APPROVED' ? 'bg-success text-success border-success' : (event.status.name() == 'HAPPENING' ? 'bg-primary text-primary border-primary' : (event.status.name() == 'FINISHED' ? 'bg-info text-info border-info' : (event.status.name() == 'DELETED' ? 'bg-dark text-white border-dark text-decoration-line-through' : 'bg-danger text-danger border-danger')))))}"
                                                     th:text="${event.status.name() == 'DRAFT' ? 'Nháp' : (event.status.name() == 'PENDING' ? 'Chờ duyệt' : (event.status.name() == 'APPROVED' ? 'Đã duyệt' : (event.status.name() == 'HAPPENING' ? 'Đang diễn ra' : (event.status.name() == 'FINISHED' ? 'Đã kết thúc' : (event.status.name() == 'DELETED' ? 'Đã xóa' : (event.status.name() == 'CANCELLED' ? 'Đã hủy' : 'Từ chối'))))))}">Status</span>
 
 
                                             </div>
                                         </td>
                                         <td class="px-4 py-3 text-end">
-                                            <div class="dropdown">
-                                                <button class="btn btn-sm btn-outline-secondary rounded-3 dropdown-toggle"
-                                                    type="button" data-bs-toggle="dropdown">
-                                                    Hành động
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm">
-                                                    <li>
-                                                        <a class="dropdown-item"
-                                                            th:href="@{/user/events/detail/{id}(id=${event.id})}">
-                                                            <i class="bi bi-eye me-2"></i> Xem chi tiết
-                                                        </a>
-                                                    </li>
-                                                    <!-- Edit moved to detail page per UX change -->
-                                                    <li>
-                                                        <button type="button" class="dropdown-item"
-                                                            th:onclick="'duplicateEvent(' + ${event.id} + ')'">
-                                                            <i class="bi bi-files me-2"></i> Nhân bản
-                                                        </button>
-                                                    </li>
-                                                    <!-- Xóa được hiển thị trên trang chi tiết (detail). Bỏ mục Xóa khỏi danh sách theo yêu cầu. -->
-                                                </ul>
-                                            </div>
+                                            <a th:href="@{/user/events/detail/{id}(id=${event.id})}"
+                                                class="btn btn-sm btn-outline-light me-1 rounded-3"
+                                                title="Xem chi tiết">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a th:href="@{/user/events/edit/{id}(id=${event.id})}"
+                                                class="btn btn-sm btn-outline-light me-1 rounded-3" title="Sửa">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger rounded-3"
+                                                th:data-id="${event.id}" th:data-title="${event.title}"
+                                                onclick="deleteEvent(this.getAttribute('data-id'), this.getAttribute('data-title'))"
+                                                title="Xóa">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                     <tr th:if="${events.empty}">
@@ -100,7 +100,7 @@
                 <!-- Pagination -->
                 <div th:if="${events.totalPages > 1}" class="d-flex justify-content-center mt-4">
                     <nav aria-label="Page navigation">
-                        <ul class="pagination">
+                        <ul class="pagination pagination-custom">
                             <li class="page-item" th:classappend="${events.first ? 'disabled' : ''}">
                                 <a class="page-link"
                                     th:href="@{/user/events(page=${events.number - 1}, size=${events.size})}">
@@ -122,13 +122,7 @@
                     </nav>
                 </div>
 
-                <!-- Floating Action Button for Create -->
-                <a th:href="@{/user/events/create}"
-                    class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center"
-                    title="Tạo sự kiện mới"
-                    style="position: fixed; bottom: 40px; right: 40px; width: 60px; height: 60px; z-index: 1000; background-color: #6f42c1; border: none; transition: transform 0.2s;">
-                    <i class="bi bi-plus-lg fs-2"></i>
-                </a>
+
 
                 <script>
                     document.addEventListener('DOMContentLoaded', function () {

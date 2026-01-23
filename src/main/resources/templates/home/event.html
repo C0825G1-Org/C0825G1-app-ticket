@@ -30,7 +30,7 @@
                     <li class="breadcrumb-item active" aria-current="page">Sự kiện</li>
                 </ol>
             </nav>
-            <h1 class="display-6 fw-bold mb-0">Khám phá Sự kiện</h1>
+            <h1 class="display-6 fw-bold mb-0 text-white">Khám phá Sự kiện</h1>
         </div>
     </section>
 
@@ -55,12 +55,10 @@
                                 </div>
 
                                 <div class="d-flex gap-2">
-                                    <button type="submit"
-                                        class="btn btn-sm flex-fill mt-2 btn-event-search">
+                                    <button type="submit" class="btn btn-sm flex-fill mt-2 btn-event-search">
                                         <i class="bi bi-search me-1"></i> Tìm kiếm
                                     </button>
-                                    <a th:href="@{/events}"
-                                        class="btn btn-sm flex-fill mt-2 btn-event-reset">
+                                    <a th:href="@{/events}" class="btn btn-sm flex-fill mt-2 btn-event-reset">
                                         <i class="bi bi-x-circle me-1"></i> Xóa
                                     </a>
                                 </div>
@@ -68,7 +66,7 @@
 
                             <!-- Category Filter -->
                             <div class="mb-4">
-                                <h6 class="fw-bold mb-3">Danh mục</h6>
+                                <h6 class="fw-bold mb-3 text-white">Danh mục</h6>
                                 <select class="form-select" name="category">
                                     <option value="" th:selected="${param.category == null}">Tất cả danh mục</option>
                                     <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"
@@ -80,7 +78,7 @@
 
                             <!-- Location Filter -->
                             <div class="mb-4">
-                                <h6 class="fw-bold mb-3">Địa điểm</h6>
+                                <h6 class="fw-bold mb-3 text-white">Địa điểm</h6>
                                 <select class="form-select" name="location">
                                     <option value="" th:selected="${param.location == null}">Toàn quốc</option>
 
@@ -255,9 +253,9 @@
                                     <option value="Thanh Hóa"
                                         th:selected="${param.location != null and param.location[0] == 'Thanh Hóa'}">
                                         Thanh Hóa</option>
-                                    <option value="Thừa Thiên Huế"
-                                        th:selected="${param.location != null and param.location[0] == 'Thừa Thiên Huế'}">
-                                        Thừa Thiên Huế</option>
+                                    <option value="Thành phố Huế"
+                                        th:selected="${param.location != null and param.location[0] == 'Thành phố Huế'}">
+                                        Thành phố Huế</option>
                                     <option value="Tiền Giang"
                                         th:selected="${param.location != null and param.location[0] == 'Tiền Giang'}">
                                         Tiền Giang</option>
@@ -305,8 +303,8 @@
                     <!-- Sidebar sự kiện gần -->
                     <div class="mt-5">
                         <div class="mb-4">
-                            <h4 class="fw-bold mb-1">
-                                <i class="bi bi-geo-fill text-primary"></i>
+                            <h4 class="fw-bold mb-1 text-white">
+                                <i class="bi bi-geo-fill text-white"></i>
                                 Sự kiện gần bạn
                             </h4>
                             <p class="text-muted mb-0"

@@ -44,52 +44,110 @@
             </h1>
 
             <!-- Search Widget -->
-            <div class="search-widget mx-auto text-start animate-fade-up"
-                style="max-width: 900px; animation-delay: 0.3s; background: rgba(255, 255, 255, 0.95);">
-                <form method="get" th:action="@{/event/search}" class="row g-3">
-                    <div class="col-lg-4">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0 rounded-start-4 ps-3">
-                                <i class="bi bi-search text-muted"></i>
-                            </span>
-                            <input type="text" name="search" class="form-control form-control-lg border-start-0 ps-0"
-                                placeholder="Tìm kiếm sự kiện...">
-                        </div>
-                    </div>
-                    <div class="col-lg-3">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0 rounded-start-4 ps-3">
-                                <i class="bi bi-geo-alt text-muted"></i>
-                            </span>
-                            <select name="location"
-                                class="form-select form-select-lg border-start-0 ps-0 bg-transparent">
-                                <option value="">Toàn quốc</option>
-                                <option value="Hà Nội">Hà Nội</option>
-                                <option value="Ho Chi Minh">TP. Hồ Chí Minh</option>
-                                <option value="Đà Nẵng">Đà Nẵng</option>
-                                <option value="Hải Phòng">Hải Phòng</option>
-                                <option value="Cần Thơ">Cần Thơ</option>
-                                <option value="Nha Trang">Nha Trang</option>
-                            </select>
-                        </div>
+            <div class="search-widget mx-auto text-start animate-fade-up shadow-lg rounded-5 overflow-hidden p-2"
+                style="max-width: 900px; animation-delay: 0.3s; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
+                <form method="get" th:action="@{/event/search}" class="row g-2 align-items-center">
+                    <div class="col-lg-4 position-relative search-input-wrapper">
+                        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-4 text-primary fs-5"
+                            style="z-index: 5;"></i>
+                        <input type="text" name="search"
+                            class="form-control form-control-lg border-0 bg-transparent py-3 ps-5 shadow-none"
+                            style="font-size: 1rem;" placeholder="Tìm kiếm sự kiện...">
+                        <div class="position-absolute top-50 end-0 translate-middle-y border-end"
+                            style="height: 60%; right: 0;"></div>
                     </div>
 
-                    <div class="col-lg-3">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0 rounded-start-4 ps-3">
-                                <i class="bi bi-tag text-muted"></i>
-                            </span>
-                            <select name="category"
-                                class="form-select form-select-lg border-start-0 ps-0 bg-transparent">
-                                <option value="">Tất cả danh mục</option>
-                                <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}">
-                                </option>
-                            </select>
-                        </div>
+                    <div class="col-lg-3 position-relative search-input-wrapper">
+                        <i class="bi bi-geo-alt position-absolute top-50 start-0 translate-middle-y ms-3 text-primary fs-5"
+                            style="z-index: 5;"></i>
+                        <select name="location"
+                            class="form-select form-select-lg border-0 bg-transparent py-3 ps-5 shadow-none"
+                            style="font-size: 1rem; cursor: pointer;">
+                            <option value="">Toàn quốc</option>
+                            <option value="An Giang">An Giang</option>
+                            <option value="Bà Rịa - Vũng Tàu">Bà Rịa - Vũng Tàu</option>
+                            <option value="Bắc Giang">Bắc Giang</option>
+                            <option value="Bắc Kạn">Bắc Kạn</option>
+                            <option value="Bạc Liêu">Bạc Liêu</option>
+                            <option value="Bắc Ninh">Bắc Ninh</option>
+                            <option value="Bến Tre">Bến Tre</option>
+                            <option value="Bình Định">Bình Định</option>
+                            <option value="Bình Dương">Bình Dương</option>
+                            <option value="Bình Phước">Bình Phước</option>
+                            <option value="Bình Thuận">Bình Thuận</option>
+                            <option value="Cà Mau">Cà Mau</option>
+                            <option value="Cần Thơ">Cần Thơ</option>
+                            <option value="Cao Bằng">Cao Bằng</option>
+                            <option value="Đà Nẵng">Đà Nẵng</option>
+                            <option value="Đắk Lắk">Đắk Lắk</option>
+                            <option value="Đắk Nông">Đắk Nông</option>
+                            <option value="Điện Biên">Điện Biên</option>
+                            <option value="Đồng Nai">Đồng Nai</option>
+                            <option value="Đồng Tháp">Đồng Tháp</option>
+                            <option value="Gia Lai">Gia Lai</option>
+                            <option value="Hà Giang">Hà Giang</option>
+                            <option value="Hà Nam">Hà Nam</option>
+                            <option value="Hà Nội">Hà Nội</option>
+                            <option value="Hà Tĩnh">Hà Tĩnh</option>
+                            <option value="Hải Dương">Hải Dương</option>
+                            <option value="Hải Phòng">Hải Phòng</option>
+                            <option value="Hậu Giang">Hậu Giang</option>
+                            <option value="Hòa Bình">Hòa Bình</option>
+                            <option value="Hưng Yên">Hưng Yên</option>
+                            <option value="Khánh Hòa">Khánh Hòa</option>
+                            <option value="Kiên Giang">Kiên Giang</option>
+                            <option value="Kon Tum">Kon Tum</option>
+                            <option value="Lai Châu">Lai Châu</option>
+                            <option value="Lâm Đồng">Lâm Đồng</option>
+                            <option value="Lạng Sơn">Lạng Sơn</option>
+                            <option value="Lào Cai">Lào Cai</option>
+                            <option value="Long An">Long An</option>
+                            <option value="Nam Định">Nam Định</option>
+                            <option value="Nghệ An">Nghệ An</option>
+                            <option value="Ninh Bình">Ninh Bình</option>
+                            <option value="Ninh Thuận">Ninh Thuận</option>
+                            <option value="Phú Thọ">Phú Thọ</option>
+                            <option value="Phú Yên">Phú Yên</option>
+                            <option value="Quảng Bình">Quảng Bình</option>
+                            <option value="Quảng Nam">Quảng Nam</option>
+                            <option value="Quảng Ngãi">Quảng Ngãi</option>
+                            <option value="Quảng Ninh">Quảng Ninh</option>
+                            <option value="Quảng Trị">Quảng Trị</option>
+                            <option value="Sóc Trăng">Sóc Trăng</option>
+                            <option value="Sơn La">Sơn La</option>
+                            <option value="Tây Ninh">Tây Ninh</option>
+                            <option value="Thái Bình">Thái Bình</option>
+                            <option value="Thái Nguyên">Thái Nguyên</option>
+                            <option value="Thanh Hóa">Thanh Hóa</option>
+                            <option value="Thành phố Huế">Thành phố Huế</option>
+                            <option value="Tiền Giang">Tiền Giang</option>
+                            <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
+                            <option value="Trà Vinh">Trà Vinh</option>
+                            <option value="Tuyên Quang">Tuyên Quang</option>
+                            <option value="Vĩnh Long">Vĩnh Long</option>
+                            <option value="Vĩnh Phúc">Vĩnh Phúc</option>
+                            <option value="Yên Bái">Yên Bái</option>
+                        </select>
+                        <div class="position-absolute top-50 end-0 translate-middle-y border-end d-none d-lg-block"
+                            style="height: 60%; right: 0;"></div>
                     </div>
+
+                    <div class="col-lg-3 position-relative search-input-wrapper">
+                        <i class="bi bi-tag position-absolute top-50 start-0 translate-middle-y ms-3 text-primary fs-5"
+                            style="z-index: 5;"></i>
+                        <select name="category"
+                            class="form-select form-select-lg border-0 bg-transparent py-3 ps-5 shadow-none"
+                            style="font-size: 1rem; cursor: pointer;">
+                            <option value="">Tất cả danh mục</option>
+                            <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"></option>
+                        </select>
+                    </div>
+
                     <div class="col-lg-2">
-                        <button type="submit" class="btn btn-gradient btn-lg w-100 rounded-4 fw-bold h-100">
-                            Tìm
+                        <button type="submit"
+                            class="btn btn-gradient btn-lg w-100 rounded-4 fw-bold shadow-sm btn-shine"
+                            style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border: none; padding: 0.8rem 0; transition: transform 0.2s;">
+                            Tìm kiếm
                         </button>
                     </div>
                 </form>
@@ -283,9 +341,14 @@
                         <!-- Event Info -->
                         <div class="card-body p-4 d-flex flex-column">
                             <!-- Title -->
-                            <h5 class="card-title fw-bold mb-3"
-                                style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 48px;"
-                                th:text="${event.title}">
+                            <h5 class="card-title fw-bold mb-3" style="display: -webkit-box;
+                                    -webkit-line-clamp: 2;
+                                    -webkit-box-orient: vertical;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    line-height: 1.4em;
+                                    min-height: calc(1.4em * 2);
+                                 " th:utext="${event.title}">
                                 EDM Symphony Night
                             </h5>
 

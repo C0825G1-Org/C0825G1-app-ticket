@@ -18,4 +18,5 @@ public interface IBookingService {
     long calculateTotalAmount(Long bookingId);
     void expireBookings();
     List<com.codegym.appticket.entity.BookingDetail> getBookingDetailsByBookingId(Long bookingId);
+    int getSoldQuantity(Long ticketTypeId);
 }

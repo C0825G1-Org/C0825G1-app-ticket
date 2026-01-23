@@ -7,7 +7,8 @@
 <script th:src="@{'https://cdn.tiny.cloud/1/' + ${tinyMceApiKey} + '/tinymce/6/tinymce.min.js'}"
     referrerpolicy="origin"></script>
 
-<body>
+<body style="background-color: #0f172a;" data-bs-theme="dark">
+    <!-- Apply Dark Theme to Body content wrapper -->
     <div th:replace="~{common/layout :: user-layout(~{::content})}">
         <div th:fragment="content">
             <div class="container-xl mt-5 pt-5 mb-5">
@@ -15,10 +16,10 @@
                 <!-- Header -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h4 class="fw-bold mb-0">Tạo sự kiện mới</h4>
-                        <p class="text-muted small mb-0">Nhập thông tin chi tiết để tạo sự kiện mới</p>
+                        <h4 class="fw-bold mb-0 text-white">Tạo sự kiện mới</h4>
+                        <p class="text-white-50 small mb-0">Nhập thông tin chi tiết để tạo sự kiện mới</p>
                     </div>
-                    <a th:href="@{/user/events}" class="btn btn-outline-secondary rounded-3">
+                    <a th:href="@{/user/events}" class="btn btn-outline-light rounded-3">
                         <i class="bi bi-arrow-left me-2"></i> Quay lại
                     </a>
                 </div>
@@ -55,9 +56,10 @@
                             <!-- STEP 1: EVENT INFO -->
                             <div id="step-info">
                                 <!-- Basic Info -->
-                                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                                    <div class="card-header bg-white border-bottom py-3">
-                                        <h5 class="fw-bold mb-0">
+                                <div class="card card-glass-dark border-0 shadow-sm rounded-4 mb-4">
+                                    <div
+                                        class="card-header bg-transparent border-bottom border-secondary border-opacity-25 py-3">
+                                        <h5 class="fw-bold mb-0 text-white">
                                             <i class="bi bi-info-circle text-primary me-2"></i>
                                             Thông tin cơ bản
                                         </h5>
@@ -65,19 +67,22 @@
                                     <div class="card-body p-4">
 
                                         <div class="mb-3">
-                                            <label class="form-label fw-medium">Tên sự kiện <span
+                                            <label class="form-label fw-medium text-white">Tên sự kiện <span
                                                     class="text-danger">*</span></label>
-                                            <input type="text" class="form-control form-control-lg" name="title"
-                                                placeholder="VD: Đêm nhạc Acoustic" required>
+                                            <input type="text"
+                                                class="form-control form-control-lg bg-dark text-white border-secondary border-opacity-50"
+                                                name="title" placeholder="VD: Đêm nhạc Acoustic" required>
                                             <div class="text-danger small error-message" id="error-title"></div>
                                         </div>
 
                                         <!-- Organizer Section Removed for User: Automaticaly set to self -->
 
                                         <div class="mb-3">
-                                            <label class="form-label fw-medium">Danh mục <span
+                                            <label class="form-label fw-medium text-white">Danh mục <span
                                                     class="text-danger">*</span></label>
-                                            <select class="form-select form-select-lg" name="categoryId" required>
+                                            <select
+                                                class="form-select form-select-lg bg-dark text-white border-secondary border-opacity-50"
+                                                name="categoryId" required>
                                                 <option value="">-- Chọn danh mục --</option>
                                                 <option th:each="cat : ${categories}" th:value="${cat.id}"
                                                     th:text="${cat.name}">Category</option>
@@ -86,12 +91,11 @@
                                         </div>
 
                                         <div class="mb-3">
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <label class="form-label fw-medium mb-0">Mô tả sự kiện <span
-                                                        class="text-danger">*</span></label>
-                                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="openPreviewModal()"><i class="bi bi-eye me-1"></i> Xem trước</button>
-                                            </div>
-                                            <textarea class="form-control" rows="5" name="description" id="description"
+                                            <label class="form-label fw-medium text-white">Mô tả sự kiện <span
+                                                    class="text-danger">*</span></label>
+                                            <textarea
+                                                class="form-control bg-dark text-white border-secondary border-opacity-50"
+                                                rows="5" name="description" id="description"
                                                 placeholder="Mô tả chi tiết..."></textarea>
                                             <div class="form-text text-muted mt-2">
                                                 <i class="bi bi-info-circle me-1"></i>
@@ -106,10 +110,10 @@
                                 </div>
 
                                 <!-- Event Occurrences (New) -->
-                                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                                <div class="card card-glass-dark border-0 shadow-sm rounded-4 mb-4">
                                     <div
-                                        class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                                        <h5 class="fw-bold mb-0">
+                                        class="card-header bg-transparent border-bottom border-secondary border-opacity-25 py-3 d-flex justify-content-between align-items-center">
+                                        <h5 class="fw-bold mb-0 text-white">
                                             <i class="bi bi-geo-alt text-primary me-2"></i>
                                             Thời gian & Địa điểm
                                         </h5>
@@ -136,9 +140,10 @@
 
                             <!-- STEP 2: MEDIA -->
                             <div id="step-media" class="d-none">
-                                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                                    <div class="card-header bg-white border-bottom py-3">
-                                        <h5 class="fw-bold mb-0">
+                                <div class="card card-glass-dark border-0 shadow-sm rounded-4 mb-4">
+                                    <div
+                                        class="card-header bg-transparent border-bottom border-secondary border-opacity-25 py-3">
+                                        <h5 class="fw-bold mb-0 text-white">
                                             <i class="bi bi-images text-primary me-2"></i>
                                             Hình ảnh & Truyền thông
                                         </h5>
@@ -151,8 +156,8 @@
                                         <div id="galleryUrlsContainer"></div>
 
                                         <div class="mb-5">
-                                            <label class="form-label fw-medium mb-3">Banner Sự kiện (Bắt buộc) <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label fw-medium mb-3 text-white">Banner Sự kiện (Bắt
+                                                buộc) <span class="text-danger">*</span></label>
                                             <div class="preview-container mb-2"
                                                 onclick="document.getElementById('bannerFile').click()">
                                                 <img id="preview-banner" class="preview-image">
@@ -168,8 +173,8 @@
 
                                         <div class="row mb-5">
                                             <div class="col-md-6">
-                                                <label class="form-label fw-medium mb-3">Logo Sự kiện (Bắt buộc) <span
-                                                        class="text-danger">*</span></label>
+                                                <label class="form-label fw-medium mb-3 text-white">Logo Sự kiện (Bắt
+                                                    buộc) <span class="text-danger">*</span></label>
                                                 <div class="preview-container mb-2"
                                                     onclick="document.getElementById('logoFile').click()"
                                                     style="height: 150px;">
@@ -185,8 +190,8 @@
                                                     onchange="previewFile(this, 'preview-logo', 'placeholder-logo')">
                                             </div>
                                             <div class="col-md-6">
-                                                <label class="form-label fw-medium mb-3">Sơ đồ vị trí (Bắt buộc) <span
-                                                        class="text-danger">*</span></label>
+                                                <label class="form-label fw-medium mb-3 text-white">Sơ đồ vị trí (Bắt
+                                                    buộc) <span class="text-danger">*</span></label>
                                                 <div class="preview-container mb-2"
                                                     onclick="document.getElementById('ticketMapFile').click()"
                                                     style="height: 150px;">
@@ -204,7 +209,7 @@
                                         </div>
 
                                         <div class="mb-3">
-                                            <label class="form-label fw-medium">Thư viện ảnh/video khác (Tùy
+                                            <label class="form-label fw-medium text-white">Thư viện ảnh/video khác (Tùy
                                                 chọn)</label>
                                             <input type="file" class="form-control mb-3" id="galleryFiles" multiple
                                                 accept="image/*,video/*"
@@ -218,12 +223,12 @@
 
                                 <!-- Buttons for Step 2 -->
                                 <div class="d-flex gap-3 justify-content-end mb-5">
-                                    <button type="button" class="btn btn-outline-secondary btn-lg rounded-3 px-5"
+                                    <button type="button" class="btn btn-outline-light btn-lg rounded-3 px-5"
                                         onclick="prevStep()">
                                         <i class="bi bi-arrow-left me-2"></i> Quay lại
                                     </button>
-                                    <button type="submit" class="btn btn-outline-secondary btn-lg rounded-3 px-4"
-                                        onclick="saveAsDraft()">
+                                    <button type="submit" class="btn btn-outline-light btn-lg rounded-3 px-4"
+                                        onclick="setDraft()">
                                         <i class="bi bi-save me-2"></i> Lưu nháp
                                     </button>
                                     <button type="submit" class="btn btn-gradient btn-lg rounded-3 px-5 fw-bold"
@@ -274,7 +279,7 @@
                                     // REMOVE VALIDATION IF DRAFT
                                     const eventStatus = document.getElementById('eventStatus').value;
                                     if (eventStatus === 'DRAFT') {
-                                        // Skip file count validation or make it optional? 
+                                        // Skip file count validation or make it optional?
                                         // Draft should normally allow anything, but max file count is safeguard. Let's keep max 10 check for safety or skip it too?
                                         // Let's keep hard limits but skip 'required'
                                     } else {
@@ -471,51 +476,51 @@
                                 if (!container) return;
                                 const idx = document.querySelectorAll('.event-occurrence-item').length;
                                 const item = document.createElement('div');
-                                item.className = 'card mb-3 border bg-light event-occurrence-item';
+                                item.className = 'card mb-3 border border-secondary border-opacity-25 bg-transparent event-occurrence-item';
                                 item.innerHTML = `
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between mb-2">
-                                            <h6 class="fw-bold text-muted">Lịch trình #${idx + 1}</h6>
+                                            <h6 class="fw-bold text-white-50">Lịch trình #${idx + 1}</h6>
                                             <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this, 'occurrence')">
                                                 <i class="bi bi-trash"></i> Xóa
                                             </button>
                                         </div>
                                         <div class="row g-3">
                                             <div class="col-md-6">
-                                                <label class="form-label small fw-medium">Bắt đầu <span class="text-danger">*</span></label>
-                                                <input type="datetime-local" class="form-control" name="eventOccurrences[${idx}].startTime" required>
+                                                <label class="form-label small fw-medium text-white">Bắt đầu <span class="text-danger">*</span></label>
+                                                <input type="datetime-local" class="form-control bg-dark text-white border-secondary border-opacity-50" name="eventOccurrences[${idx}].startTime" required>
                                             </div>
                                             <div class="col-md-6">
-                                                <label class="form-label small fw-medium">Kết thúc <span class="text-danger">*</span></label>
-                                                <input type="datetime-local" class="form-control" name="eventOccurrences[${idx}].endTime" required>
+                                                <label class="form-label small fw-medium text-white">Kết thúc <span class="text-danger">*</span></label>
+                                                <input type="datetime-local" class="form-control bg-dark text-white border-secondary border-opacity-50" name="eventOccurrences[${idx}].endTime" required>
                                             </div>
-                                            <div class="col-12"><hr class="my-1"></div>
+                                            <div class="col-12"><hr class="my-1 border-secondary"></div>
                                             <div class="col-md-6">
-                                                <label class="form-label small fw-medium">Tỉnh/Thành phố <span class="text-danger">*</span></label>
-                                                <select class="form-select province-select" name="eventOccurrences[${idx}].provinceCode" required data-index="${idx}" onchange="onProvinceChange(this, ${idx})">
+                                                <label class="form-label small fw-medium text-white">Tỉnh/Thành phố <span class="text-danger">*</span></label>
+                                                <select class="form-select province-select bg-dark text-white border-secondary border-opacity-50" name="eventOccurrences[${idx}].provinceCode" required data-index="${idx}" onchange="onProvinceChange(this, ${idx})">
                                                     <option value="">-- Chọn Tỉnh/Thành --</option>
                                                 </select>
                                                 <input type="hidden" name="eventOccurrences[${idx}].provinceName" class="province-name">
                                             </div>
                                             <div class="col-md-6">
-                                                <label class="form-label small fw-medium">Phường/Xã <span class="text-danger">*</span></label>
-                                                <select class="form-select ward-select" name="eventOccurrences[${idx}].wardCode" required disabled onchange="onWardChange(this, ${idx})">
+                                                <label class="form-label small fw-medium text-white">Phường/Xã <span class="text-danger">*</span></label>
+                                                <select class="form-select ward-select bg-dark text-white border-secondary border-opacity-50" name="eventOccurrences[${idx}].wardCode" required disabled onchange="onWardChange(this, ${idx})">
                                                     <option value="">-- Chọn Phường/Xã --</option>
                                                 </select>
                                                 <input type="hidden" name="eventOccurrences[${idx}].wardName" class="ward-name">
                                             </div>
                                             <div class="col-12">
-                                                <label class="form-label small fw-medium">Địa chỉ chi tiết <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="eventOccurrences[${idx}].addressDetail" placeholder="Số nhà, Tên đường..." required>
+                                                <label class="form-label small fw-medium text-white">Địa chỉ chi tiết <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control bg-dark text-white border-secondary border-opacity-50" name="eventOccurrences[${idx}].addressDetail" placeholder="Số nhà, Tên đường..." required>
                                             </div>
                                             <div class="col-12">
-                                                <label class="form-label small fw-medium">Link Bản đồ (Tùy chọn)</label>
-                                                <input type="text" class="form-control" name="eventOccurrences[${idx}].mapLink" placeholder="https://maps.google.com/...">
+                                                <label class="form-label small fw-medium text-white">Link Bản đồ (Tùy chọn)</label>
+                                                <input type="text" class="form-control bg-dark text-white border-secondary border-opacity-50" name="eventOccurrences[${idx}].mapLink" placeholder="https://maps.google.com/...">
                                             </div>
                                             
                                             <!-- Nested Ticket Types -->
                                             <div class="col-12 mt-3">
-                                                <div class="card inner-card border-0 bg-white">
+                                                <div class="card inner-card border-0 bg-transparent">
                                                     <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center px-0">
                                                         <h6 class="fw-bold mb-0 text-primary">Các loại vé cho lịch trình này</h6>
                                                         <button type="button" class="btn btn-sm btn-outline-primary" onclick="addTicketType(${idx})">
@@ -554,20 +559,20 @@
                                 row.className = 'row g-2 mb-2 ticket-type-row align-items-end';
                                 row.innerHTML = `
                                     <div class="col-md-5">
-                                        <label class="form-label small text-muted">Tên vé</label>
-                                        <input type="text" class="form-control form-control-sm" 
+                                        <label class="form-label small text-white-50">Tên vé</label>
+                                        <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50"
                                                name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].name" 
                                                placeholder="VD: VIP" required>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label small text-muted">Giá (VNĐ)</label>
-                                        <input type="number" class="form-control form-control-sm" 
+                                        <label class="form-label small text-white-50">Giá (VNĐ)</label>
+                                        <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50"
                                                name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].price" 
                                                min="0" placeholder="0" required>
                                     </div>
                                     <div class="col-md-3">
-                                        <label class="form-label small text-muted">Số lượng</label>
-                                        <input type="number" class="form-control form-control-sm" 
+                                        <label class="form-label small text-white-50">Số lượng</label>
+                                        <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50"
                                                name="eventOccurrences[${occIdx}].ticketTypes[${ticketIdx}].quantity" 
                                                min="1" placeholder="100" required>
                                     </div>

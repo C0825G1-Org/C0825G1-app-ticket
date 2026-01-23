@@ -247,29 +247,29 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
             """, nativeQuery = true)
     EventDetailDTO findEventDetailById(@Param("eventId") Long eventId);
 
-        // Get ticket types for an event
-        @Query(value = """
-                            SELECT
-                                tt.id AS id,
-                                tt.name AS name,
-                                tt.price AS price,
-                                (tt.quantity - COALESCE(SUM(bd.quantity), 0)) AS availableQuantity,
-                                eo.id AS occurrenceId,
-                                eo.start_time AS startTime,
-                                p.name AS location
-                            FROM ticket_types tt
-                            JOIN event_occurrences eo ON tt.event_occurrence_id = eo.id
-                            LEFT JOIN booking_details bd ON bd.ticket_type_id = tt.id
-                            LEFT JOIN bookings b ON b.id = bd.booking_id AND b.status = 'SUCCESS'
-                            LEFT JOIN locations l ON l.id = eo.location_id
-                            LEFT JOIN wards w ON w.code = l.ward_code
-                            LEFT JOIN provinces p ON p.code = w.province_code
-                            WHERE eo.event_id = :eventId
-                            GROUP BY tt.id, tt.name, tt.price, tt.quantity, eo.id, eo.start_time, p.name
-                            HAVING availableQuantity > 0
-                            ORDER BY eo.start_time ASC, tt.price ASC
-                        """, nativeQuery = true)
-        List<TicketTypeDTO> findTicketTypesByEventId(@Param("eventId") Long eventId);
+    // Get ticket types for an event (including sold-out tickets)
+    @Query(value = """
+                SELECT
+                    tt.id AS id,
+                    tt.name AS name,
+                    tt.price AS price,
+                    (tt.quantity - COALESCE(SUM(bd.quantity), 0)) AS availableQuantity,
+                    eo.id AS occurrenceId,
+                    eo.start_time AS startTime,
+                    p.name AS location
+                FROM ticket_types tt
+                JOIN event_occurrences eo ON tt.event_occurrence_id = eo.id
+                LEFT JOIN booking_details bd ON bd.ticket_type_id = tt.id
+                LEFT JOIN bookings b ON b.id = bd.booking_id
+                LEFT JOIN locations l ON l.id = eo.location_id
+                LEFT JOIN wards w ON w.code = l.ward_code
+                LEFT JOIN provinces p ON p.code = w.province_code
+                WHERE eo.event_id = :eventId
+                  AND (b.id IS NULL OR b.status = 'SUCCESS' OR b.status = 'PENDING')
+                GROUP BY tt.id, tt.name, tt.price, tt.quantity, eo.id, eo.start_time, p.name
+                ORDER BY eo.start_time ASC, tt.price ASC
+            """, nativeQuery = true)
+    List<TicketTypeDTO> findTicketTypesByEventId(@Param("eventId") Long eventId);
 
         // Get all occurrences for an event
         @Query(value = """
@@ -384,7 +384,7 @@ public interface IEventRepository extends JpaRepository<Event, Long> {
               AND l.longitude IS NOT NULL
               AND eo.start_time > NOW()
               AND (:hasExcludeFilter = 0 OR p.name NOT IN :excludeLocationVariants)
-            HAVING distance < 160
+            HAVING distance > 0 AND distance < 160
             ORDER BY distance ASC
             LIMIT :limit
             """, nativeQuery = true)

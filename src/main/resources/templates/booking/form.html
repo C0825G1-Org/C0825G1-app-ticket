@@ -3,7 +3,7 @@
 
 <head th:replace="~{common/layout :: head('Đặt vé')}"></head>
 
-<body>
+<body style="background-color: #0f172a;" data-bs-theme="dark">
     <div th:replace="~{common/layout :: user-layout(~{:: .booking-form})}">
         <div class="booking-form container py-5" style="margin-top: 80px;">
             <div class="row justify-content-center"
@@ -11,22 +11,30 @@
 
                 <!-- Left Column: Seat Map (Optional) -->
                 <div class="col-lg-5 mb-4 mb-lg-0" th:if="${ticketMap != null}">
-                    <div class="card shadow-sm border-0 h-100 sticky-top" style="top: 100px; z-index: 1;">
-                        <div class="card-header bg-white border-0 py-3">
+                    <div class="card card-glass-dark border-0 h-100 sticky-top" style="top: 100px; z-index: 1;">
+                        <div class="card-header bg-transparent border-0 py-3">
                             <h5 class="fw-bold mb-0">Sơ đồ vé</h5>
                         </div>
-                        <div class="card-body text-center">
+                        <div class="card-body text-center position-relative group-hover" role="button"
+                            data-bs-toggle="modal" data-bs-target="#seatMapModal">
                             <img th:src="${ticketMap.mediaUrl}" class="img-fluid rounded-3" alt="Sơ đồ vé">
+                            <div
+                                class="position-absolute top-50 start-50 translate-middle opacity-0 hover-opacity-100 transition-all">
+                                <span class="badge bg-dark bg-opacity-75 p-2 rounded-circle">
+                                    <i class="bi bi-zoom-in fs-4 text-white"></i>
+                                </span>
+                            </div>
+                            <p class="text-muted small mt-2 mb-0">Nhấn vào ảnh để phóng to</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Right Column: Booking Form -->
                 <div th:class="${ticketMap != null ? 'col-lg-7' : 'col-md-8'}">
-                    <div class="card shadow-sm border-0">
+                    <div class="card card-glass-dark border-0">
                         <div class="card-body p-4">
-                            <h2 class="mb-4" th:text="${event.title}">Tên sự kiện</h2>
-                            <p class="text-muted" th:text="${location}"><i class="bi bi-geo-alt"></i> Địa điểm</p>
+                            <h2 class="mb-4 text-white" th:text="${event.title}">Tên sự kiện</h2>
+                            <p class="text-white-50" th:text="${location}"><i class="bi bi-geo-alt"></i> Địa điểm</p>
                             <hr>
 
                             <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -50,8 +58,8 @@
                                 <th:block th:each="tt, stat : ${ticketTypes}">
                                     <!-- Header: Show only if first item OR occurrenceId changed -->
                                     <div th:if="${stat.first or tt.eventOccurrence.id != ticketTypes[stat.index - 1].eventOccurrence.id}"
-                                        class="alert alert-soft-primary mt-4 mb-2 d-flex align-items-center">
-                                        <i class="bi bi-calendar-event me-2"></i>
+                                        class="alert alert-soft-info mt-4 mb-2 d-flex align-items-center text-white bg-dark border border-secondary border-opacity-50">
+                                        <i class="bi bi-calendar-event me-2 text-info"></i>
                                         <div>
                                             <strong
                                                 th:text="${#temporals.format(tt.eventOccurrence.startTime, 'HH:mm - dd/MM/yyyy')}"></strong>
@@ -61,21 +69,22 @@
                                         </div>
                                     </div>
 
-                                    <div class="mb-3 p-3 border rounded">
+                                    <div
+                                        class="mb-3 p-3 border border-secondary border-opacity-25 rounded bg-transparent">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div>
-                                                <h6 class="mb-0" th:text="${tt.name}">Tên vé</h6>
-                                                <small class="text-primary"
+                                                <h6 class="mb-0 text-white" th:text="${tt.name}">Tên vé</h6>
+                                                <small class="text-primary fw-bold"
                                                     th:text="${#numbers.formatDecimal(tt.price, 0, 'COMMA', 0, 'POINT')} + ' VND'"></small>
                                                 <br>
-                                                <small class="text-muted"
-                                                    th:text="'Còn lại: ' + ${tt.quantity}"></small>
+                                                <small class="text-white-50"
+                                                    th:text="'Còn lại: ' + ${ticketAvailability[tt.id]}"></small>
                                             </div>
                                             <div style="width: 100px;">
                                                 <input type="number" th:name="'ticket_' + ${tt.id}"
-                                                    class="form-control ticket-qty"
+                                                    class="form-control ticket-qty bg-dark text-white border-secondary border-opacity-50" th:data-price="${tt.price}"
                                                     th:value="${preSelectedQuantities != null and preSelectedQuantities.containsKey(tt.id) ? preSelectedQuantities.get(tt.id) : ''}"
-                                                    placeholder="0" min="0" th:max="${tt.quantity}">
+                                                    placeholder="0" min="0" th:max="${ticketAvailability[tt.id]}">
                                             </div>
                                         </div>
                                     </div>
@@ -86,9 +95,17 @@
                                     Vui lòng chọn ít nhất một vé để tiếp tục.
                                 </div>
 
+                                <div
+                                    class="d-flex justify-content-between align-items-center mb-4 p-3 bg-light rounded-3 border">
+                                    <h5 class="fw-bold mb-0 text-dark">Tổng cộng:</h5>
+                                    <h4 class="fw-bold text-primary mb-0" id="totalAmountDisplay">0 VND</h4>
+                                </div>
+
                                 <div class="d-grid gap-2 mt-4">
-                                    <button type="submit" class="btn btn-primary btn-lg">Tiếp tục đặt vé</button>
-                                    <a th:href="@{/event/{id}(id=${event.id})}" class="btn btn-outline-secondary">Quay
+                                    <button type="submit" class="btn btn-gradient btn-lg fw-bold text-white"
+                                        style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); border: none;">Tiếp
+                                        tục đặt vé</button>
+                                    <a th:href="@{/event/{id}(id=${event.id})}" class="btn btn-outline-light">Quay
                                         lại</a>
                                 </div>
                             </form>
@@ -111,10 +128,48 @@
                                         errorDiv.classList.add('d-none');
                                     }
                                 });
+
+                                // Calculate Total Amount
+                                const ticketInputs = document.querySelectorAll('.ticket-qty');
+                                const totalDisplay = document.getElementById('totalAmountDisplay');
+
+                                function updateTotal() {
+                                    let totalAmount = 0;
+                                    ticketInputs.forEach(input => {
+                                        const qty = parseInt(input.value) || 0;
+                                        const price = parseFloat(input.dataset.price) || 0;
+                                        totalAmount += qty * price;
+                                    });
+                                    totalDisplay.textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalAmount).replace('₫', 'VND');
+                                }
+
+                                ticketInputs.forEach(input => {
+                                    input.addEventListener('input', updateTotal);
+                                    input.addEventListener('change', updateTotal);
+                                });
+
+                                // Initial Calculation
+                                updateTotal();
                                 /*]]>*/
                             </script>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Seat Map Modal -->
+    <div class="modal fade" id="seatMapModal" tabindex="-1" aria-hidden="true"
+        th:if="${event.eventMedias.^[mediaPurpose.name() == 'TICKET_MAP'] != null}">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content bg-transparent border-0 shadow-none">
+                <div class="modal-header border-0 p-0 mb-2">
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0 text-center"
+                    th:with="ticketMap=${event.eventMedias.^[mediaPurpose.name() == 'TICKET_MAP']}">
+                    <img th:src="${ticketMap.mediaUrl}" class="img-fluid rounded-3 shadow-lg" alt="Sơ đồ vé chi tiết">
                 </div>
             </div>
         </div>

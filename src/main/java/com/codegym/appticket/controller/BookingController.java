@@ -121,6 +121,16 @@ public class BookingController {
 
         model.addAttribute("ticketTypes", ticketTypes);
         model.addAttribute("preSelectedQuantities", preSelectedQuantities);
+        
+        // Calculate available quantity for each ticket type (quantity - sold)
+        Map<Long, Integer> ticketAvailability = new HashMap<>();
+        for (TicketType tt : ticketTypes) {
+            int sold = bookingService.getSoldQuantity(tt.getId());
+            int available = tt.getQuantity() - sold;
+            ticketAvailability.put(tt.getId(), Math.max(0, available)); // Ensure non-negative
+        }
+        model.addAttribute("ticketAvailability", ticketAvailability);
+        
         return "booking/form";
     }
 
@@ -211,7 +221,22 @@ public class BookingController {
         }
         model.addAttribute("location", location);
 
+        // Calculate total amount
+        java.math.BigDecimal totalAmount = java.math.BigDecimal.ZERO;
+        for (Map.Entry<TicketType, Integer> entry : selectedTickets.entrySet()) {
+            totalAmount = totalAmount.add(entry.getKey().getPrice().multiply(java.math.BigDecimal.valueOf(entry.getValue())));
+        }
+        model.addAttribute("totalAmount", totalAmount);
+
         model.addAttribute("selectedTickets", selectedTickets);
+        model.addAttribute("occurrenceId", occurrence.getId());
+
+        // Construct back URL for "Edit" button
+        StringBuilder backUrl = new StringBuilder("/bookings/book/" + eventId + "?occurrence=" + occurrence.getId());
+        for (Map.Entry<TicketType, Integer> entry : selectedTickets.entrySet()) {
+            backUrl.append("&ticket_").append(entry.getKey().getId()).append("=").append(entry.getValue());
+        }
+        model.addAttribute("backUrl", backUrl.toString());
 
         // Lấy thông tin người dùng hiện tại để hiển thị trên trang xác nhận
         if (email != null) {
@@ -264,6 +289,19 @@ public class BookingController {
             // Pass the existing booking ID to the view so we can reuse it
             model.addAttribute("bookingId", bookingId);
 
+            // Calculate total amount
+            java.math.BigDecimal totalAmount = details.stream()
+                    .map(d -> d.getTicketType().getPrice().multiply(java.math.BigDecimal.valueOf(d.getQuantity())))
+                    .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+            model.addAttribute("totalAmount", totalAmount);
+            model.addAttribute("occurrenceId", occurrence.getId());
+
+            // Construct back URL for "Edit" button
+            StringBuilder backUrl = new StringBuilder("/bookings/book/" + occurrence.getEvent().getId() + "?occurrence=" + occurrence.getId());
+            for (Map.Entry<TicketType, Integer> entry : selectedTickets.entrySet()) {
+                backUrl.append("&ticket_").append(entry.getKey().getId()).append("=").append(entry.getValue());
+            }
+            model.addAttribute("backUrl", backUrl.toString());
 
             String email = getCurrentUserEmail();
             if (email != null) {
