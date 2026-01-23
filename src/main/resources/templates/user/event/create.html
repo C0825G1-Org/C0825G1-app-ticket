@@ -4,8 +4,7 @@
 <head th:replace="~{common/layout :: head('Tạo sự kiện mới')}">
 </head>
 <link rel="stylesheet" href="/css/wizard-custom.css">
-<script th:src="@{'https://cdn.tiny.cloud/1/' + ${tinyMceApiKey} + '/tinymce/6/tinymce.min.js'}"
-    referrerpolicy="origin"></script>
+<link rel="stylesheet" href="/css/wizard-custom.css">
 
 <body style="background-color: #0f172a;" data-bs-theme="dark">
     <!-- Apply Dark Theme to Body content wrapper -->
@@ -91,15 +90,24 @@
                                         </div>
 
                                         <div class="mb-3">
-                                            <label class="form-label fw-medium text-white">Mô tả sự kiện <span
-                                                    class="text-danger">*</span></label>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <label class="form-label fw-medium text-white">Mô tả sự kiện <span
+                                                        class="text-danger">*</span></label>
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                                    onclick="openPreviewModal()">
+                                                    <i class="bi bi-eye me-1"></i> Xem trước
+                                                </button>
+                                            </div>
                                             <textarea
                                                 class="form-control bg-dark text-white border-secondary border-opacity-50"
                                                 rows="5" name="description" id="description"
                                                 placeholder="Mô tả chi tiết..."></textarea>
                                             <div class="form-text text-muted mt-2">
                                                 <i class="bi bi-info-circle me-1"></i>
-                                                <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#guideModal">Xem hướng dẫn soạn thảo nội dung <i class="bi bi-eye ms-1"></i></a>
+                                                <a href="#" class="text-decoration-none" data-bs-toggle="modal"
+                                                    data-bs-target="#guideModal">Xem hướng dẫn soạn thảo nội dung <i
+                                                        class="bi bi-eye ms-1"></i></a>
                                             </div>
                                             <div class="text-danger small error-message" id="error-description"></div>
                                         </div>
@@ -227,12 +235,14 @@
                                         onclick="prevStep()">
                                         <i class="bi bi-arrow-left me-2"></i> Quay lại
                                     </button>
-                                    <button type="submit" class="btn btn-outline-light btn-lg rounded-3 px-4"
-                                        onclick="setDraft()">
+                                    <button type="button" class="btn btn-outline-light btn-lg rounded-3 px-4"
+                                        onclick="saveAsDraft()">
                                         <i class="bi bi-save me-2"></i> Lưu nháp
                                     </button>
-                                    <button type="submit" class="btn btn-gradient btn-lg rounded-3 px-5 fw-bold"
-                                        style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); border: none; color: white;">
+                                    <button type="submit" id="btn-create-event"
+                                        class="btn btn-gradient btn-lg rounded-3 px-5 fw-bold"
+                                        style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); border: none; color: white;"
+                                        onclick="document.getElementById('eventStatus').value = 'PENDING'">
                                         <i class="bi bi-check-lg me-2"></i> Tạo sự kiện
                                     </button>
                                 </div>
@@ -278,21 +288,17 @@
 
                                     // REMOVE VALIDATION IF DRAFT
                                     const eventStatus = document.getElementById('eventStatus').value;
-                                    if (eventStatus === 'DRAFT') {
-                                        // Skip file count validation or make it optional?
-                                        // Draft should normally allow anything, but max file count is safeguard. Let's keep max 10 check for safety or skip it too?
-                                        // Let's keep hard limits but skip 'required'
-                                    } else {
+                                    if (eventStatus !== 'DRAFT') {
                                         // Only validate gallery if NOT draft
                                         const galleryInput = document.getElementById('galleryFiles');
-                                        if (galleryInput.files.length > 10) {
+                                        if (galleryInput && galleryInput.files.length > 10) {
                                             Toast.fire({ icon: 'warning', title: 'Tối đa 10 file.' });
                                             return;
                                         }
                                     }
-                                    const submitBtn = e.submitter; // Get the specific button clicked
-                                    const originalBtnText = submitBtn.innerHTML;
-                                    setButtonLoading(submitBtn, 'Đang xử lý...');
+
+                                    const submitBtn = document.getElementById('btn-create-event');
+                                    const resetButton = setButtonLoading(submitBtn, 'Đang xử lý...');
 
                                     try {
                                         const bannerFile = document.getElementById('bannerFile').files[0];
@@ -369,8 +375,7 @@
                                         console.error(e);
                                         Toast.fire({ icon: 'error', title: e.message });
                                     } finally {
-                                        submitBtn.innerHTML = originalBtnText;
-                                        submitBtn.disabled = false;
+                                        resetButton();
                                     }
                                 });
 
@@ -671,12 +676,15 @@
                                 document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
 
                                 // Trigger submit
-                                // No manual submit needed if button is type="submit"
+                                document.getElementById('btn-create-event').click();
                             };
                             // Default submit button handles PENDING automatically as default value is PENDING
                             // But we removed setPublish onclick. Ensure defaults.
                             // The default value of hidden input is PENDING. So normal submit works fine.
                         </script>
+
+                        <script th:src="@{'https://cdn.tiny.cloud/1/' + ${tinyMceApiKey} + '/tinymce/6/tinymce.min.js'}"
+                            referrerpolicy="origin"></script>
 
                         <!-- Include Guide & Preview modals (admin fragments) -->
                         <div th:replace="~{admin/event/fragments/guide-modal :: guideModal}"></div>
@@ -689,4 +697,3 @@
 </body>
 
 </html>
-

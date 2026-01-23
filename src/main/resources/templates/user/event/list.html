@@ -70,21 +70,28 @@
                                             </div>
                                         </td>
                                         <td class="px-4 py-3 text-end">
-                                            <a th:href="@{/user/events/detail/{id}(id=${event.id})}"
-                                                class="btn btn-sm btn-outline-light me-1 rounded-3"
-                                                title="Xem chi tiết">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            <a th:href="@{/user/events/edit/{id}(id=${event.id})}"
-                                                class="btn btn-sm btn-outline-light me-1 rounded-3" title="Sửa">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger rounded-3"
-                                                th:data-id="${event.id}" th:data-title="${event.title}"
-                                                onclick="deleteEvent(this.getAttribute('data-id'), this.getAttribute('data-title'))"
-                                                title="Xóa">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-light dropdown-toggle rounded-3"
+                                                    type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    Hành động
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-dark shadow border-secondary border-opacity-25"
+                                                    style="background-color: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px);">
+                                                    <li>
+                                                        <a class="dropdown-item"
+                                                            th:href="@{/user/events/detail/{id}(id=${event.id})}">
+                                                            <i class="bi bi-eye me-2"></i> Xem chi tiết
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <button class="dropdown-item" type="button"
+                                                            th:data-id="${event.id}" th:data-title="${event.title}"
+                                                            onclick="duplicateEvent(this.getAttribute('data-id'), this.getAttribute('data-title'))">
+                                                            <i class="bi bi-copy me-2"></i> Nhân bản
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </div>
                                         </td>
                                     </tr>
                                     <tr th:if="${events.empty}">
@@ -250,6 +257,3 @@
 </body>
 
 </html>
-
-
-
