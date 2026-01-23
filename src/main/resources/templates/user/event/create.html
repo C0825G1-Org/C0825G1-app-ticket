@@ -162,7 +162,7 @@
                                                 </div>
                                             </div>
                                             <input type="file" class="form-control d-none" id="bannerFile"
-                                                accept="image/*" required
+                                                accept="image/*"
                                                 onchange="previewFile(this, 'preview-banner', 'placeholder-banner')">
                                         </div>
 
@@ -181,7 +181,7 @@
                                                     </div>
                                                 </div>
                                                 <input type="file" class="form-control d-none" id="logoFile"
-                                                    accept="image/*" required
+                                                    accept="image/*"
                                                     onchange="previewFile(this, 'preview-logo', 'placeholder-logo')">
                                             </div>
                                             <div class="col-md-6">
@@ -198,7 +198,7 @@
                                                     </div>
                                                 </div>
                                                 <input type="file" class="form-control d-none" id="ticketMapFile"
-                                                    accept="image/*" required
+                                                    accept="image/*"
                                                     onchange="previewFile(this, 'preview-map', 'placeholder-map')">
                                             </div>
                                         </div>
@@ -282,6 +282,24 @@
                                         const galleryInput = document.getElementById('galleryFiles');
                                         if (galleryInput.files.length > 10) {
                                             Toast.fire({ icon: 'warning', title: 'Tối đa 10 file.' });
+                                            return;
+                                        }
+
+                                        // Manual validation for required files (since we removed HTML5 required)
+                                        const bannerFile = document.getElementById('bannerFile').files[0];
+                                        const logoFile = document.getElementById('logoFile').files[0];
+                                        const ticketMapFile = document.getElementById('ticketMapFile').files[0];
+
+                                        if (!bannerFile) {
+                                            Toast.fire({ icon: 'warning', title: 'Vui lòng chọn Banner sự kiện!' });
+                                            return;
+                                        }
+                                        if (!logoFile) {
+                                            Toast.fire({ icon: 'warning', title: 'Vui lòng chọn Logo sự kiện!' });
+                                            return;
+                                        }
+                                        if (!ticketMapFile) {
+                                            Toast.fire({ icon: 'warning', title: 'Vui lòng chọn Sơ đồ sự kiện!' });
                                             return;
                                         }
                                     }
