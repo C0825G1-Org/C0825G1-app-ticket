@@ -4,8 +4,7 @@
 <head th:replace="~{common/layout :: head('Chỉnh sửa sự kiện')}">
 </head>
 <link rel="stylesheet" href="/css/wizard-custom.css">
-<script th:src="@{'https://cdn.tiny.cloud/1/' + ${tinyMceApiKey} + '/tinymce/6/tinymce.min.js'}"
-    referrerpolicy="origin"></script>
+<link rel="stylesheet" href="/css/wizard-custom.css">
 
 <body style="background-color: #0f172a;" data-bs-theme="dark">
     <div th:replace="~{common/layout :: user-layout(~{::content})}">
@@ -399,13 +398,14 @@
                                         onclick="prevStep()">
                                         <i class="bi bi-arrow-left me-2"></i> Quay lại
                                     </button>
-                                    <button type="submit"
+                                    <button type="button"
                                         class="btn btn-outline-secondary btn-lg rounded-3 px-5 fw-bold"
                                         onclick="saveAsDraft()" formnovalidate
                                         th:if="${eventUpdateDTO.status.name() == 'DRAFT'}">
                                         <i class="bi bi-file-earmark me-2"></i> Lưu nháp
                                     </button>
-                                    <button type="submit" class="btn btn-gradient btn-lg rounded-3 px-5 fw-bold"
+                                    <button type="submit" id="btn-save-changes"
+                                        class="btn btn-gradient btn-lg rounded-3 px-5 fw-bold"
                                         style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); border: none; color: white;">
                                         <i class="bi bi-check-lg me-2"></i> Lưu thay đổi
                                     </button>
@@ -434,7 +434,8 @@
                             // Global helper functions
                             window.saveAsDraft = function () {
                                 document.getElementById('eventStatus').value = 'DRAFT';
-                                // formnovalidate on button handles the rest
+                                // Trigger submit
+                                document.getElementById('btn-save-changes').click();
                             };
 
                             window.removeRow = function (btn, type) {
@@ -825,9 +826,8 @@
                                         Toast.fire({ icon: 'warning', title: 'Tối đa 10 file.' });
                                         return;
                                     }
-                                    const submitBtn = this.querySelector('button[type="submit"]');
-                                    const originalBtnText = submitBtn.innerHTML;
-                                    setButtonLoading(submitBtn, 'Đang lưu...');
+                                    const submitBtn = document.getElementById('btn-save-changes');
+                                    const resetButton = setButtonLoading(submitBtn, 'Đang lưu...');
 
                                     try {
                                         const bannerFile = document.getElementById('bannerFile').files[0];
@@ -903,8 +903,7 @@
                                         console.error(e);
                                         Toast.fire({ icon: 'error', title: e.message });
                                     } finally {
-                                        submitBtn.innerHTML = originalBtnText;
-                                        submitBtn.disabled = false;
+                                        resetButton();
                                     }
                                 });
 
@@ -914,17 +913,17 @@
                             });
                         </script>
 
+                        <script th:src="@{'https://cdn.tiny.cloud/1/' + ${tinyMceApiKey} + '/tinymce/6/tinymce.min.js'}"
+                            referrerpolicy="origin"></script>
+
+                        <!-- Use admin guide and preview fragments for consistent UX -->
+                        <div th:replace="~{admin/event/fragments/guide-modal :: guideModal}"></div>
+                        <div th:replace="~{admin/event/fragments/preview-modal :: previewModal}"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Use admin guide and preview fragments for consistent UX -->
-    <div th:replace="~{admin/event/fragments/guide-modal :: guideModal}"></div>
-    <div th:replace="~{admin/event/fragments/preview-modal :: previewModal}"></div>
 </body>
 
 </html>
-
-

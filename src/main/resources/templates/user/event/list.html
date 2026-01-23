@@ -20,6 +20,55 @@
                     </a>
                 </div>
 
+                <!-- Filters & Search -->
+                <div class="card card-glass-dark border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body p-4">
+                        <form th:action="@{/user/events}" method="get" th:object="${eventSearchDTO}" class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-white-50">Tiêu đề</label>
+                                <input type="text" class="form-control bg-transparent text-white border-secondary"
+                                    th:field="*{title}" placeholder="Tên sự kiện...">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold text-white-50">Danh mục</label>
+                                <select class="form-select bg-transparent text-white border-secondary"
+                                    th:field="*{categoryId}">
+                                    <option value="" class="text-dark">-- Tất cả --</option>
+                                    <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"
+                                        class="text-dark">
+                                        Category</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold text-white-50">Trạng thái</label>
+                                <select class="form-select bg-transparent text-white border-secondary"
+                                    th:field="*{status}">
+                                    <option value="" class="text-dark">-- Tất cả --</option>
+                                    <option th:each="st : ${statuses}" th:value="${st}"
+                                        th:text="${st.name() == 'PENDING' ? 'Chờ duyệt' : (st.name() == 'APPROVED' ? 'Đã duyệt' : (st.name() == 'HAPPENING' ? 'Đang diễn ra' : (st.name() == 'FINISHED' ? 'Đã kết thúc' : (st.name() == 'CANCELLED' ? 'Đã hủy' : (st.name() == 'DELETED' ? 'Đã xóa' : (st.name() == 'DRAFT' ? 'Lưu nháp' : 'Từ chối'))))))}"
+                                        class="text-dark">
+                                        Status</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold text-white-50">Từ ngày</label>
+                                <input type="date" class="form-control bg-transparent text-white border-secondary"
+                                    th:field="*{startDate}" style="color-scheme: dark;">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold text-white-50">Đến ngày</label>
+                                <input type="date" class="form-control bg-transparent text-white border-secondary"
+                                    th:field="*{endDate}" style="color-scheme: dark;">
+                            </div>
+                            <div class="col-md-1 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100 fw-bold rounded-3">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                 <!-- Events Table -->
                 <div class="card card-glass-dark border-0 shadow-sm rounded-4">
                     <div class="card-body p-0">
@@ -53,7 +102,7 @@
                                         </td>
                                         <td class="px-4 py-3"><span
                                                 class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25"
-                                                th:text="${event.category.name}">Cat</span></td>
+                                                th:text="${event.categoryName}">Cat</span></td>
                                         <td class="px-4 py-3 text-white-50">
                                             <span
                                                 th:if="${event.eventOccurrences != null && !event.eventOccurrences.isEmpty()}"
@@ -70,21 +119,28 @@
                                             </div>
                                         </td>
                                         <td class="px-4 py-3 text-end">
-                                            <a th:href="@{/user/events/detail/{id}(id=${event.id})}"
-                                                class="btn btn-sm btn-outline-light me-1 rounded-3"
-                                                title="Xem chi tiết">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            <a th:href="@{/user/events/edit/{id}(id=${event.id})}"
-                                                class="btn btn-sm btn-outline-light me-1 rounded-3" title="Sửa">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger rounded-3"
-                                                th:data-id="${event.id}" th:data-title="${event.title}"
-                                                onclick="deleteEvent(this.getAttribute('data-id'), this.getAttribute('data-title'))"
-                                                title="Xóa">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-light dropdown-toggle rounded-3"
+                                                    type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    Hành động
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-dark shadow border-secondary border-opacity-25"
+                                                    style="background-color: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px);">
+                                                    <li>
+                                                        <a class="dropdown-item"
+                                                            th:href="@{/user/events/detail/{id}(id=${event.id})}">
+                                                            <i class="bi bi-eye me-2"></i> Xem chi tiết
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <button class="dropdown-item" type="button"
+                                                            th:data-id="${event.id}" th:data-title="${event.title}"
+                                                            onclick="duplicateEvent(this.getAttribute('data-id'), this.getAttribute('data-title'))">
+                                                            <i class="bi bi-copy me-2"></i> Nhân bản
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </div>
                                         </td>
                                     </tr>
                                     <tr th:if="${events.empty}">
@@ -103,18 +159,19 @@
                         <ul class="pagination pagination-custom">
                             <li class="page-item" th:classappend="${events.first ? 'disabled' : ''}">
                                 <a class="page-link"
-                                    th:href="@{/user/events(page=${events.number - 1}, size=${events.size})}">
+                                    th:href="@{/user/events(page=${events.number - 1}, size=${events.size}, title=${eventSearchDTO.title}, categoryId=${eventSearchDTO.categoryId}, status=${eventSearchDTO.status}, startDate=${eventSearchDTO.startDate}, endDate=${eventSearchDTO.endDate})}">
                                     <i class="bi bi-chevron-left"></i>
                                 </a>
                             </li>
                             <li class="page-item" th:each="i : ${#numbers.sequence(0, events.totalPages - 1)}"
                                 th:classappend="${events.number == i ? 'active' : ''}">
-                                <a class="page-link" th:href="@{/user/events(page=${i}, size=${events.size})}"
+                                <a class="page-link"
+                                    th:href="@{/user/events(page=${i}, size=${events.size}, title=${eventSearchDTO.title}, categoryId=${eventSearchDTO.categoryId}, status=${eventSearchDTO.status}, startDate=${eventSearchDTO.startDate}, endDate=${eventSearchDTO.endDate})}"
                                     th:text="${i + 1}">1</a>
                             </li>
                             <li class="page-item" th:classappend="${events.last ? 'disabled' : ''}">
                                 <a class="page-link"
-                                    th:href="@{/user/events(page=${events.number + 1}, size=${events.size})}">
+                                    th:href="@{/user/events(page=${events.number + 1}, size=${events.size}, title=${eventSearchDTO.title}, categoryId=${eventSearchDTO.categoryId}, status=${eventSearchDTO.status}, startDate=${eventSearchDTO.startDate}, endDate=${eventSearchDTO.endDate})}">
                                     <i class="bi bi-chevron-right"></i>
                                 </a>
                             </li>
@@ -250,6 +307,3 @@
 </body>
 
 </html>
-
-
-

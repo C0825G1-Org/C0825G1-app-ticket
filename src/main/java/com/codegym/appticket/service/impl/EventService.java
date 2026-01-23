@@ -42,7 +42,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -107,6 +106,7 @@ public class EventService implements IEventService {
                                 dto.getStatus(),
                                 start,
                                 end,
+                                dto.getOrganizerId(),
                                 sortedPageable).map(this::convertToDTO);
         }
 
@@ -502,7 +502,7 @@ public class EventService implements IEventService {
 
                 // Re-fetch event to ensure all associations are fresh from DB
                 Event refreshedEvent = eventRepository.findById(updatedEvent.getId())
-                        .orElseThrow(() -> new RuntimeException("Event not found after update"));
+                                .orElseThrow(() -> new RuntimeException("Event not found after update"));
 
                 return convertToDTO(refreshedEvent);
         }
@@ -628,61 +628,66 @@ public class EventService implements IEventService {
         }
 
         private Location getOrCreateLocation(EventOccurrenceDTO occDTO) {
-            // 1. Xử lý Tỉnh/Thành phố
-            Province province = provinceRepository
-                    .findById(occDTO.getProvinceCode())
-                    .orElseGet(() -> {
-                            Province newProv = new Province();
-                            newProv.setCode(occDTO.getProvinceCode());
-                            newProv.setName(occDTO.getProvinceName());
-                            return provinceRepository.save(newProv);
-                    });
+                // 1. Xử lý Tỉnh/Thành phố
+                Province province = provinceRepository
+                                .findById(occDTO.getProvinceCode())
+                                .orElseGet(() -> {
+                                        Province newProv = new Province();
+                                        newProv.setCode(occDTO.getProvinceCode());
+                                        newProv.setName(occDTO.getProvinceName());
+                                        return provinceRepository.save(newProv);
+                                });
 
-            // 2. Xử lý Phường/Xã
-            Ward ward = wardRepository
-                    .findById(occDTO.getWardCode())
-                    .orElseGet(() -> {
-                            Ward newWard = new Ward();
-                            newWard.setCode(occDTO.getWardCode());
-                            newWard.setName(occDTO.getWardName());
-                            newWard.setProvince(province);
-                            return wardRepository.save(newWard);
-                    });
+                // 2. Xử lý Phường/Xã
+                Ward ward = wardRepository
+                                .findById(occDTO.getWardCode())
+                                .orElseGet(() -> {
+                                        Ward newWard = new Ward();
+                                        newWard.setCode(occDTO.getWardCode());
+                                        newWard.setName(occDTO.getWardName());
+                                        newWard.setProvince(province);
+                                        return wardRepository.save(newWard);
+                                });
 
-            // 3. Tìm hoặc tạo Location
-            Location location = locationRepository
-                    .findByWardCodeAndAddressDetail(occDTO.getWardCode(), occDTO.getAddressDetail())
-                    .orElseGet(() -> {
-                            Location newLoc = new Location();
-                            newLoc.setWard(ward);
-                            newLoc.setAddressDetail(occDTO.getAddressDetail());
-                            newLoc.setMapLink(occDTO.getMapLink());
-                            return newLoc; // CHƯA save tại đây
-                    });
+                // 3. Tìm hoặc tạo Location
+                Location location = locationRepository
+                                .findByWardCodeAndAddressDetail(occDTO.getWardCode(), occDTO.getAddressDetail())
+                                .orElseGet(() -> {
+                                        Location newLoc = new Location();
+                                        newLoc.setWard(ward);
+                                        newLoc.setAddressDetail(occDTO.getAddressDetail());
+                                        newLoc.setMapLink(occDTO.getMapLink());
+                                        return newLoc; // CHƯA save tại đây
+                                });
 
-            // 4. Populate coordinates nếu chưa có
-            if (location.getLatitude() == null || location.getLongitude() == null) {
-                    try {
-                        String provinceName = ward.getProvince().getName();
-                        System.out.println("📍 Attempting to geocode for province: " + provinceName + " (ward: " + ward.getCode() + ")");
+                // 4. Populate coordinates nếu chưa có
+                if (location.getLatitude() == null || location.getLongitude() == null) {
+                        try {
+                                String provinceName = ward.getProvince().getName();
+                                System.out.println("📍 Attempting to geocode for province: " + provinceName + " (ward: "
+                                                + ward.getCode() + ")");
 
-                        Double[] coords = geocodingService.getCoordinates(provinceName);
+                                Double[] coords = geocodingService.getCoordinates(provinceName);
 
-                        if (coords != null && coords.length == 2) {
-                                location.setLatitude(coords[0]);
-                                location.setLongitude(coords[1]);
-                                System.out.println("✅ Successfully set coordinates: lat=" + coords[0] + ", lon=" + coords[1]);
-                        } else {
-                                System.err.println("⚠️ Geocoding returned null or invalid coordinates for province: " + provinceName);
+                                if (coords != null && coords.length == 2) {
+                                        location.setLatitude(coords[0]);
+                                        location.setLongitude(coords[1]);
+                                        System.out.println("✅ Successfully set coordinates: lat=" + coords[0] + ", lon="
+                                                        + coords[1]);
+                                } else {
+                                        System.err.println(
+                                                        "⚠️ Geocoding returned null or invalid coordinates for province: "
+                                                                        + provinceName);
+                                }
+                        } catch (Exception e) {
+                                System.err.println("❌ Error populating coordinates for ward " + ward.getCode() + ": "
+                                                + e.getMessage());
+                                e.printStackTrace();
                         }
-                    } catch (Exception e) {
-                        System.err.println("❌ Error populating coordinates for ward " + ward.getCode() + ": " + e.getMessage());
-                        e.printStackTrace();
-                    }
-            }
+                }
 
-            // 5. Save và trả về (cho cả location mới và cũ nếu cập nhật lat/lon)
-            return locationRepository.saveAndFlush(location);
+                // 5. Save và trả về (cho cả location mới và cũ nếu cập nhật lat/lon)
+                return locationRepository.saveAndFlush(location);
         }
 
         private void cleanupOrphanLocations(Set<Location> potentialOrphans) {
@@ -700,7 +705,8 @@ public class EventService implements IEventService {
                                 locationRepository.delete(location);
                                 deletedCount++;
                                 System.out.println("🗑️ Deleted orphan location ID: " + location.getId() +
-                                                " (ward: " + location.getWard().getCode() + ", address: " + location.getAddressDetail() + ")");
+                                                " (ward: " + location.getWard().getCode() + ", address: "
+                                                + location.getAddressDetail() + ")");
                         }
                 }
 
@@ -1101,8 +1107,8 @@ public class EventService implements IEventService {
                                 EventOccurrence nOcc = new EventOccurrence();
                                 nOcc.setEvent(newEvent);
                                 // Shift time by 1 day to make it distinct and practical for "next show"
-                                nOcc.setStartTime(occ.getStartTime().plusDays(1));
-                                nOcc.setEndTime(occ.getEndTime().plusDays(1));
+                                nOcc.setStartTime(occ.getStartTime());
+                                nOcc.setEndTime(occ.getEndTime());
                                 nOcc.setLocation(occ.getLocation());
 
                                 List<TicketType> newTickets = new ArrayList<>();
@@ -1238,127 +1244,130 @@ public class EventService implements IEventService {
                 }
                 return userRepository.findByEmailAndNotDeleted(currentEmail);
         }
-    @Transactional
-    public void incrementViewCount(Long eventId) {
-        Event event = eventRepository.findById(eventId).orElse(null);
-        if (event != null) {
-            event.setViewCount(event.getViewCount() == null ? 1 : event.getViewCount() + 1);
-            eventRepository.save(event);
-        }
-    }
 
-    public com.codegym.appticket.dto.event.EventStatsDTO getEventStats(Long eventId, Long occurrenceId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
-
-        // 1. Fetch Aggregated Stats
-        java.util.List<Object[]> stats = eventRepository.sumRevenueAndTickets(eventId, occurrenceId);
-        Long totalTickets = 0L;
-        java.math.BigDecimal totalRevenue = java.math.BigDecimal.ZERO;
-
-        if (stats != null && !stats.isEmpty()) {
-            Object[] row = stats.get(0);
-            if (row[0] != null)
-                totalTickets = ((Number) row[0]).longValue();
-            if (row[1] != null)
-                totalRevenue = (java.math.BigDecimal) row[1];
+        @Transactional
+        public void incrementViewCount(Long eventId) {
+                Event event = eventRepository.findById(eventId).orElse(null);
+                if (event != null) {
+                        event.setViewCount(event.getViewCount() == null ? 1 : event.getViewCount() + 1);
+                        eventRepository.save(event);
+                }
         }
 
-        // 2. Fetch Booked Tickets List
-        List<com.codegym.appticket.dto.event.BookedTicketDTO> bookedTickets = eventRepository
-                .findBookedTicketsByEventAndOccurrence(eventId, occurrenceId);
+        public com.codegym.appticket.dto.event.EventStatsDTO getEventStats(Long eventId, Long occurrenceId) {
+                Event event = eventRepository.findById(eventId)
+                                .orElseThrow(() -> new RuntimeException("Event not found"));
 
-        return com.codegym.appticket.dto.event.EventStatsDTO.builder()
-                .totalTicketsSold(totalTickets)
-                .totalRevenue(totalRevenue)
-                .viewCount(event.getViewCount() == null ? 0 : event.getViewCount())
-                .bookedTickets(bookedTickets)
-                .build();
-    }
+                // 1. Fetch Aggregated Stats
+                java.util.List<Object[]> stats = eventRepository.sumRevenueAndTickets(eventId, occurrenceId);
+                Long totalTickets = 0L;
+                java.math.BigDecimal totalRevenue = java.math.BigDecimal.ZERO;
 
-    @Override
-    public byte[] exportBookedTicketsToExcel(Long eventId, Long occurrenceId) throws java.io.IOException {
-        // Fetch data
-        List<com.codegym.appticket.dto.event.BookedTicketDTO> tickets = eventRepository
-                .findBookedTicketsByEventAndOccurrence(eventId, occurrenceId);
-
-        // Create Workbook
-        try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
-            org.apache.poi.ss.usermodel.Sheet sheet = workbook.createSheet("Danh sách vé");
-
-            // Styles
-            org.apache.poi.ss.usermodel.CellStyle headerStyle = workbook.createCellStyle();
-            org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
-            headerFont.setBold(true);
-            headerStyle.setFont(headerFont);
-            headerStyle.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER);
-            headerStyle.setFillForegroundColor(org.apache.poi.ss.usermodel.IndexedColors.GREY_25_PERCENT.getIndex());
-            headerStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
-            headerStyle.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-            headerStyle.setBorderTop(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-            headerStyle.setBorderLeft(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-            headerStyle.setBorderRight(org.apache.poi.ss.usermodel.BorderStyle.THIN);
-
-            org.apache.poi.ss.usermodel.CellStyle dateStyle = workbook.createCellStyle();
-            dateStyle.setDataFormat(workbook.createDataFormat().getFormat("dd/mm/yyyy hh:mm"));
-
-            org.apache.poi.ss.usermodel.CellStyle currencyStyle = workbook.createCellStyle();
-            currencyStyle.setDataFormat(workbook.createDataFormat().getFormat("#,##0 ₫"));
-
-            // Header Row
-            String[] headers = {"Mã vé", "Khách hàng", "Email", "Số điện thoại", "Loại vé", "Giá vé", "Ngày đặt", "Suất diễn"};
-            org.apache.poi.ss.usermodel.Row headerRow = sheet.createRow(0);
-            for (int i = 0; i < headers.length; i++) {
-                org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
-                cell.setCellValue(headers[i]);
-                cell.setCellStyle(headerStyle);
-            }
-
-            // Data Rows
-            int rowNum = 1;
-            java.math.BigDecimal totalRev = java.math.BigDecimal.ZERO;
-            for (com.codegym.appticket.dto.event.BookedTicketDTO ticket : tickets) {
-                org.apache.poi.ss.usermodel.Row row = sheet.createRow(rowNum++);
-
-                row.createCell(0).setCellValue(ticket.getTicketCode());
-                row.createCell(1).setCellValue(ticket.getCustomerName());
-                row.createCell(2).setCellValue(ticket.getCustomerEmail());
-                row.createCell(3).setCellValue(ticket.getCustomerPhone());
-                row.createCell(4).setCellValue(ticket.getTicketTypeName());
-
-                org.apache.poi.ss.usermodel.Cell priceCell = row.createCell(5);
-                priceCell.setCellValue(ticket.getTotalPrice().doubleValue());
-                priceCell.setCellStyle(currencyStyle);
-
-                if (ticket.getTotalPrice() != null) {
-                    totalRev = totalRev.add(ticket.getTotalPrice());
+                if (stats != null && !stats.isEmpty()) {
+                        Object[] row = stats.get(0);
+                        if (row[0] != null)
+                                totalTickets = ((Number) row[0]).longValue();
+                        if (row[1] != null)
+                                totalRevenue = (java.math.BigDecimal) row[1];
                 }
 
-                org.apache.poi.ss.usermodel.Cell dateCell = row.createCell(6);
-                if (ticket.getBookingTime() != null) {
-                    dateCell.setCellValue(ticket.getBookingTime());
-                }
-                dateCell.setCellStyle(dateStyle);
+                // 2. Fetch Booked Tickets List
+                List<com.codegym.appticket.dto.event.BookedTicketDTO> bookedTickets = eventRepository
+                                .findBookedTicketsByEventAndOccurrence(eventId, occurrenceId);
 
-                row.createCell(7).setCellValue(ticket.getOccurrenceTime());
-            }
-
-            // Total Row
-            org.apache.poi.ss.usermodel.Row totalRow = sheet.createRow(rowNum + 1);
-            totalRow.createCell(4).setCellValue("Tổng tiền:");
-            org.apache.poi.ss.usermodel.Cell totalVal = totalRow.createCell(5);
-            totalVal.setCellValue(totalRev.doubleValue());
-            totalVal.setCellStyle(currencyStyle);
-            totalRow.getCell(5).setCellStyle(currencyStyle); // Apply again to be safe
-
-            // Auto-size columns
-            for (int i = 0; i < headers.length; i++) {
-                sheet.autoSizeColumn(i);
-            }
-
-            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-            workbook.write(out);
-            return out.toByteArray();
+                return com.codegym.appticket.dto.event.EventStatsDTO.builder()
+                                .totalTicketsSold(totalTickets)
+                                .totalRevenue(totalRevenue)
+                                .viewCount(event.getViewCount() == null ? 0 : event.getViewCount())
+                                .bookedTickets(bookedTickets)
+                                .build();
         }
-    }
+
+        @Override
+        public byte[] exportBookedTicketsToExcel(Long eventId, Long occurrenceId) throws java.io.IOException {
+                // Fetch data
+                List<com.codegym.appticket.dto.event.BookedTicketDTO> tickets = eventRepository
+                                .findBookedTicketsByEventAndOccurrence(eventId, occurrenceId);
+
+                // Create Workbook
+                try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook()) {
+                        org.apache.poi.ss.usermodel.Sheet sheet = workbook.createSheet("Danh sách vé");
+
+                        // Styles
+                        org.apache.poi.ss.usermodel.CellStyle headerStyle = workbook.createCellStyle();
+                        org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
+                        headerFont.setBold(true);
+                        headerStyle.setFont(headerFont);
+                        headerStyle.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER);
+                        headerStyle.setFillForegroundColor(
+                                        org.apache.poi.ss.usermodel.IndexedColors.GREY_25_PERCENT.getIndex());
+                        headerStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
+                        headerStyle.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+                        headerStyle.setBorderTop(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+                        headerStyle.setBorderLeft(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+                        headerStyle.setBorderRight(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+
+                        org.apache.poi.ss.usermodel.CellStyle dateStyle = workbook.createCellStyle();
+                        dateStyle.setDataFormat(workbook.createDataFormat().getFormat("dd/mm/yyyy hh:mm"));
+
+                        org.apache.poi.ss.usermodel.CellStyle currencyStyle = workbook.createCellStyle();
+                        currencyStyle.setDataFormat(workbook.createDataFormat().getFormat("#,##0 ₫"));
+
+                        // Header Row
+                        String[] headers = { "Mã vé", "Khách hàng", "Email", "Số điện thoại", "Loại vé", "Giá vé",
+                                        "Ngày đặt", "Suất diễn" };
+                        org.apache.poi.ss.usermodel.Row headerRow = sheet.createRow(0);
+                        for (int i = 0; i < headers.length; i++) {
+                                org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
+                                cell.setCellValue(headers[i]);
+                                cell.setCellStyle(headerStyle);
+                        }
+
+                        // Data Rows
+                        int rowNum = 1;
+                        java.math.BigDecimal totalRev = java.math.BigDecimal.ZERO;
+                        for (com.codegym.appticket.dto.event.BookedTicketDTO ticket : tickets) {
+                                org.apache.poi.ss.usermodel.Row row = sheet.createRow(rowNum++);
+
+                                row.createCell(0).setCellValue(ticket.getTicketCode());
+                                row.createCell(1).setCellValue(ticket.getCustomerName());
+                                row.createCell(2).setCellValue(ticket.getCustomerEmail());
+                                row.createCell(3).setCellValue(ticket.getCustomerPhone());
+                                row.createCell(4).setCellValue(ticket.getTicketTypeName());
+
+                                org.apache.poi.ss.usermodel.Cell priceCell = row.createCell(5);
+                                priceCell.setCellValue(ticket.getTotalPrice().doubleValue());
+                                priceCell.setCellStyle(currencyStyle);
+
+                                if (ticket.getTotalPrice() != null) {
+                                        totalRev = totalRev.add(ticket.getTotalPrice());
+                                }
+
+                                org.apache.poi.ss.usermodel.Cell dateCell = row.createCell(6);
+                                if (ticket.getBookingTime() != null) {
+                                        dateCell.setCellValue(ticket.getBookingTime());
+                                }
+                                dateCell.setCellStyle(dateStyle);
+
+                                row.createCell(7).setCellValue(ticket.getOccurrenceTime());
+                        }
+
+                        // Total Row
+                        org.apache.poi.ss.usermodel.Row totalRow = sheet.createRow(rowNum + 1);
+                        totalRow.createCell(4).setCellValue("Tổng tiền:");
+                        org.apache.poi.ss.usermodel.Cell totalVal = totalRow.createCell(5);
+                        totalVal.setCellValue(totalRev.doubleValue());
+                        totalVal.setCellStyle(currencyStyle);
+                        totalRow.getCell(5).setCellStyle(currencyStyle); // Apply again to be safe
+
+                        // Auto-size columns
+                        for (int i = 0; i < headers.length; i++) {
+                                sheet.autoSizeColumn(i);
+                        }
+
+                        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+                        workbook.write(out);
+                        return out.toByteArray();
+                }
+        }
 }

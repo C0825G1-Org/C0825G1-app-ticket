@@ -4,8 +4,7 @@
 <head th:replace="~{common/layout :: head('Tạo sự kiện mới')}">
 </head>
 <link rel="stylesheet" href="/css/wizard-custom.css">
-<script th:src="@{'https://cdn.tiny.cloud/1/' + ${tinyMceApiKey} + '/tinymce/6/tinymce.min.js'}"
-    referrerpolicy="origin"></script>
+<link rel="stylesheet" href="/css/wizard-custom.css">
 
 <body style="background-color: #0f172a;" data-bs-theme="dark">
     <!-- Apply Dark Theme to Body content wrapper -->
@@ -91,15 +90,24 @@
                                         </div>
 
                                         <div class="mb-3">
-                                            <label class="form-label fw-medium text-white">Mô tả sự kiện <span
-                                                    class="text-danger">*</span></label>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <label class="form-label fw-medium text-white">Mô tả sự kiện <span
+                                                        class="text-danger">*</span></label>
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                                    onclick="openPreviewModal()">
+                                                    <i class="bi bi-eye me-1"></i> Xem trước
+                                                </button>
+                                            </div>
                                             <textarea
                                                 class="form-control bg-dark text-white border-secondary border-opacity-50"
                                                 rows="5" name="description" id="description"
                                                 placeholder="Mô tả chi tiết..."></textarea>
                                             <div class="form-text text-muted mt-2">
                                                 <i class="bi bi-info-circle me-1"></i>
-                                                <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#guideModal">Xem hướng dẫn soạn thảo nội dung <i class="bi bi-eye ms-1"></i></a>
+                                                <a href="#" class="text-decoration-none" data-bs-toggle="modal"
+                                                    data-bs-target="#guideModal">Xem hướng dẫn soạn thảo nội dung <i
+                                                        class="bi bi-eye ms-1"></i></a>
                                             </div>
                                             <div class="text-danger small error-message" id="error-description"></div>
                                         </div>
@@ -227,12 +235,14 @@
                                         onclick="prevStep()">
                                         <i class="bi bi-arrow-left me-2"></i> Quay lại
                                     </button>
-                                    <button type="submit" class="btn btn-outline-light btn-lg rounded-3 px-4"
-                                        onclick="setDraft()">
+                                    <button type="button" class="btn btn-outline-light btn-lg rounded-3 px-4"
+                                        onclick="processEventCreation('DRAFT')">
                                         <i class="bi bi-save me-2"></i> Lưu nháp
                                     </button>
-                                    <button type="submit" class="btn btn-gradient btn-lg rounded-3 px-5 fw-bold"
-                                        style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); border: none; color: white;">
+                                    <button type="button" id="btn-create-event"
+                                        class="btn btn-gradient btn-lg rounded-3 px-5 fw-bold"
+                                        style="background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); border: none; color: white;"
+                                        onclick="processEventCreation('PENDING')">
                                         <i class="bi bi-check-lg me-2"></i> Tạo sự kiện
                                     </button>
                                 </div>
@@ -269,40 +279,70 @@
                                     });
                                 }
 
-                                // Form Submit Logic
-                                document.getElementById('createEventForm').addEventListener('submit', async function (e) {
-                                    e.preventDefault();
-                                    if (typeof tinymce !== 'undefined' && tinymce.get('description')) {
-                                        tinymce.get('description').save();
-                                    }
+                                // Unified Submit Logic
+                                window.processEventCreation = async function (status) {
+                                    // 1. Set Status
+                                    const eventStatusInput = document.getElementById('eventStatus');
+                                    eventStatusInput.value = status;
 
-                                    // REMOVE VALIDATION IF DRAFT
-                                    const eventStatus = document.getElementById('eventStatus').value;
-                                    if (eventStatus === 'DRAFT') {
-                                        // Skip file count validation or make it optional?
-                                        // Draft should normally allow anything, but max file count is safeguard. Let's keep max 10 check for safety or skip it too?
-                                        // Let's keep hard limits but skip 'required'
+                                    // 2. Handle Validation / Requirements
+                                    if (status === 'DRAFT') {
+                                        // Remove 'required' for Draft
+                                        document.querySelectorAll('[required]').forEach(el => {
+                                            el.removeAttribute('required');
+                                            el.classList.remove('is-invalid');
+                                        });
+                                        // Clear errors
+                                        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                                        document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
                                     } else {
-                                        // Only validate gallery if NOT draft
+                                        // Standard Client-Side Checks for PENDING
+                                        // Validate TinyMCE
+                                        if (typeof tinymce !== 'undefined' && tinymce.get('description')) {
+                                            tinymce.get('description').save();
+                                        }
+                                        const desc = document.getElementById('description').value;
+                                        if (!desc.trim()) {
+                                            Toast.fire({ icon: 'warning', title: 'Vui lòng nhập mô tả sự kiện.' });
+                                            return;
+                                        }
+                                        // Validate Gallery Limit
                                         const galleryInput = document.getElementById('galleryFiles');
-                                        if (galleryInput.files.length > 10) {
-                                            Toast.fire({ icon: 'warning', title: 'Tối đa 10 file.' });
+                                        if (galleryInput && galleryInput.files.length > 10) {
+                                            Toast.fire({ icon: 'warning', title: 'Tối đa 10 file ảnh/video.' });
+                                            return;
+                                        }
+                                        // HTML5 Validation check (manually trigger)
+                                        const form = document.getElementById('createEventForm');
+                                        if (!form.checkValidity()) {
+                                            form.reportValidity();
                                             return;
                                         }
                                     }
-                                    const submitBtn = e.submitter; // Get the specific button clicked
-                                    const originalBtnText = submitBtn.innerHTML;
-                                    setButtonLoading(submitBtn, 'Đang xử lý...');
+
+                                    // 3. Prepare UI
+                                    const submitBtn = document.getElementById('btn-create-event');
+                                    const draftBtn = document.querySelector('button[onclick*="DRAFT"]'); // approximate
+
+                                    // Lock buttons
+                                    const resetButton = setButtonLoading(submitBtn, status === 'DRAFT' ? 'Đang lưu...' : 'Đang tạo...');
 
                                     try {
+                                        // 4. Upload Files
+                                        if (typeof tinymce !== 'undefined' && tinymce.get('description')) {
+                                            tinymce.get('description').save();
+                                        }
+
                                         const bannerFile = document.getElementById('bannerFile').files[0];
                                         const logoFile = document.getElementById('logoFile').files[0];
                                         const ticketMapFile = document.getElementById('ticketMapFile').files[0];
                                         const galleryFiles = document.getElementById('galleryFiles').files;
                                         const uploadPromises = [];
+
                                         if (bannerFile) uploadPromises.push(uploadToCloudinary(bannerFile).then(url => document.getElementById('bannerUrl').value = url));
                                         if (logoFile) uploadPromises.push(uploadToCloudinary(logoFile).then(url => document.getElementById('logoUrl').value = url));
                                         if (ticketMapFile) uploadPromises.push(uploadToCloudinary(ticketMapFile).then(url => document.getElementById('ticketMapUrl').value = url));
+
                                         if (galleryFiles.length > 0) {
                                             const galleryContainer = document.getElementById('galleryUrlsContainer');
                                             galleryContainer.innerHTML = '';
@@ -316,18 +356,23 @@
                                                 }));
                                             }
                                         }
+
                                         await Promise.all(uploadPromises);
 
-                                        // Submit to backend
-                                        setButtonLoading(submitBtn, 'Đang tạo...');
-                                        const formData = new FormData(this);
+                                        // 5. Submit to Backend
+                                        const form = document.getElementById('createEventForm');
+                                        const formData = new FormData(form);
                                         const searchParams = new URLSearchParams();
                                         for (const [key, value] of formData) {
                                             if (value instanceof File) continue;
                                             searchParams.append(key, value);
                                         }
+                                        // Ensure status is correct in params
+                                        searchParams.set('status', status);
+
                                         const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
                                         const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
                                         const response = await fetch('/user/events/create', {
                                             method: 'POST',
                                             headers: { [csrfHeader]: csrfToken },
@@ -336,11 +381,14 @@
                                         const data = await response.json();
 
                                         if (data.status === 'success') {
-                                            Toast.fire({ icon: 'success', title: 'Tạo thành công!' });
-                                            setTimeout(() => window.location.href = data.redirectUrl, 1500);
+                                            Toast.fire({ icon: 'success', title: data.message || 'Thành công!' });
+                                            // Redirect
+                                            setTimeout(() => window.location.href = data.redirectUrl || '/user/events', 1500);
                                         } else if (data.status === 'validation_error') {
+                                            // Handle Errors
                                             document.querySelectorAll('.error-message').forEach(el => !el.id.includes('error-') ? el.remove() : el.textContent = '');
                                             document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+
                                             for (const [field, message] of Object.entries(data.errors)) {
                                                 const errorDiv = document.getElementById('error-' + field);
                                                 if (errorDiv) {
@@ -348,6 +396,7 @@
                                                     const input = document.querySelector(`[name="${field}"]`);
                                                     if (input) input.classList.add('is-invalid');
                                                 } else {
+                                                    // Dynamic fields
                                                     const input = document.querySelector(`[name="${field}"]`);
                                                     if (input) {
                                                         input.classList.add('is-invalid');
@@ -361,18 +410,20 @@
                                                     }
                                                 }
                                             }
-                                            Toast.fire({ icon: 'error', title: 'Kiểm tra lại thông tin.' });
+                                            Toast.fire({ icon: 'error', title: 'Vui lòng kiểm tra lại thông tin.' });
+                                            // Also switch to Step 1 if errors are there?
+                                            // For now assume user stays on current step or navigates.
                                         } else {
-                                            Toast.fire({ icon: 'error', title: data.message });
+                                            Toast.fire({ icon: 'error', title: data.message || 'Lỗi không xác định.' });
                                         }
+
                                     } catch (e) {
                                         console.error(e);
-                                        Toast.fire({ icon: 'error', title: e.message });
+                                        Toast.fire({ icon: 'error', title: e.message || 'Có lỗi xảy ra.' });
                                     } finally {
-                                        submitBtn.innerHTML = originalBtnText;
-                                        submitBtn.disabled = false;
+                                        resetButton();
                                     }
-                                });
+                                };
 
                                 // Initialize
                                 showStep(1);
@@ -659,24 +710,14 @@
 
                             window.prevStep = function () { showStep(1); };
 
-                            window.saveAsDraft = function () {
-                                document.getElementById('eventStatus').value = 'DRAFT';
-                                // Remove 'required' attributes to allow draft saving
-                                document.querySelectorAll('[required]').forEach(el => {
-                                    el.removeAttribute('required');
-                                    el.classList.remove('is-invalid');
-                                });
-                                // Remove client-side checks classes if any
-                                document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-                                document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
 
-                                // Trigger submit
-                                // No manual submit needed if button is type="submit"
-                            };
                             // Default submit button handles PENDING automatically as default value is PENDING
                             // But we removed setPublish onclick. Ensure defaults.
                             // The default value of hidden input is PENDING. So normal submit works fine.
                         </script>
+
+                        <script th:src="@{'https://cdn.tiny.cloud/1/' + ${tinyMceApiKey} + '/tinymce/6/tinymce.min.js'}"
+                            referrerpolicy="origin"></script>
 
                         <!-- Include Guide & Preview modals (admin fragments) -->
                         <div th:replace="~{admin/event/fragments/guide-modal :: guideModal}"></div>
@@ -689,4 +730,3 @@
 </body>
 
 </html>
-
