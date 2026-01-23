@@ -91,15 +91,21 @@
                                         </div>
 
                                         <div class="mb-3">
-                                            <label class="form-label fw-medium text-white">Mô tả sự kiện <span
-                                                    class="text-danger">*</span></label>
-                                            <textarea
-                                                class="form-control bg-dark text-white border-secondary border-opacity-50"
-                                                rows="5" name="description" id="description"
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <label class="form-label fw-medium mb-0">Mô tả sự kiện <span
+                                                        class="text-danger">*</span></label>
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                                    onclick="openPreviewModal()"><i class="bi bi-eye me-1"></i> Xem
+                                                    trước</button>
+                                            </div>
+                                            <textarea class="form-control" rows="5" name="description" id="description"
                                                 placeholder="Mô tả chi tiết..."></textarea>
                                             <div class="form-text text-muted mt-2">
                                                 <i class="bi bi-info-circle me-1"></i>
-                                                <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#guideModal">Xem hướng dẫn soạn thảo nội dung <i class="bi bi-eye ms-1"></i></a>
+                                                <a href="#" class="text-decoration-none" data-bs-toggle="modal"
+                                                    data-bs-target="#guideModal">Xem hướng dẫn soạn thảo nội dung <i
+                                                        class="bi bi-eye ms-1"></i></a>
                                             </div>
                                             <div class="text-danger small error-message" id="error-description"></div>
                                         </div>
@@ -276,17 +282,31 @@
                                         tinymce.get('description').save();
                                     }
 
-                                    // REMOVE VALIDATION IF DRAFT
                                     const eventStatus = document.getElementById('eventStatus').value;
-                                    if (eventStatus === 'DRAFT') {
-                                        // Skip file count validation or make it optional?
-                                        // Draft should normally allow anything, but max file count is safeguard. Let's keep max 10 check for safety or skip it too?
-                                        // Let's keep hard limits but skip 'required'
-                                    } else {
-                                        // Only validate gallery if NOT draft
+
+                                    // Manual Validation for File Inputs because they are hidden
+                                    if (eventStatus !== 'DRAFT') {
+                                        const bannerFile = document.getElementById('bannerFile');
+                                        const logoFile = document.getElementById('logoFile');
+                                        const ticketMapFile = document.getElementById('ticketMapFile');
+
+                                        if (!bannerFile.files[0]) {
+                                            Toast.fire({ icon: 'warning', title: 'Vui lòng chọn Banner sự kiện' });
+                                            return;
+                                        }
+                                        if (!logoFile.files[0]) {
+                                            Toast.fire({ icon: 'warning', title: 'Vui lòng chọn Logo sự kiện' });
+                                            return;
+                                        }
+                                        if (!ticketMapFile.files[0]) {
+                                            Toast.fire({ icon: 'warning', title: 'Vui lòng chọn Sơ đồ sự kiện' });
+                                            return;
+                                        }
+
+                                        // Gallery validation
                                         const galleryInput = document.getElementById('galleryFiles');
                                         if (galleryInput.files.length > 10) {
-                                            Toast.fire({ icon: 'warning', title: 'Tối đa 10 file.' });
+                                            Toast.fire({ icon: 'warning', title: 'Tối đa 10 file thư viện.' });
                                             return;
                                         }
 
@@ -308,7 +328,8 @@
                                             return;
                                         }
                                     }
-                                    const submitBtn = e.submitter; // Get the specific button clicked
+
+                                    const submitBtn = e.submitter;
                                     const originalBtnText = submitBtn.innerHTML;
                                     setButtonLoading(submitBtn, 'Đang xử lý...');
 
@@ -318,9 +339,12 @@
                                         const ticketMapFile = document.getElementById('ticketMapFile').files[0];
                                         const galleryFiles = document.getElementById('galleryFiles').files;
                                         const uploadPromises = [];
+
+                                        // Upload logic...
                                         if (bannerFile) uploadPromises.push(uploadToCloudinary(bannerFile).then(url => document.getElementById('bannerUrl').value = url));
                                         if (logoFile) uploadPromises.push(uploadToCloudinary(logoFile).then(url => document.getElementById('logoUrl').value = url));
                                         if (ticketMapFile) uploadPromises.push(uploadToCloudinary(ticketMapFile).then(url => document.getElementById('ticketMapUrl').value = url));
+
                                         if (galleryFiles.length > 0) {
                                             const galleryContainer = document.getElementById('galleryUrlsContainer');
                                             galleryContainer.innerHTML = '';
@@ -366,17 +390,8 @@
                                                     const input = document.querySelector(`[name="${field}"]`);
                                                     if (input) input.classList.add('is-invalid');
                                                 } else {
-                                                    const input = document.querySelector(`[name="${field}"]`);
-                                                    if (input) {
-                                                        input.classList.add('is-invalid');
-                                                        let dynamicError = input.nextElementSibling;
-                                                        if (!dynamicError || !dynamicError.classList.contains('error-message')) {
-                                                            dynamicError = document.createElement('div');
-                                                            dynamicError.className = 'text-danger small error-message';
-                                                            input.parentNode.insertBefore(dynamicError, input.nextSibling);
-                                                        }
-                                                        dynamicError.textContent = message;
-                                                    }
+                                                    // Fallback for fields without dedicated error div
+                                                    Toast.fire({ icon: 'error', title: message });
                                                 }
                                             }
                                             Toast.fire({ icon: 'error', title: 'Kiểm tra lại thông tin.' });
@@ -707,4 +722,3 @@
 </body>
 
 </html>
-
