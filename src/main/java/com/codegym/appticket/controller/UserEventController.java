@@ -62,7 +62,9 @@ public class UserEventController {
     }
 
     @GetMapping
-    public String listMyEvents(@PageableDefault(size = 5) Pageable pageable, Model model) {
+    public String listMyEvents(
+            @ModelAttribute("eventSearchDTO") com.codegym.appticket.dto.event.EventSearchDTO searchDTO,
+            @PageableDefault(size = 5) Pageable pageable, Model model) {
         if (pageable.getSort().isUnsorted()) {
             pageable = org.springframework.data.domain.PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
                     org.springframework.data.domain.Sort
@@ -75,8 +77,20 @@ public class UserEventController {
         if (currentUser == null)
             return "redirect:/login";
 
-        Page<Event> events = eventService.findEventsByOrganizer(currentUser, pageable);
+        // Enforce Organizer Filter
+        searchDTO.setOrganizerId(currentUser.getId());
+
+        // Handle empty title for cleaner URL/Query
+        if (searchDTO.getTitle() != null && searchDTO.getTitle().isEmpty()) {
+            searchDTO.setTitle(null);
+        }
+
+        Page<EventDTO> events = eventService.search(searchDTO, pageable);
+
         model.addAttribute("events", events);
+        model.addAttribute("categories", eventCategoryService.findAll());
+        model.addAttribute("statuses", EventStatus.values());
+
         return "user/event/list";
     }
 

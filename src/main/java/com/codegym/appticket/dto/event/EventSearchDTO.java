@@ -5,8 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.time.LocalDateTime;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,4 +19,5 @@ public class EventSearchDTO {
     private java.time.LocalDate endDate;
 
     private com.codegym.appticket.entity.EventStatus status;
+    private Long organizerId;
 }
